@@ -335,20 +335,12 @@ export default function ComboFormPage() {
       setAiGenerating(true);
       setAiSuggestions([]);
 
-      const payload: {
-        comboName: string;
-        comboDishes: string[];
-        customContext?: string;
-      } = {
-        comboName: normalizedComboName,
-        comboDishes,
-      };
-
-      if (normalizedPrompt) {
-        payload.customContext = normalizedPrompt;
+      let prompt = normalizedPrompt;
+      if (!prompt) {
+        prompt = `Hay tao mo ta toi da 50 tu cho combo "${normalizedComboName}" gom cac mon: ${comboDishes.join(", ")}`;
       }
 
-      const response = await aiService.generateContent(payload);
+      const response = await aiService.generateContent({ prompt });
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,

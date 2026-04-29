@@ -51,7 +51,26 @@
         "checkin": "Check-in",
         "complete": "Complete",
         "quick_cancel": "Quick Cancel",
-        "view_detail": "View details & actions"
+        "view_detail": "View details & actions",
+        "quick_view": "Quick view",
+        "open_deposit_link": "Open deposit payment link",
+        "deposit_link": "Deposit link",
+        "confirm_cash_deposit": "Confirm cash deposit received",
+        "confirm_deposit": "Confirm deposit"
+      },
+      "confirm": {
+        "cancel_title": "Confirm reservation cancellation",
+        "cancel_description": "Are you sure you want to cancel this reservation? This action cannot be undone.",
+        "cancel_confirm": "Cancel reservation",
+        "cancel_cancel": "Go back",
+        "checkin_title": "Confirm check-in",
+        "checkin_description": "Are you sure you want to check in this reservation?",
+        "checkin_confirm": "Check-in",
+        "checkin_cancel": "Go back",
+        "deposit_title": "Confirm cash deposit",
+        "deposit_description": "Are you sure you want to confirm cash deposit received for this reservation?",
+        "deposit_confirm": "Confirm",
+        "deposit_cancel": "Go back"
       },
       "side_effects": {
         "CONFIRMED": "Table will be marked as Reserved",
@@ -92,8 +111,16 @@
         "checked_in_at": "Checked in:"
       },
       "messages": {
+        "load_failed": "Failed to load reservations",
+        "statuses_load_failed": "Failed to load reservation statuses",
+        "status_updated": "Reservation status updated",
+        "update_status_failed": "Failed to update reservation status",
+        "cancel_only_from_status": "Cancellation is only supported from status options",
         "checkin_success": "Checked in successfully",
         "checkin_failed": "Failed to check in reservation",
+        "deposit_pending": "Deposit payment pending",
+        "deposit_confirmed": "Cash deposit confirmed",
+        "deposit_failed": "Failed to process deposit request",
         "already_checked_in": "This reservation has already been checked in",
         "checked_in_at": "Checked in at"
       }
@@ -4394,7 +4421,8 @@
         "mobile_confirm": "Confirm",
         "view_360": "View 360",
         "total_capacity": "Total Capacity",
-        "selected_table_label": "Selected Table"
+        "selected_table_label": "Selected table",
+        "table_unavailable": "This table is currently occupied. Please choose another table."
       },
       "panorama": {
         "loading": "Loading 360 image...",

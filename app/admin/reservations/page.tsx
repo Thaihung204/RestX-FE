@@ -12,12 +12,13 @@ import { formatVND } from "@/lib/utils/currency";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined, PlusOutlined } from "@ant-design/icons";
 import { Select, message } from "antd";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DayPicker } from '@/components/ui/DayPicker';
 import dayjs from 'dayjs';
 import { useTranslation } from "react-i18next";
 import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -73,12 +74,18 @@ function ReservationDetailModal({
   onClose: () => void;
   onStatusUpdated: () => void;
 }) {
+  const router = useRouter();
   const { t } = useTranslation();
   const [detail, setDetail] = useState<ReservationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [allStatuses, setAllStatuses] = useState<ReservationStatus[]>([]);
   const [selectedStatusId, setSelectedStatusId] = useState<number | "">("");
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [pendingCancelStatusId, setPendingCancelStatusId] = useState<number | null>(null);
+  const [confirmCheckInOpen, setConfirmCheckInOpen] = useState(false);
+  const [confirmCashDepositOpen, setConfirmCashDepositOpen] = useState(false);
+  const [cashDepositLoading, setCashDepositLoading] = useState(false);
 
   useEffect(() => {
     reservationService
@@ -89,9 +96,7 @@ function ReservationDetailModal({
         message.error(
           extractApiErrorMessage(
             error,
-            t("admin.reservations.messages.statuses_load_failed", {
-              defaultValue: "Khong the tai trang thai dat ban",
-            }),
+            t("admin.reservations.messages.statuses_load_failed"),
           ),
         );
       });
@@ -145,36 +150,26 @@ function ReservationDetailModal({
     const selectedStatus = allStatuses.find((s) => s.id === newStatusId);
     if (selectedStatus?.code !== "CANCELLED") {
       message.warning(
-        t("admin.reservations.messages.update_status_failed", {
-          defaultValue: "Chỉ hỗ trợ hủy đặt bàn từ danh sách trạng thái",
-        }),
+        t("admin.reservations.messages.cancel_only_from_status"),
       );
       setSelectedStatusId(detail.status.id);
       return;
     }
 
-    const confirmed = window.confirm(
-      t("admin.reservations.modal.confirm_action", {
-        action: t("admin.reservations.actions.cancel", { defaultValue: "Hủy" }),
-      }),
-    );
+    setPendingCancelStatusId(newStatusId);
+    setConfirmCancelOpen(true);
+  };
 
-    if (!confirmed) {
-      setSelectedStatusId(detail.status.id);
-      return;
-    }
-
+  const executeCancelStatus = async () => {
+    if (!detail || !pendingCancelStatusId) return;
+    setConfirmCancelOpen(false);
     setActionLoading(true);
     try {
       await reservationService.updateReservationStatus(
         reservationId,
-        newStatusId,
+        pendingCancelStatusId,
       );
-      message.success(
-        t("admin.reservations.messages.status_updated", {
-          defaultValue: "Đã cập nhật trạng thái",
-        }),
-      );
+      message.success(t("admin.reservations.messages.status_updated"));
       onStatusUpdated();
       onClose();
     } catch (e) {
@@ -182,15 +177,19 @@ function ReservationDetailModal({
       message.error(
         extractApiErrorMessage(
           e,
-          t("admin.reservations.messages.update_status_failed", {
-            defaultValue: "Không thể cập nhật trạng thái đặt bàn",
-          }),
+          t("admin.reservations.messages.update_status_failed"),
         ),
       );
       setSelectedStatusId(detail.status.id);
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleCancelCancel = () => {
+    setConfirmCancelOpen(false);
+    setPendingCancelStatusId(null);
+    if (detail) setSelectedStatusId(detail.status.id);
   };
 
   const now = new Date();
@@ -203,17 +202,24 @@ function ReservationDetailModal({
       now.getMonth(),
       now.getDate(),
     );
+  const currentStatusLabel = detail
+    ? t(`admin.reservations.status.${detail.status.code.toLowerCase()}`, {
+      defaultValue: detail.status.name,
+    })
+    : undefined;
+  const selectedStatusValue =
+    selectedStatusId !== "" &&
+    allStatuses.some((s) => s.id === selectedStatusId)
+      ? selectedStatusId
+      : undefined;
 
-  const handleCheckIn = async () => {
+  const executeCheckIn = async () => {
     if (!detail || !canCheckIn) return;
+    setConfirmCheckInOpen(false);
     setActionLoading(true);
     try {
       await reservationService.checkInReservation(detail.confirmationCode);
-      message.success(
-        t("admin.reservations.messages.checkin_success", {
-          defaultValue: "Check-in thành công",
-        }),
-      );
+      message.success(t("admin.reservations.messages.checkin_success"));
       onStatusUpdated();
       onClose();
     } catch (e) {
@@ -221,9 +227,7 @@ function ReservationDetailModal({
       message.error(
         extractApiErrorMessage(
           e,
-          t("admin.reservations.messages.checkin_failed", {
-            defaultValue: "Không thể check-in đặt bàn",
-          }),
+          t("admin.reservations.messages.checkin_failed"),
         ),
       );
     } finally {
@@ -231,7 +235,32 @@ function ReservationDetailModal({
     }
   };
 
+  const handleConfirmCashDeposit = async () => {
+    if (!detail || (detail.depositAmount ?? 0) <= 0) return;
+    setConfirmCashDepositOpen(false);
+    setCashDepositLoading(true);
+    try {
+      await reservationService.confirmCashDeposit(reservationId, {
+        cashReceive: detail.depositAmount,
+      });
+      message.success(t("admin.reservations.messages.deposit_confirmed"));
+      onStatusUpdated();
+      onClose();
+    } catch (e) {
+      console.error(e);
+      message.error(
+        extractApiErrorMessage(
+          e,
+          t("admin.reservations.messages.deposit_failed"),
+        ),
+      );
+    } finally {
+      setCashDepositLoading(false);
+    }
+  };
+
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
@@ -319,7 +348,8 @@ function ReservationDetailModal({
                   {t("admin.reservations.modal.status_label")}
                 </span>
                 <Select
-                  value={selectedStatusId !== "" ? selectedStatusId : undefined}
+                  value={selectedStatusValue}
+                  placeholder={currentStatusLabel}
                   disabled={
                     actionLoading ||
                     allStatuses.length === 0 ||
@@ -328,7 +358,6 @@ function ReservationDetailModal({
                   loading={actionLoading}
                   onChange={(val: number) => handleStatusChange(val)}
                   style={{ minWidth: 180 }}
-                  optionLabelProp="label"
                   options={allStatuses.map((s) => {
                     const color =
                       s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
@@ -392,7 +421,7 @@ function ReservationDetailModal({
                 {canCheckIn && (
                   <button
                     type="button"
-                    onClick={handleCheckIn}
+                    onClick={() => setConfirmCheckInOpen(true)}
                     disabled={actionLoading}
                     className="px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
                     style={{
@@ -405,12 +434,7 @@ function ReservationDetailModal({
                 )}
                 {detail.checkedInAt && (
                   <span
-                    className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
-                    style={{
-                      background: "rgba(34, 197, 94, 0.1)",
-                      color: "#22c55e",
-                      border: "1px solid rgba(34, 197, 94, 0.2)",
-                    }}
+                    className="reservation-checkin-badge"
                     title={
                       t("admin.reservations.checked_in_at") +
                       " " +
@@ -421,6 +445,43 @@ function ReservationDetailModal({
                     {new Date(detail.checkedInAt).toLocaleTimeString()}
                   </span>
                 )}
+                {/* Deposit actions - for PENDING with unpaid deposit */}
+                {detail.status.code === "PENDING" &&
+                  (detail.depositAmount ?? 0) > 0 &&
+                  !detail.depositPaid && (
+                    <>
+                      {detail.checkoutUrl && (
+                        <a
+                          href={detail.checkoutUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-2 rounded-lg text-sm font-semibold transition-all"
+                          style={{
+                            background: "rgba(234, 179, 8, 0.15)",
+                            color: "#eab308",
+                            border: "1px solid rgba(234, 179, 8, 0.3)",
+                          }}
+                        >
+                          {t("admin.reservations.actions.deposit_link")}
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setConfirmCashDepositOpen(true)}
+                        disabled={cashDepositLoading}
+                        className="px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                        style={{
+                          background: "rgba(234, 179, 8, 0.2)",
+                          color: "#ca8a04",
+                          border: "1px solid rgba(234, 179, 8, 0.3)",
+                        }}
+                      >
+                        {cashDepositLoading
+                          ? t("admin.reservations.modal.processing")
+                          : t("admin.reservations.actions.confirm_deposit")}
+                      </button>
+                    </>
+                  )}
               </div>
 
               {/* Info grid */}
@@ -543,11 +604,80 @@ function ReservationDetailModal({
                     </span>
                   )}
               </div>
+
+              {/* View full detail link */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    router.push(`/admin/reservation/${reservationId}`);
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                  style={{
+                    background: "var(--surface)",
+                    color: "var(--primary)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {t("admin.reservations.actions.view_detail")}
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
     </div>
+
+      <ConfirmModal
+        open={confirmCancelOpen}
+        title={t("admin.reservations.confirm.cancel_title", { defaultValue: "Xác nhận hủy đặt bàn" })}
+        description={t("admin.reservations.confirm.cancel_description", { defaultValue: "Bạn có chắc chắn muốn hủy đặt bàn này? Hành động này không thể hoàn tác." })}
+        confirmText={t("admin.reservations.confirm.cancel_confirm", { defaultValue: "Hủy đặt bàn" })}
+        cancelText={t("admin.reservations.confirm.cancel_cancel", { defaultValue: "Quay lại" })}
+        variant="danger"
+        loading={actionLoading}
+        onConfirm={executeCancelStatus}
+        onCancel={handleCancelCancel}
+      />
+
+      <ConfirmModal
+        open={confirmCheckInOpen}
+        title={t("admin.reservations.confirm.checkin_title", { defaultValue: "Xác nhận check-in" })}
+        description={t("admin.reservations.confirm.checkin_description", { defaultValue: "Bạn có chắc chắn muốn check-in cho đặt bàn này?" })}
+        confirmText={t("admin.reservations.confirm.checkin_confirm", { defaultValue: "Check-in" })}
+        cancelText={t("admin.reservations.confirm.checkin_cancel", { defaultValue: "Quay lại" })}
+        variant="info"
+        loading={actionLoading}
+        onConfirm={executeCheckIn}
+        onCancel={() => setConfirmCheckInOpen(false)}
+      />
+
+      <ConfirmModal
+        open={confirmCashDepositOpen}
+        title={t("admin.reservations.confirm.deposit_title", { defaultValue: "Xác nhận cọc tiền mặt" })}
+        description={t("admin.reservations.confirm.deposit_description", { defaultValue: "Bạn có chắc chắn muốn xác nhận đã nhận cọc tiền mặt cho đặt bàn này?" })}
+        confirmText={t("admin.reservations.confirm.deposit_confirm", { defaultValue: "Xác nhận" })}
+        cancelText={t("admin.reservations.confirm.deposit_cancel", { defaultValue: "Quay lại" })}
+        variant="warning"
+        loading={cashDepositLoading}
+        onConfirm={handleConfirmCashDeposit}
+        onCancel={() => setConfirmCashDepositOpen(false)}
+      />
+    </>
   );
 }
 
@@ -592,13 +722,7 @@ export default function ReservationsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [checkingInId, setCheckingInId] = useState<string | null>(null);
-  const [checkedInIds, setCheckedInIds] = useState<Set<string>>(new Set());
-  const [confirmingCashId, setConfirmingCashId] = useState<string | null>(null);
-  const now = new Date();
-  const todayYear = now.getFullYear();
-  const todayMonth = now.getMonth();
-  const todayDay = now.getDate();
+
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -618,9 +742,7 @@ export default function ReservationsPage() {
       message.error(
         extractApiErrorMessage(
           e,
-          t("admin.reservations.messages.load_failed", {
-            defaultValue: "Khong the tai danh sach dat ban",
-          }),
+          t("admin.reservations.messages.load_failed"),
         ),
       );
     } finally {
@@ -680,9 +802,7 @@ export default function ReservationsPage() {
         message.error(
           extractApiErrorMessage(
             error,
-            t("admin.reservations.messages.statuses_load_failed", {
-              defaultValue: "Khong the tai trang thai dat ban",
-            }),
+            t("admin.reservations.messages.statuses_load_failed"),
           ),
         );
       });
@@ -727,74 +847,7 @@ export default function ReservationsPage() {
     }
   }, [date, search, statusId, t]);
 
-  const handleCheckInReservation = async (
-    reservationId: string,
-    confirmationCode: string,
-  ) => {
-    setCheckingInId(reservationId);
-    try {
-      await reservationService.checkInReservation(confirmationCode);
-      message.success(
-        t("admin.reservations.messages.checkin_success", {
-          defaultValue: "Check-in thanh cong",
-        }),
-      );
-      setCheckedInIds((prev) => new Set(prev).add(reservationId));
-      await fetchData();
-    } catch (error) {
-      console.error(error);
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("admin.reservations.messages.checkin_failed", {
-            defaultValue: "Khong the check-in dat ban",
-          }),
-        ),
-      );
-    } finally {
-      setCheckingInId(null);
-    }
-  };
 
-  const handleConfirmCashDeposit = async (
-    reservationId: string,
-    amount: number,
-  ) => {
-    if (amount <= 0) return;
-    const confirmed = window.confirm(
-      t("admin.reservations.modal.confirm_action", {
-        action: t("admin.reservations.actions.confirm", {
-          defaultValue: "Xác nhận cọc tiền mặt",
-        }),
-      }),
-    );
-    if (!confirmed) return;
-
-    setConfirmingCashId(reservationId);
-    try {
-      await reservationService.confirmCashDeposit(reservationId, {
-        cashReceive: amount,
-      });
-      message.success(
-        t("admin.reservations.messages.deposit_confirmed", {
-          defaultValue: "Đã xác nhận cọc tiền mặt",
-        }),
-      );
-      await fetchData();
-    } catch (error) {
-      console.error(error);
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("admin.reservations.messages.checkin_failed", {
-            defaultValue: "Không thể xử lý yêu cầu",
-          }),
-        ),
-      );
-    } finally {
-      setConfirmingCashId(null);
-    }
-  };
 
   const totalCount = data?.totalCount ?? 0;
 
@@ -1269,70 +1322,37 @@ export default function ReservationsPage() {
                                 )}
                               </span>
                             )}
+                          {item.status.code === "CONFIRMED" &&
+                            !item.checkedInAt &&
+                            isSameLocalDate(
+                              item.reservationDateTime,
+                              new Date().getFullYear(),
+                              new Date().getMonth(),
+                              new Date().getDate(),
+                            ) && (
+                              <span
+                                className="text-[11px] font-medium"
+                                style={{ color: "#10b981" }}
+                              >
+                                {t(
+                                  "admin.reservations.messages.not_checked_in",
+                                  {
+                                    defaultValue: "Chưa check-in",
+                                  },
+                                )}
+                              </span>
+                            )}
                         </div>
                       </td>
 
                       <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <div className="flex justify-center gap-2">
-                          {item.status.code === "CONFIRMED" &&
-                            isSameLocalDate(
-                              item.reservationDateTime,
-                              todayYear,
-                              todayMonth,
-                              todayDay,
-                            ) &&
-                            !item.checkedInAt &&
-                            !checkedInIds.has(item.id) && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCheckInReservation(
-                                    item.id,
-                                    item.confirmationCode,
-                                  )
-                                }
-                                disabled={checkingInId === item.id}
-                                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                                style={{
-                                  background: "var(--primary)",
-                                  color: "#fff",
-                                }}
-                                title={t("admin.reservations.actions.checkin")}
-                              >
-                                {checkingInId === item.id
-                                  ? t("admin.reservations.modal.processing")
-                                  : t("admin.reservations.actions.checkin")}
-                              </button>
-                            )}
-                          {(item.checkedInAt || checkedInIds.has(item.id)) && (
-                            <span
-                              className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{
-                                background: "rgba(34, 197, 94, 0.1)",
-                                color: "#22c55e",
-                                border: "1px solid rgba(34, 197, 94, 0.2)",
-                              }}
-                              title={
-                                item.checkedInAt
-                                  ? t("admin.reservations.checked_in_at") +
-                                  " " +
-                                  new Date(
-                                    item.checkedInAt,
-                                  ).toLocaleTimeString()
-                                  : undefined
-                              }
-                            >
-                              {t("admin.reservations.checked_in")}
-                            </span>
-                          )}
+                        <div className="reservation-action-group">
                           <button
+                            type="button"
                             onClick={() => setSelectedId(item.id)}
-                            className="p-2 rounded-lg transition-all"
-                            style={{
-                              background: "var(--primary-soft)",
-                              color: "var(--primary)",
-                            }}
-                            title={t("admin.reservations.actions.view_detail")}
+                            className="reservation-action-btn reservation-action-btn--icon reservation-action-btn--soft"
+                            title={t("admin.reservations.actions.quick_view")}
+                            aria-label={t("admin.reservations.actions.quick_view")}
                           >
                             <svg
                               className="w-4 h-4"
@@ -1354,86 +1374,6 @@ export default function ReservationsPage() {
                               />
                             </svg>
                           </button>
-                          {item.status.code === "PENDING" &&
-                            (item.depositAmount ?? 0) > 0 &&
-                            !item.depositPaid && (
-                              <>
-                                {item.checkoutUrl && (
-                                  <a
-                                    href={item.checkoutUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-2 py-1 rounded-lg text-xs font-semibold transition-all"
-                                    style={{
-                                      background: "#f59e0b22",
-                                      color: "#b45309",
-                                      border: "1px solid #f59e0b44",
-                                    }}
-                                    title={t(
-                                      "admin.reservations.actions.confirm",
-                                      {
-                                        defaultValue: "Mở link thanh toán cọc",
-                                      },
-                                    )}
-                                  >
-                                    {t("admin.reservations.actions.confirm", {
-                                      defaultValue: "Link cọc",
-                                    })}
-                                  </a>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleConfirmCashDeposit(
-                                      item.id,
-                                      item.depositAmount ?? 0,
-                                    )
-                                  }
-                                  disabled={confirmingCashId === item.id}
-                                  className="px-2 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                                  style={{
-                                    background: "#f59e0b",
-                                    color: "#fff",
-                                  }}
-                                  title={t(
-                                    "admin.reservations.actions.confirm",
-                                    {
-                                      defaultValue: "Xác nhận cọc tiền mặt",
-                                    },
-                                  )}
-                                >
-                                  {confirmingCashId === item.id
-                                    ? t("admin.reservations.modal.processing")
-                                    : t("admin.reservations.actions.confirm", {
-                                      defaultValue: "Xác nhận cọc",
-                                    })}
-                                </button>
-                              </>
-                            )}
-                          <Link
-                            href={`/admin/reservation/${item.id}`}
-                            className="p-2 rounded-lg transition-all"
-                            style={{
-                              background: "var(--surface)",
-                              color: "var(--text-muted)",
-                              border: "1px solid var(--border)",
-                            }}
-                            title={t("admin.reservations.actions.view_detail")}
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                              />
-                            </svg>
-                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -1556,6 +1496,8 @@ export default function ReservationsPage() {
         onClose={() => setCreateModalOpen(false)}
         onSuccess={() => fetchData()}
       />
+
+
     </main>
   );
 }

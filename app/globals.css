@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -795,6 +795,14 @@ textarea::placeholder {
   animation: fadeIn 0.2s ease-out;
 }
 
+/* Confirm Modal Custom Hover Styles */
+.confirm-modal-cancel-btn:hover {
+  background: var(--surface-subtle) !important;
+}
+.confirm-modal-confirm-btn:hover {
+  filter: brightness(1.1);
+}
+
 /* Notification Detail Modal - remove outer AntD box completely, match cart/profile modal */
 .notification-detail-modal .ant-modal-container,
 .notification-detail-modal .ant-modal,
@@ -834,6 +842,92 @@ textarea::placeholder {
 
 .reservation-empty-warning span:last-child {
   font-weight: 600;
+}
+
+/* Admin reservation actions (tenant-themed button system) */
+.reservation-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+
+.reservation-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.reservation-action-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.reservation-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reservation-action-btn--icon {
+  width: 2.5rem;
+  padding-inline: 0;
+}
+
+.reservation-action-btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.reservation-action-btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.reservation-action-btn--soft {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.reservation-action-btn--neutral {
+  background: var(--surface);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.reservation-action-btn--warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: var(--warning-border);
+}
+
+.reservation-action-btn--warning-solid {
+  background: var(--warning);
+  color: var(--text-on-warning);
+}
+
+.reservation-checkin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--success-border);
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* =========================================================
@@ -1304,6 +1398,56 @@ img {
 .ant-popconfirm .ant-btn-default:hover {
   border-color: var(--primary) !important;
   color: var(--primary) !important;
+}
+
+/* Ant Design confirmation modal theme consistency */
+.ant-modal-confirm .ant-modal-content {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-title,
+.ant-modal-confirm .ant-modal-confirm-content,
+.ant-modal-confirm .ant-modal-confirm-content * {
+  color: var(--text) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-content {
+  color: var(--text-muted) !important;
+}
+
+.ant-modal-confirm .ant-btn-default {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.ant-modal-confirm .ant-btn-default:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* Staff activity close-session confirm modal */
+.staff-activity-confirm-modal.ant-modal-confirm .ant-modal-content {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.staff-activity-confirm-modal.ant-modal-confirm .ant-modal-confirm-title {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+.staff-activity-confirm-modal.ant-modal-confirm .ant-modal-confirm-content,
+.staff-activity-confirm-modal.ant-modal-confirm .ant-modal-confirm-content * {
+  color: var(--text) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .staff-activity-confirm-modal.ant-modal-confirm .ant-modal-confirm-content,
+[data-theme="dark"] .staff-activity-confirm-modal.ant-modal-confirm .ant-modal-confirm-content * {
+  color: var(--text-dark-dynamic) !important;
 }
 
 /* =========================================================

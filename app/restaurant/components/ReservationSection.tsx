@@ -950,8 +950,19 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 /** Convert numeric-string status from BE floor layout to TableData status */
                 const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' => {
-                    const normalized = s?.toLowerCase();
-                    if (s === '1' || normalized === 'occupied') return 'OCCUPIED';
+                    const normalized = String(s ?? '').trim().toLowerCase();
+                    if (
+                        normalized === '1' ||
+                        normalized === 'occupied' ||
+                        normalized === 'reserved' ||
+                        normalized === 'booked' ||
+                        normalized === 'busy' ||
+                        normalized === 'inuse' ||
+                        normalized === 'checked_in' ||
+                        normalized === 'serving'
+                    ) {
+                        return 'OCCUPIED';
+                    }
                     return 'AVAILABLE';
                 };
 
@@ -1190,7 +1201,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         id: table.id,
         label: table.name,
         capacity: table.seats,
-        isOccupied: false,
+        isOccupied: table.status !== 'AVAILABLE',
         isPremium: table.area === 'Window' || table.area === 'VIP',
         zone: table.area,
         x: table.position.x,
@@ -1203,6 +1214,16 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     const handleMapTableClick = async (table: TableData) => {
         const alreadySelected = selectedTables.some(t => t.id === table.id);
+        const isUnavailable = table.status !== 'AVAILABLE';
+
+        if (isUnavailable && !alreadySelected) {
+            message.warning(
+                t('landing.booking.table_map.table_unavailable', {
+                    defaultValue: 'Bàn này đang có khách, vui lòng chọn bàn khác.',
+                }),
+            );
+            return;
+        }
 
         setSelectedTables(prev => {
             if (alreadySelected) return prev.filter(t => t.id !== table.id);
@@ -1251,6 +1272,40 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             console.warn('[ReservationSection] Failed to fetch table details for 360:', err);
         }
     };
+
+    useEffect(() => {
+        if (step !== ReservationStep.TABLE_SELECTION || !layout || selectedTables.length === 0) return;
+
+        const availableIds = new Set(
+            layout.floors
+                .flatMap((floor) => floor.tables)
+                .filter((table) => table.status === 'AVAILABLE')
+                .map((table) => table.id),
+        );
+
+        setSelectedTables((prev) => {
+            const next = prev.filter((table) => availableIds.has(table.id));
+            return next.length === prev.length ? prev : next;
+        });
+
+        setPanoramaMap((prev) => {
+            const next = new Map(prev);
+            let changed = false;
+            for (const tableId of Array.from(next.keys())) {
+                if (!availableIds.has(tableId)) {
+                    next.delete(tableId);
+                    changed = true;
+                }
+            }
+            return changed ? next : prev;
+        });
+
+        if (active360TableId && !availableIds.has(active360TableId)) {
+            setIs3DModalOpen(false);
+            setPanoramaTableData(null);
+            setActive360TableId(null);
+        }
+    }, [layout, selectedTables.length, step, active360TableId]);
 
     // --- Gemini Integration ---
     const getSmartRecommendation = async (guests: number, time: string) => {

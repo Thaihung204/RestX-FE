@@ -32,6 +32,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { DayPicker } from '@/components/ui/DayPicker';
 import { TimePicker } from '@/components/ui/TimePicker';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
@@ -247,6 +248,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [selectedTable, setSelectedTable] = useState<TableActivityData | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isClosingSession, setIsClosingSession] = useState(false);
+  const [confirmCloseSessionTable, setConfirmCloseSessionTable] = useState<TableActivityData | null>(null);
   const [isMergeMode, setIsMergeMode] = useState(false);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [isMerging, setIsMerging] = useState(false);
@@ -367,7 +369,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           reservationContactPhone: reservation?.contact?.phone,
           reservationStatusName: reservation?.status?.name,
           reservationStatusCode: reservation?.status?.code,
-          reservationCheckedInAt: (reservation as any)?.checkedInAt,
+          reservationCheckedInAt: reservation?.checkedInAt,
           sessionId: session?.sessionId ?? session?.id,
           sessionStartedAt: session?.startedAt,
           sessionEndedAt: session?.endedAt ?? null,
@@ -449,28 +451,25 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
 
   const handleCloseSession = async (table: TableActivityData) => {
     if (!table.id) return;
+    setConfirmCloseSessionTable(table);
+  };
 
-    Modal.confirm({
-      title: t('staff.floor_activity.modal.close_session_confirm_title', { defaultValue: 'Xac nhan dong phien ban?' }),
-      content: t('staff.floor_activity.modal.close_session_confirm_content', { defaultValue: 'Phien ban se duoc dong va trang thai ban se cap nhat lai.' }),
-      okText: t('common.confirm', { defaultValue: 'Xac nhan' }),
-      cancelText: t('common.cancel', { defaultValue: 'Huy' }),
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        setIsClosingSession(true);
-        try {
-          await tableService.closeTableSession(table.id);
-          messageApi.success(t('staff.floor_activity.modal.close_session_success', { defaultValue: 'Dong phien ban thanh cong!' }));
-          setSelectedTable(null);
-          await fetchData();
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          messageApi.error(msg || t('staff.floor_activity.modal.close_session_error', { defaultValue: 'Dong phien ban that bai' }));
-        } finally {
-          setIsClosingSession(false);
-        }
-      },
-    });
+  const executeCloseSession = async () => {
+    if (!confirmCloseSessionTable?.id) return;
+    
+    setIsClosingSession(true);
+    try {
+      await tableService.closeTableSession(confirmCloseSessionTable.id);
+      messageApi.success(t('staff.floor_activity.modal.close_session_success', { defaultValue: 'Đóng phiên bàn thành công!' }));
+      setSelectedTable(null);
+      setConfirmCloseSessionTable(null);
+      await fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      messageApi.error(msg || t('staff.floor_activity.modal.close_session_error', { defaultValue: 'Đóng phiên bàn thất bại' }));
+    } finally {
+      setIsClosingSession(false);
+    }
   };
 
   const handleMergeExecution = async () => {
@@ -1093,7 +1092,10 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const isSelectedTableMerged = selectedMergedTableCount > 1;
           const hasSessionFootprint = Boolean(selectedTable.sessionId || selectedTable.sessionStartedAt || selectedTable.sessionEndedAt);
           const isSessionActive = selectedTable.sessionIsActive === true;
-          const canCloseSession = isSessionActive;
+          const isSessionTrulyStarted = hasOrder || !!selectedTable.reservationCheckedInAt || !hasReservation;
+          const isSessionCurrentlyActive = isSessionActive && isSessionTrulyStarted;
+          const isSessionScheduled = isSessionActive && !isSessionTrulyStarted;
+          const canCloseSession = isSessionCurrentlyActive;
           const isSessionEnded = Boolean(selectedTable.sessionEndedAt) || (selectedTable.sessionIsActive === false && hasSessionFootprint);
 
           return (
@@ -1151,16 +1153,20 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>
                       {t('staff.floor_activity.modal.session', { defaultValue: 'Phiên bàn' })}
                     </Text>
-                    {isSessionActive ? (
+                    {isSessionCurrentlyActive ? (
                       <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }} color="green">
                         {t('staff.floor_activity.status.active', { defaultValue: 'Đang hoạt động' })}
+                      </Tag>
+                    ) : isSessionScheduled ? (
+                      <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }} color="blue">
+                        {t('staff.floor_activity.status.scheduled', { defaultValue: 'Đã xếp lịch' })}
                       </Tag>
                     ) : isSessionEnded ? (
                       <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }}>
                         {t('staff.floor_activity.status.inactive', { defaultValue: 'Đã kết thúc' })}
                       </Tag>
                     ) : (
-                      <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }} color="blue">
+                      <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }} color="default">
                         {t('staff.floor_activity.status.not_started', { defaultValue: 'Chưa bắt đầu' })}
                       </Tag>
                     )}
@@ -1344,6 +1350,18 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           );
         })()}
       </Modal>
+
+      <ConfirmModal
+        open={!!confirmCloseSessionTable}
+        title={t('staff.floor_activity.modal.close_session_confirm_title', { defaultValue: 'Xác nhận đóng phiên bàn?' })}
+        description={t('staff.floor_activity.modal.close_session_confirm_content', { defaultValue: 'Phiên bàn sẽ được đóng và trạng thái bàn sẽ cập nhật lại.' })}
+        confirmText={t('common.confirm', { defaultValue: 'Xác nhận' })}
+        cancelText={t('common.cancel', { defaultValue: 'Hủy' })}
+        variant="danger"
+        loading={isClosingSession}
+        onConfirm={executeCloseSession}
+        onCancel={() => setConfirmCloseSessionTable(null)}
+      />
     </div>
   );
 }
