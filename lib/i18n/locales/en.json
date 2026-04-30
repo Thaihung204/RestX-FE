@@ -2741,6 +2741,7 @@
     "actions": {
       "yes": "Yes",
       "no": "No",
+      "exporting_report": "Exporting report...",
       "delete": "Delete",
       "edit": "Edit",
       "exporting": "Exporting...",
@@ -2756,6 +2757,10 @@
     "theme": {
       "switch_to_light": "Switch to Light Mode",
       "switch_to_dark": "Switch to Dark Mode"
+    },
+    "messages": {
+      "export_success": "Report exported successfully",
+      "export_failed": "Failed to export report"
     }
   },
   "deposit": {
