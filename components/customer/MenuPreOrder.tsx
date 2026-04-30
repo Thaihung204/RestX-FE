@@ -1,8 +1,9 @@
 "use client";
 
 import dishService, {
-  MenuCategory,
-  MenuItem,
+  ComboSummaryDto,
+    MenuCategory,
+    MenuItem
 } from "@/lib/services/dishService";
 import { formatVND } from "@/lib/utils/currency";
 import { useEffect, useMemo, useState } from "react";
@@ -10,12 +11,15 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 export interface PreOrderSelectionItem {
-  dishId: string;
+  dishId?: string;
+  comboId?: string;
   name: string;
   price: number;
   quantity: number;
   note?: string;
   imageUrl?: string;
+  /** Sub-items for display only (combo children) */
+  details?: { dishName: string; quantity: number }[];
 }
 
 interface MenuPreOrderProps {
@@ -34,6 +38,7 @@ export default function MenuPreOrder({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [combos, setCombos] = useState<ComboSummaryDto[]>([]);
   const [search, setSearch] = useState("");
   const [selectedItems, setSelectedItems] = useState<PreOrderSelectionItem[]>(
     [],
@@ -60,9 +65,13 @@ export default function MenuPreOrder({
     const loadMenu = async () => {
       setLoading(true);
       try {
-        const menu = await dishService.getMenu();
+        const [menu, comboData] = await Promise.all([
+          dishService.getMenu(),
+          dishService.getActiveCombos().catch(() => []),
+        ]);
         if (active) {
           setCategories(menu || []);
+          setCombos(comboData || []);
           setSelectedItems([]);
           setSearch("");
           setShowMobileCart(false);
@@ -94,6 +103,12 @@ export default function MenuPreOrder({
       }))
       .filter((category) => category.items.length > 0);
   }, [categories, search]);
+
+  const filteredCombos = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return combos;
+    return combos.filter((c) => c.name.toLowerCase().includes(keyword));
+  }, [combos, search]);
 
   const totalSelectedItems = useMemo(
     () => selectedItems.reduce((sum, item) => sum + item.quantity, 0),
@@ -133,10 +148,42 @@ export default function MenuPreOrder({
     });
   };
 
-  const updateQuantity = (dishId: string, quantity: number) => {
+  const addCombo = (combo: ComboSummaryDto) => {
+    setSelectedItems((prev) => {
+      const existed = prev.find((item) => item.comboId === combo.id);
+      if (existed) {
+        return prev.map((item) =>
+          item.comboId === combo.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        );
+      }
+      return [
+        ...prev,
+        {
+          comboId: combo.id,
+          name: combo.name,
+          price: Number(combo.price || 0),
+          quantity: 1,
+          imageUrl: combo.imageUrl,
+          details: combo.details.map((d) => ({
+            dishName: d.dishName || d.dishId,
+            quantity: d.quantity > 0 ? d.quantity : 1,
+          })),
+        },
+      ];
+    });
+  };
+
+  const getItemKey = (item: PreOrderSelectionItem) =>
+    item.comboId ?? item.dishId ?? "";
+
+  const updateQuantity = (key: string, quantity: number) => {
     if (quantity <= 0) {
       setSelectedItems((prev) => {
-        const next = prev.filter((item) => item.dishId !== dishId);
+        const next = prev.filter(
+          (item) => (item.comboId ?? item.dishId ?? "") !== key,
+        );
         if (next.length === 0) setShowMobileCart(false);
         return next;
       });
@@ -145,14 +192,18 @@ export default function MenuPreOrder({
 
     setSelectedItems((prev) =>
       prev.map((item) =>
-        item.dishId === dishId ? { ...item, quantity } : item,
+        (item.comboId ?? item.dishId ?? "") === key
+          ? { ...item, quantity }
+          : item,
       ),
     );
   };
 
-  const updateNote = (dishId: string, note: string) => {
+  const updateNote = (key: string, note: string) => {
     setSelectedItems((prev) =>
-      prev.map((item) => (item.dishId === dishId ? { ...item, note } : item)),
+      prev.map((item) =>
+        (item.comboId ?? item.dishId ?? "") === key ? { ...item, note } : item,
+      ),
     );
   };
 
@@ -278,6 +329,88 @@ export default function MenuPreOrder({
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-10">
+              {/* Combo section — shown first */}
+              {filteredCombos.length > 0 && (
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black mb-3 sm:mb-4 flex items-center gap-2 text-[var(--text)]">
+                    <span className="w-2 h-5 sm:h-6 rounded-full bg-[var(--primary)] block"></span>
+                    {t("menu_page.combo_section_title")}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredCombos.map((combo) => {
+                      const qty = selectedItems.find((i) => i.comboId === combo.id)?.quantity || 0;
+                      return (
+                        <div
+                          key={combo.id}
+                          className="bg-[var(--card)] rounded-xl border border-[var(--border)] hover:shadow-sm transition-all p-[10px] sm:p-3"
+                          style={{ borderColor: qty > 0 ? "var(--primary)" : undefined, borderWidth: qty > 0 ? 1.5 : 1 }}
+                        >
+                          <div className="flex flex-row items-start gap-2 sm:gap-3">
+                            {/* Image */}
+                            <div className="w-[72px] h-[72px] sm:w-[85px] sm:h-[85px] shrink-0 rounded-xl overflow-hidden border border-[var(--stroke-subtle)]">
+                              {combo.imageUrl ? (
+                                <img src={combo.imageUrl} alt={combo.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-[var(--surface-subtle)]">
+                                  <img src="/images/dishStatus/spicy.png" alt="" className="w-4 h-4 object-contain opacity-30" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-[var(--text)] text-[15px] sm:text-[16px] leading-tight block truncate mb-0.5">
+                                {combo.name}
+                              </span>
+                              <span className="font-bold text-[var(--primary)] text-[15px] sm:text-[16px] block mb-1">
+                                {formatVND(Number(combo.price || 0))}
+                              </span>
+                              <div className="flex flex-col gap-0.5">
+                                {combo.details.map((d) => (
+                                  <span key={d.id ?? d.dishId} className="text-[11px] text-[var(--text-muted)]">
+                                    • {d.dishName || d.dishId} x{d.quantity > 0 ? d.quantity : 1}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            {/* +/- */}
+                            <div className="shrink-0">
+                              {qty > 0 ? (
+                                <div className="flex items-center gap-1 py-1 px-1.5">
+                                  <button
+                                    onClick={() => updateQuantity(combo.id, qty - 1)}
+                                    className="w-8 h-8 flex items-center justify-center text-[var(--text)] border border-[var(--border)] rounded transition-colors">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                                    </svg>
+                                  </button>
+                                  <span className="w-5 text-center text-sm font-semibold text-[var(--text)]">{qty}</span>
+                                  <button
+                                    onClick={() => addCombo(combo)}
+                                    className="w-8 h-8 flex items-center justify-center text-[var(--text)] border border-[var(--border)] rounded transition-colors">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => addCombo(combo)}
+                                  className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center hover:brightness-110 transition-colors shadow-sm">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Regular dish categories */}
               {filteredCategories.map((category) => (
                 <div key={category.categoryId}>
                   <h3 className="text-lg sm:text-xl font-black mb-3 sm:mb-4 flex items-center gap-2 text-[var(--text)]">
@@ -285,8 +418,7 @@ export default function MenuPreOrder({
                     {category.categoryName}
                   </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {(category.items || []).map((dish) => {
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">                    {(category.items || []).map((dish) => {
                       const quantityInCart =
                         selectedItems.find((i) => i.dishId === dish.id)
                           ?.quantity || 0;
@@ -566,7 +698,7 @@ export default function MenuPreOrder({
                     </div>
                   </div>
 
-                  {(() => {
+                    {(() => {
                     const qty =
                       selectedItems.find((i) => i.dishId === selectedFood.id)
                         ?.quantity || 0;
@@ -729,7 +861,7 @@ export default function MenuPreOrder({
               <div className="space-y-4">
                 {selectedItems.map((item) => (
                   <div
-                    key={item.dishId}
+                    key={item.comboId ?? item.dishId}
                     className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 flex gap-4 shadow-sm relative group transition-shadow hover:shadow-md">
                     {/* Optional Item Image in Cart */}
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--bg-base)] shrink-0 hidden sm:block border border-[var(--border)]">
@@ -763,7 +895,7 @@ export default function MenuPreOrder({
                           {item.name}
                         </h5>
                         <button
-                          onClick={() => updateQuantity(item.dishId, 0)}
+                          onClick={() => updateQuantity(getItemKey(item), 0)}
                           className="absolute top-3 right-3 text-[var(--text-muted)] hover:text-[var(--danger)] p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Xoá món">
                           <svg
@@ -781,6 +913,17 @@ export default function MenuPreOrder({
                         </button>
                       </div>
 
+                      {/* Combo children */}
+                      {item.comboId && (item.details ?? []).length > 0 && (
+                        <div className="mt-1 mb-1 flex flex-col gap-0.5">
+                          {(item.details ?? []).map((d, i) => (
+                            <span key={i} className="text-[11px] text-[var(--text-muted)]">
+                              • {d.dishName} x{d.quantity * item.quantity}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="mt-2 flex items-center justify-between">
                         <span className="font-black text-[var(--primary)] text-sm">
                           {formatVND(item.price * item.quantity)}
@@ -789,7 +932,7 @@ export default function MenuPreOrder({
                         <div className="flex items-center bg-[var(--surface)] rounded-lg border border-[var(--border)] overflow-hidden h-8">
                           <button
                             onClick={() =>
-                              updateQuantity(item.dishId, item.quantity - 1)
+                              updateQuantity(getItemKey(item), item.quantity - 1)
                             }
                             className="w-8 h-full flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--card)] hover:text-[var(--danger)] transition-colors">
                             <svg
@@ -810,7 +953,7 @@ export default function MenuPreOrder({
                           </span>
                           <button
                             onClick={() =>
-                              updateQuantity(item.dishId, item.quantity + 1)
+                              updateQuantity(getItemKey(item), item.quantity + 1)
                             }
                             className="w-8 h-full flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--card)] hover:text-[var(--primary)] transition-colors">
                             <svg
@@ -829,6 +972,7 @@ export default function MenuPreOrder({
                         </div>
                       </div>
 
+                      {!item.comboId && (
                       <div className="mt-3 relative">
                         <div className="absolute top-2 left-2.5 text-[var(--text-muted)]">
                           <svg
@@ -847,7 +991,7 @@ export default function MenuPreOrder({
                         <input
                           value={item.note || ""}
                           onChange={(e) =>
-                            updateNote(item.dishId, e.target.value)
+                            updateNote(getItemKey(item), e.target.value)
                           }
                           placeholder={t(
                             "reservation_detail.order.note_placeholder",
@@ -855,6 +999,7 @@ export default function MenuPreOrder({
                           className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-[var(--bg-base)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] transition-colors placeholder:text-xs text-[var(--text)]"
                         />
                       </div>
+                      )}
                     </div>
                   </div>
                 ))}

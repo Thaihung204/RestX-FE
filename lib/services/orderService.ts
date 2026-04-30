@@ -164,12 +164,15 @@ export interface StaffOrderQueryParams {
 export interface OrderDetailListItemDto {
   id?: string;
   orderId?: string;
-  dishId?: string;
+  dishId?: string | null;
+  comboId?: string | null;
+  parentId?: string | null;
   dishName?: string;
   quantity?: number;
   note?: string | null;
   status?: string | null;
   createdDate?: string | null;
+  tableCode?: string[] | string | null;
 }
 
 export interface ApplyDiscountRequest {

@@ -1687,12 +1687,16 @@ export default function ReservationDetailsView({
     if (!detail || !resolvedCustomerId) return;
 
     const orderDetails = selectedItems
-      .map((item) => ({
-        dishId: item.dishId,
-        quantity: Number(item.quantity || 0),
-        note: item.note?.trim() || undefined,
-      }))
-      .filter((item) => item.dishId && item.quantity > 0);
+      .filter((item) => item.quantity > 0 && (item.comboId || item.dishId))
+      .map((item) => {
+        const base = {
+          quantity: Number(item.quantity || 0),
+          note: item.note?.trim() || undefined,
+        };
+        return item.comboId
+          ? { ...base, comboId: item.comboId }
+          : { ...base, dishId: item.dishId };
+      });
 
     if (orderDetails.length === 0) {
       messageApi.warning(t("reservation_detail.order.no_selected_items"));
