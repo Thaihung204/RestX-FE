@@ -128,6 +128,10 @@ class DishService {
 
   private comboListInFlight: Promise<ComboSummaryDto[]> | null = null;
 
+  private activeComboListCache: ComboSummaryDto[] | null = null;
+
+  private activeComboListInFlight: Promise<ComboSummaryDto[]> | null = null;
+
   private comboByIdCache = new Map<string, ComboSummaryDto>();
 
   private comboByIdInFlight = new Map<string, Promise<ComboSummaryDto>>();
@@ -502,10 +506,30 @@ class DishService {
   }
 
   async getActiveCombos(): Promise<ComboSummaryDto[]> {
-    const response = await axiosInstance.get("/dishes/combos/active");
-    return this.extractArrayData(response.data).map((item) =>
-      this.normalizeCombo(item),
-    );
+    if (this.activeComboListCache) {
+      return this.activeComboListCache;
+    }
+    if (this.activeComboListInFlight) {
+      return this.activeComboListInFlight;
+    }
+    const request = axiosInstance
+      .get("/dishes/combos/active")
+      .then((response) => {
+        const normalized = this.extractArrayData(response.data).map((item) =>
+          this.normalizeCombo(item),
+        );
+        this.activeComboListCache = normalized;
+        return normalized;
+      })
+      .finally(() => {
+        this.activeComboListInFlight = null;
+      });
+    this.activeComboListInFlight = request;
+    return request;
+  }
+
+  clearActiveComboCache() {
+    this.activeComboListCache = null;
   }
 
   async getComboById(id: string): Promise<ComboSummaryDto> {

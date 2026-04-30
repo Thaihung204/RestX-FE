@@ -8,13 +8,13 @@ import type { CartItem } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import { useTenant } from "./TenantContext";
 
@@ -227,6 +227,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const comboLookup = new Map(comboData.map((c) => [c.id, c]));
 
       const result: CartItem[] = [];
+      const comboAggregated = new Map<string, CartItem>();
 
       orders.forEach((order) => {
         const details = order.orderDetails ?? [];
@@ -247,10 +248,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           (d: any) => !d.comboId && !d.parentId,
         );
 
-        // Process combo parents
+        // Process combo parents — aggregate same comboId+status across all orders
         comboParents.forEach((detail: any) => {
           const combo = comboLookup.get(detail.comboId);
           const status = detail.status?.trim() || "Pending";
+          const key = `combo__${detail.comboId}__${status.toLowerCase()}`;
           const children: CartItem[] = (
             childrenByParentId.get(detail.id) ?? []
           ).map((child: any) => {
@@ -269,20 +271,40 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             };
           });
 
-          result.push({
-            id: detail.comboId,
-            lineId: detail.id,
-            name: combo?.name || detail.dishName || detail.comboId,
-            price: String(detail.dishPrice ?? combo?.price ?? 0),
-            quantity: detail.quantity || 1,
-            category: "food" as const,
-            categoryId: "combo",
-            image: combo?.imageUrl ?? undefined,
-            status,
-            note: detail.note || undefined,
-            comboId: detail.comboId,
-            children,
-          });
+          const incomingQty = detail.quantity || 1;
+          const existing = comboAggregated.get(key);
+          if (existing) {
+            // Merge quantity; merge children quantities too
+            const mergedChildren = [...(existing.children ?? [])];
+            children.forEach((newChild) => {
+              const existingChild = mergedChildren.find((c) => c.id === newChild.id);
+              if (existingChild) {
+                existingChild.quantity += newChild.quantity;
+              } else {
+                mergedChildren.push({ ...newChild });
+              }
+            });
+            comboAggregated.set(key, {
+              ...existing,
+              quantity: existing.quantity + incomingQty,
+              children: mergedChildren,
+            });
+          } else {
+            comboAggregated.set(key, {
+              id: detail.comboId,
+              lineId: detail.id,
+              name: combo?.name || detail.dishName || detail.comboId,
+              price: String(detail.dishPrice ?? combo?.price ?? 0),
+              quantity: incomingQty,
+              category: "food" as const,
+              categoryId: "combo",
+              image: combo?.imageUrl ?? undefined,
+              status,
+              note: detail.note || undefined,
+              comboId: detail.comboId,
+              children,
+            });
+          }
         });
 
         // Process standalone dishes (aggregate same dish+status)
@@ -333,6 +355,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         result.push(...Array.from(aggregated.values()));
       });
+
+      // Push aggregated combos (merged across all orders)
+      result.push(...Array.from(comboAggregated.values()));
 
       setOrderedItems(result);
 

@@ -131,19 +131,35 @@ export default function StaffKitchenPage() {
       details: OrderDetailListItemDto[],
       tableMap: Map<string, string>,
     ): KitchenItem[] => {
-      return (details || []).map((detail, index) => ({
-        key:
-          detail.id ||
-          `${detail.orderId || "order"}-${detail.dishId || "dish"}-${index}`,
-        id: detail.id || "",
-        orderId: detail.orderId || "",
-        tableName: (detail.orderId && tableMap.get(detail.orderId)) || "-",
-        dishName: detail.dishName || detail.dishId || "",
-        quantity: detail.quantity ?? 0,
-        note: detail.note || undefined,
-        status: detail.status || undefined,
-        createdDate: detail.createdDate || undefined,
-      }));
+      // Only show standalone dishes (comboId = null) — kitchen doesn't need combo rows or combo children
+      const visibleDetails = (details || []).filter(
+        (d) => !d.comboId,
+      );
+
+      return visibleDetails.map((detail, index) => {
+        // Resolve table name: prefer tableCode from detail, fallback to tableMap
+        const tableCodeFromDetail = Array.isArray(detail.tableCode)
+          ? detail.tableCode.join(" - ")
+          : detail.tableCode || undefined;
+        const tableName =
+          tableCodeFromDetail ||
+          (detail.orderId && tableMap.get(detail.orderId)) ||
+          "-";
+
+        return {
+          key:
+            detail.id ||
+            `${detail.orderId || "order"}-${detail.dishId || detail.comboId || "item"}-${index}`,
+          id: detail.id || "",
+          orderId: detail.orderId || "",
+          tableName,
+          dishName: detail.dishName || detail.dishId || detail.comboId || "",
+          quantity: detail.quantity ?? 0,
+          note: detail.note || undefined,
+          status: detail.status || undefined,
+          createdDate: detail.createdDate || undefined,
+        };
+      });
     },
     [],
   );
