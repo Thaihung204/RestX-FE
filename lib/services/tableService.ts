@@ -75,6 +75,7 @@ export interface TableSessionReservationInfo {
     specialRequests?: string;
     contact?: TableSessionReservationContactInfo;
     status?: TableSessionReservationStatusInfo;
+    checkedInAt?: string | null;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -158,6 +159,7 @@ const normalizeSessionReservation = (payload: unknown): TableSessionReservationI
             typeof data.specialRequests === 'string' ? data.specialRequests : undefined,
         contact: normalizeReservationContact(data.contact),
         status: normalizeReservationStatus(data.status),
+        checkedInAt: typeof data.checkedInAt === 'string' ? data.checkedInAt : null,
         createdAt: typeof data.createdAt === 'string' ? data.createdAt : undefined,
         updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
     };

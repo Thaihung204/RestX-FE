@@ -42,25 +42,22 @@ export default function IngredientCategorySettings() {
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
   const handleGenerateDescription = async () => {
-    const normalizedName = formData.name?.trim() || "";
     const normalizedPrompt = aiPrompt.trim();
+
+    if (!normalizedPrompt) {
+      message.warning(
+        t("dashboard.settings.ai_content.empty_result", {
+          defaultValue: "Please enter a prompt before generating AI content.",
+        }),
+      );
+      return;
+    }
 
     try {
       setAiGenerating(true);
       setAiSuggestions([]);
 
-      const payload: {
-        dishName: string;
-        customContext?: string;
-      } = {
-        dishName: normalizedName, // Fake it for backend compatibility
-      };
-
-      if (normalizedPrompt) {
-        payload.customContext = normalizedPrompt;
-      }
-
-      const response = await aiService.generateContent(payload);
+      const response = await aiService.generateContent({ prompt: normalizedPrompt });
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,

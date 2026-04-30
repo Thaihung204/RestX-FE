@@ -51,7 +51,26 @@
         "checkin": "Check-in",
         "complete": "Complete",
         "quick_cancel": "Quick Cancel",
-        "view_detail": "View details & actions"
+        "view_detail": "View details & actions",
+        "quick_view": "Quick view",
+        "open_deposit_link": "Open deposit payment link",
+        "deposit_link": "Deposit link",
+        "confirm_cash_deposit": "Confirm cash deposit received",
+        "confirm_deposit": "Confirm deposit"
+      },
+      "confirm": {
+        "cancel_title": "Confirm reservation cancellation",
+        "cancel_description": "Are you sure you want to cancel this reservation? This action cannot be undone.",
+        "cancel_confirm": "Cancel reservation",
+        "cancel_cancel": "Go back",
+        "checkin_title": "Confirm check-in",
+        "checkin_description": "Are you sure you want to check in this reservation?",
+        "checkin_confirm": "Check-in",
+        "checkin_cancel": "Go back",
+        "deposit_title": "Confirm cash deposit",
+        "deposit_description": "Are you sure you want to confirm cash deposit received for this reservation?",
+        "deposit_confirm": "Confirm",
+        "deposit_cancel": "Go back"
       },
       "side_effects": {
         "CONFIRMED": "Table will be marked as Reserved",
@@ -92,8 +111,16 @@
         "checked_in_at": "Checked in:"
       },
       "messages": {
+        "load_failed": "Failed to load reservations",
+        "statuses_load_failed": "Failed to load reservation statuses",
+        "status_updated": "Reservation status updated",
+        "update_status_failed": "Failed to update reservation status",
+        "cancel_only_from_status": "Cancellation is only supported from status options",
         "checkin_success": "Checked in successfully",
         "checkin_failed": "Failed to check in reservation",
+        "deposit_pending": "Deposit payment pending",
+        "deposit_confirmed": "Cash deposit confirmed",
+        "deposit_failed": "Failed to process deposit request",
         "already_checked_in": "This reservation has already been checked in",
         "checked_in_at": "Checked in at"
       }
@@ -333,12 +360,26 @@
       },
       "modal": {
         "cart": "Cart",
-        "select_table": "Select Table",
+        "select_table": "Select Table *",
+        "select_table_placeholder": "Select a table to create order...",
+        "select_order": "Select Order",
+        "select_category": "Category",
         "no_items": "No items yet",
+        "no_dishes": "No dishes in this category",
         "print": "Print Bill",
         "print_short": "Print",
         "add_item": "Add Item",
-        "order_detail": "Order details"
+        "order_detail": "Order details",
+        "create_order": "Create New Order",
+        "cancel": "Cancel",
+        "cart_title": "Cart",
+        "cart_empty": "No items selected yet",
+        "cart_summary": "Cart Summary",
+        "total_estimate": "Estimated Total",
+        "review_cart": "Review Cart",
+        "cart_confirm_title": "Confirm Cart",
+        "cart_confirm_back": "Back",
+        "cart_confirm_submit": "Confirm"
       },
       "menu": {
         "appetizer": "Appetizers",
@@ -352,7 +393,10 @@
         "order_create_failed": "Failed to create order",
         "status_updated": "Item status updated",
         "order_status_updated": "Order status updated",
-        "order_status_update_failed": "Failed to update order status"
+        "order_status_update_failed": "Failed to update order status",
+        "combo_empty": "Combo has no dishes",
+        "combo_added": "Combo added to order",
+        "paid_order_locked": "Order has been paid, cannot add more items."
       },
       "payment": {
         "btn": "Pay",
@@ -394,7 +438,10 @@
           "no_discount": "No membership discount available",
           "no_promotions": "No promotion codes available",
           "min_order": "Min. order",
-          "or": "or"
+          "or": "or",
+          "service_charge": "Service charge",
+          "discount_label": "Discount",
+          "deposit_label": "Deposit"
         }
       }
     },
@@ -2446,6 +2493,7 @@
         "error_fetch": "Failed to load data",
         "error_save": "Failed to save",
         "error_delete": "Failed to delete",
+        "error_delete_category_in_use": "Cannot delete category because it is being used by one or more dishes.",
         "order_notifications": "Order Notifications",
         "system_notifications": "System Notifications",
         "items": {
@@ -4444,7 +4492,8 @@
         "mobile_confirm": "Confirm",
         "view_360": "View 360",
         "total_capacity": "Total Capacity",
-        "selected_table_label": "Selected Table"
+        "selected_table_label": "Selected table",
+        "table_unavailable": "This table is currently occupied. Please choose another table."
       },
       "panorama": {
         "loading": "Loading 360 image...",

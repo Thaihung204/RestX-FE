@@ -17,14 +17,21 @@ interface ConfirmModalProps {
   onCancel: () => void;
 }
 
-const variantConfig: Record<
+const variantStyles: Record<
   ConfirmModalVariant,
-  { iconBg: string; iconColor: string; confirmBg: string; icon: React.ReactNode }
+  {
+    iconBg: string;
+    iconColor: string;
+    confirmBg: string;
+    confirmHoverBg: string;
+    icon: React.ReactNode;
+  }
 > = {
   danger: {
-    iconBg: "bg-red-100 dark:bg-red-900/30",
-    iconColor: "text-red-500",
-    confirmBg: "bg-red-500 hover:bg-red-600",
+    iconBg: "var(--danger-soft)",
+    iconColor: "var(--danger)",
+    confirmBg: "var(--danger)",
+    confirmHoverBg: "color-mix(in srgb, var(--danger), black 10%)",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -33,9 +40,10 @@ const variantConfig: Record<
     ),
   },
   warning: {
-    iconBg: "bg-yellow-100 dark:bg-yellow-900/30",
-    iconColor: "text-yellow-500",
-    confirmBg: "bg-yellow-500 hover:bg-yellow-600",
+    iconBg: "var(--warning-soft)",
+    iconColor: "var(--warning)",
+    confirmBg: "var(--warning)",
+    confirmHoverBg: "color-mix(in srgb, var(--warning), black 10%)",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -44,9 +52,10 @@ const variantConfig: Record<
     ),
   },
   info: {
-    iconBg: "bg-blue-100 dark:bg-blue-900/30",
-    iconColor: "text-blue-500",
-    confirmBg: "bg-blue-500 hover:bg-blue-600",
+    iconBg: "var(--primary-soft)",
+    iconColor: "var(--primary)",
+    confirmBg: "var(--primary)",
+    confirmHoverBg: "var(--primary-hover)",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -60,14 +69,14 @@ export default function ConfirmModal({
   open,
   title,
   description,
-  confirmText = "Xác nhận",
-  cancelText = "Hủy",
+  confirmText = "Xac nhan",
+  cancelText = "Huy",
   variant = "danger",
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const cfg = variantConfig[variant];
+  const cfg = variantStyles[variant];
 
   // Close on Escape
   useEffect(() => {
@@ -81,17 +90,31 @@ export default function ConfirmModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{
+        background: "var(--modal-overlay)",
+        backdropFilter: "blur(4px)",
+      }}
       onClick={() => !loading && onCancel()}
     >
       <div
-        className="w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-scale-in"
-        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        className="w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in"
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-lg)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Body */}
         <div className="p-6 flex flex-col items-center text-center gap-4">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${cfg.iconBg} ${cfg.iconColor}`}>
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{
+              background: cfg.iconBg,
+              color: cfg.iconColor,
+            }}
+          >
             {cfg.icon}
           </div>
           <div>
@@ -110,15 +133,24 @@ export default function ConfirmModal({
           <button
             onClick={() => !loading && onCancel()}
             disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50"
-            style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}
+            className="confirm-modal-cancel-btn flex-1 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors disabled:opacity-50"
+            style={{
+              color: "var(--text-muted)",
+              border: "1px solid var(--border)",
+              background: "transparent",
+            }}
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex-1 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${cfg.confirmBg}`}
+            className="confirm-modal-confirm-btn flex-1 px-4 py-2.5 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{
+              background: cfg.confirmBg,
+              color: variant === "warning" ? "var(--text-on-warning)" : "var(--text-inverse)",
+              boxShadow: "var(--shadow-sm)",
+            }}
           >
             {loading && (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

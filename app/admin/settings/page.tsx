@@ -29,25 +29,22 @@ export default function SettingsPage() {
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
   const handleGenerateDescription = async () => {
-    const normalizedName = restaurantName.trim() || t("dashboard.settings.general.restaurant_name", { defaultValue: "Nhà hàng" });
     const normalizedPrompt = aiPrompt.trim();
+
+    if (!normalizedPrompt) {
+      message.warning(
+        t("dashboard.settings.ai_content.empty_result", {
+          defaultValue: "Please enter a prompt before generating AI content.",
+        }),
+      );
+      return;
+    }
 
     try {
       setAiGenerating(true);
       setAiSuggestions([]);
 
-      const payload: {
-        dishName: string;
-        customContext?: string;
-      } = {
-        dishName: normalizedName, // using dishName field just for backend payload compatibility
-      };
-
-      if (normalizedPrompt) {
-        payload.customContext = normalizedPrompt;
-      }
-
-      const response = await aiService.generateContent(payload);
+      const response = await aiService.generateContent({ prompt: normalizedPrompt });
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,

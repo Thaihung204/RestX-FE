@@ -51,7 +51,26 @@
         "checkin": "Check-in",
         "complete": "Hoàn tất",
         "quick_cancel": "Hủy nhanh",
-        "view_detail": "Xem chi tiết"
+        "view_detail": "Xem chi tiết",
+        "quick_view": "Xem nhanh",
+        "open_deposit_link": "Mở link thanh toán cọc",
+        "deposit_link": "Link cọc",
+        "confirm_cash_deposit": "Xác nhận đã nhận cọc tiền mặt",
+        "confirm_deposit": "Xác nhận cọc"
+      },
+      "confirm": {
+        "cancel_title": "Xác nhận hủy đặt bàn",
+        "cancel_description": "Bạn có chắc chắn muốn hủy đặt bàn này? Hành động này không thể hoàn tác.",
+        "cancel_confirm": "Hủy đặt bàn",
+        "cancel_cancel": "Quay lại",
+        "checkin_title": "Xác nhận check-in",
+        "checkin_description": "Bạn có chắc chắn muốn check-in cho đặt bàn này?",
+        "checkin_confirm": "Check-in",
+        "checkin_cancel": "Quay lại",
+        "deposit_title": "Xác nhận cọc tiền mặt",
+        "deposit_description": "Bạn có chắc chắn muốn xác nhận đã nhận cọc tiền mặt cho đặt bàn này?",
+        "deposit_confirm": "Xác nhận",
+        "deposit_cancel": "Quay lại"
       },
       "side_effects": {
         "CONFIRMED": "Bàn sẽ chuyển sang trạng thái Đặt trước",
@@ -92,8 +111,16 @@
         "checked_in_at": "Check-in lúc:"
       },
       "messages": {
+        "load_failed": "Không thể tải danh sách đặt bàn",
+        "statuses_load_failed": "Không thể tải trạng thái đặt bàn",
+        "status_updated": "Đã cập nhật trạng thái",
+        "update_status_failed": "Không thể cập nhật trạng thái đặt bàn",
+        "cancel_only_from_status": "Chỉ hỗ trợ hủy đặt bàn từ danh sách trạng thái",
         "checkin_success": "Check-in thành công",
         "checkin_failed": "Không thể check-in đặt bàn",
+        "deposit_pending": "Chờ thanh toán cọc",
+        "deposit_confirmed": "Đã xác nhận cọc tiền mặt",
+        "deposit_failed": "Không thể xử lý yêu cầu cọc",
         "already_checked_in": "Đặt bàn này đã check-in rồi",
         "checked_in_at": "Đã check-in lúc"
       }
@@ -335,12 +362,26 @@
       },
       "modal": {
         "cart": "Giỏ hàng",
-        "select_table": "Chọn bàn",
+        "select_table": "Chọn bàn *",
+        "select_table_placeholder": "Chọn bàn để tạo order...",
+        "select_order": "Chọn order",
+        "select_category": "Danh mục",
         "no_items": "Chưa có món nào",
+        "no_dishes": "Không có món trong danh mục này",
         "print": "In hóa đơn",
         "print_short": "In",
         "add_item": "Thêm món",
-        "order_detail": "Chi tiết đơn"
+        "order_detail": "Chi tiết đơn",
+        "create_order": "Tạo Order Mới",
+        "cancel": "Hủy",
+        "cart_title": "Giỏ hàng",
+        "cart_empty": "Chưa có món nào được chọn",
+        "cart_summary": "Tóm tắt giỏ hàng",
+        "total_estimate": "Tổng ước tính",
+        "review_cart": "Xem giỏ hàng",
+        "cart_confirm_title": "Xác nhận giỏ hàng",
+        "cart_confirm_back": "Quay lại",
+        "cart_confirm_submit": "Xác nhận"
       },
       "menu": {
         "appetizer": "Khai vị",
@@ -354,7 +395,10 @@
         "order_create_failed": "Tạo order thất bại",
         "status_updated": "Đã cập nhật trạng thái món",
         "order_status_updated": "Đã cập nhật trạng thái order",
-        "order_status_update_failed": "Cập nhật trạng thái order thất bại"
+        "order_status_update_failed": "Cập nhật trạng thái order thất bại",
+        "combo_empty": "Combo không có món nào",
+        "combo_added": "Đã thêm combo vào order",
+        "paid_order_locked": "Order đã thanh toán, không thể thêm món."
       },
       "payment": {
         "btn": "Thanh toán",
@@ -396,7 +440,10 @@
           "no_discount": "Không có giảm giá thành viên",
           "no_promotions": "Không có mã giảm giá",
           "min_order": "Đơn tối thiểu",
-          "or": "hoặc"
+          "or": "hoặc",
+          "service_charge": "Phí dịch vụ",
+          "discount_label": "Giảm giá",
+          "deposit_label": "Tiền đặt cọc"
         }
       }
     },
@@ -2493,6 +2540,7 @@
         "error_fetch": "Tải dữ liệu thất bại",
         "error_save": "Lưu thất bại",
         "error_delete": "Xóa thất bại",
+        "error_delete_category_in_use": "Không thể xóa danh mục vì đang có một hoặc nhiều món ăn sử dụng.",
         "order_notifications": "Thông báo đơn hàng",
         "system_notifications": "Thông báo hệ thống",
         "items": {
@@ -4503,7 +4551,8 @@
         "mobile_confirm": "Xác nhận",
         "view_360": "Xem 360",
         "total_capacity": "Tổng sức chứa",
-        "selected_table_label": "Bàn đã chọn"
+        "selected_table_label": "Bàn đã chọn",
+        "table_unavailable": "Bàn này đang có khách, vui lòng chọn bàn khác."
       },
       "panorama": {
         "loading": "Đang tải ảnh 360...",

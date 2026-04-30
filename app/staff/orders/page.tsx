@@ -11,15 +11,15 @@ import { useTenant } from "@/lib/contexts/TenantContext";
 import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
-    OrderDetailStatus,
+  OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import orderService, {
-    OrderDto,
-    OrderRequestDto,
+  OrderDto,
+  OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-    OrderStatus,
+  OrderStatus,
 } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
 import { TableItem, tableService } from "@/lib/services/tableService";
@@ -80,6 +80,9 @@ type PaymentOrder = {
   subTotal: number;
   total: number;
   customerId?: string;
+  depositAmount?: number;
+  serviceCharge?: number;
+  serviceChargePercent?: number;
   raw?: {
     paymentStatusId?: number;
   };
@@ -391,7 +394,7 @@ export default function OrderManagement() {
     useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
-  const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ item: DishItem; quantity: number; comboId?: string; comboDetails?: { dishName: string; quantity: number }[] }[]>([]);
   const [activeMenuCategory, setActiveMenuCategory] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -412,7 +415,7 @@ export default function OrderManagement() {
   // Create new order state (staff creates order without customerId)
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [createOrderTableId, setCreateOrderTableId] = useState<string>("");
-  const [createOrderCart, setCreateOrderCart] = useState<{ item: DishItem; quantity: number }[]>([]);
+  const [createOrderCart, setCreateOrderCart] = useState<{ item: DishItem; quantity: number; comboId?: string; comboDetails?: { dishName: string; quantity: number }[] }[]>([]);
   const [createOrderActiveCategory, setCreateOrderActiveCategory] = useState("");
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
@@ -703,42 +706,39 @@ export default function OrderManagement() {
   };
 
   const addComboToCreateOrderCart = (combo: ComboSummaryDto) => {
-    if (!combo?.details?.length) {
-      message.warning(
-        t("staff.orders.messages.combo_empty", { defaultValue: "Combo has no dishes" }),
-      );
-      return;
-    }
     setCreateOrderCart((prev) => {
-      const nextCart = [...prev];
-      combo.details.forEach((detail) => {
-        if (!detail.dishId) return;
-        const matchedDish = menuCategories
-          .flatMap((category) => category.items)
-          .find((dish) => dish.id === detail.dishId);
-        const resolvedDish: DishItem = matchedDish || {
-          id: detail.dishId,
-          name: detail.dishName || detail.dishId,
-          description: "",
-          price: Number(detail.dishPrice ?? 0),
-          unit: "portion",
-          isVegetarian: false,
-          isSpicy: false,
-          isBestSeller: false,
-          images: [],
-          imageUrl: null,
-          categoryId: "combo",
-          categoryName: "Combo",
-        };
-        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
-        const existing = nextCart.find((line) => line.item.id === detail.dishId);
-        if (existing) {
-          existing.quantity += quantityToAdd;
-          return;
-        }
-        nextCart.push({ item: resolvedDish, quantity: quantityToAdd });
-      });
-      return nextCart;
+      const existing = prev.find((c) => c.comboId === combo.id);
+      if (existing) {
+        return prev.map((c) =>
+          c.comboId === combo.id ? { ...c, quantity: c.quantity + 1 } : c,
+        );
+      }
+      const comboAsDish: DishItem = {
+        id: combo.id,
+        name: combo.name,
+        description: combo.description || "",
+        price: Number(combo.price ?? 0),
+        unit: "combo",
+        isVegetarian: false,
+        isSpicy: false,
+        isBestSeller: false,
+        images: [],
+        imageUrl: combo.imageUrl ?? null,
+        categoryId: "combo",
+        categoryName: "Combo",
+      };
+      return [
+        ...prev,
+        {
+          item: comboAsDish,
+          quantity: 1,
+          comboId: combo.id,
+          comboDetails: combo.details.map((d) => ({
+            dishName: d.dishName || d.dishId,
+            quantity: d.quantity > 0 ? d.quantity : 1,
+          })),
+        },
+      ];
     });
     message.success(t("staff.orders.messages.combo_added", { defaultValue: "Combo added to order" }));
   };
@@ -767,11 +767,11 @@ export default function OrderManagement() {
       const payload: OrderRequestDto = {
         tableId: createOrderTableId,
         // Không truyền customerId — staff tạo order trực tiếp
-        orderDetails: createOrderCart.map((c) => ({
-          dishId: c.item.id,
-          quantity: c.quantity,
-          note: "",
-        })),
+        orderDetails: createOrderCart.map((c) =>
+          c.comboId
+            ? { comboId: c.comboId, quantity: c.quantity, note: "" }
+            : { dishId: c.item.id, quantity: c.quantity, note: "" },
+        ),
       };
       await orderService.createOrder(payload);
       message.success(t("staff.orders.messages.order_created"));
@@ -788,65 +788,41 @@ export default function OrderManagement() {
   };
 
   const addComboToCart = (combo: ComboSummaryDto) => {
-    if (!combo?.details?.length) {
-      message.warning(
-        t("staff.orders.messages.combo_empty", {
-          defaultValue: "Combo has no dishes",
-        }),
-      );
-      return;
-    }
-
     setCart((prev) => {
-      const nextCart = [...prev];
-
-      combo.details.forEach((detail) => {
-        if (!detail.dishId) {
-          return;
-        }
-
-        const matchedDish = menuCategories
-          .flatMap((category) => category.items)
-          .find((dish) => dish.id === detail.dishId);
-
-        const resolvedDish: DishItem =
-          matchedDish || {
-            id: detail.dishId,
-            name: detail.dishName || detail.dishId,
-            description: "",
-            price: Number(detail.dishPrice ?? 0),
-            unit: "portion",
-            isVegetarian: false,
-            isSpicy: false,
-            isBestSeller: false,
-            images: [],
-            imageUrl: null,
-            categoryId: "combo",
-            categoryName: "Combo",
-          };
-
-        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
-        const existing = nextCart.find((line) => line.item.id === detail.dishId);
-
-        if (existing) {
-          existing.quantity += quantityToAdd;
-          return;
-        }
-
-        nextCart.push({
-          item: resolvedDish,
-          quantity: quantityToAdd,
-        });
-      });
-
-      return nextCart;
+      const existing = prev.find((c) => c.comboId === combo.id);
+      if (existing) {
+        return prev.map((c) =>
+          c.comboId === combo.id ? { ...c, quantity: c.quantity + 1 } : c,
+        );
+      }
+      const comboAsDish: DishItem = {
+        id: combo.id,
+        name: combo.name,
+        description: combo.description || "",
+        price: Number(combo.price ?? 0),
+        unit: "combo",
+        isVegetarian: false,
+        isSpicy: false,
+        isBestSeller: false,
+        images: [],
+        imageUrl: combo.imageUrl ?? null,
+        categoryId: "combo",
+        categoryName: "Combo",
+      };
+      return [
+        ...prev,
+        {
+          item: comboAsDish,
+          quantity: 1,
+          comboId: combo.id,
+          comboDetails: combo.details.map((d) => ({
+            dishName: d.dishName || d.dishId,
+            quantity: d.quantity > 0 ? d.quantity : 1,
+          })),
+        },
+      ];
     });
-
-    message.success(
-      t("staff.orders.messages.combo_added", {
-        defaultValue: "Combo added to order",
-      }),
-    );
+    message.success(t("staff.orders.messages.combo_added"));
   };
 
   const updateCartQuantity = (itemId: string, delta: number) => {
@@ -875,9 +851,7 @@ export default function OrderManagement() {
 
     if (isOrderPaid(targetOrder.raw)) {
       message.warning(
-        t("staff.orders.messages.paid_order_locked", {
-          defaultValue: "Order đã thanh toán, không thể thêm món.",
-        }),
+        t("staff.orders.messages.paid_order_locked"),
       );
       return;
     }
@@ -896,11 +870,11 @@ export default function OrderManagement() {
       const payload: OrderRequestDto = {
         tableId: resolvedTableId,
         ...(customerId && customerId !== EMPTY_GUID ? { customerId } : {}),
-        orderDetails: cart.map((c) => ({
-          dishId: c.item.id,
-          quantity: c.quantity,
-          note: "",
-        })),
+        orderDetails: cart.map((c) =>
+          c.comboId
+            ? { comboId: c.comboId, quantity: c.quantity, note: "" }
+            : { dishId: c.item.id, quantity: c.quantity, note: "" },
+        ),
       };
 
       await orderService.createOrder(payload);
@@ -916,27 +890,67 @@ export default function OrderManagement() {
     }
   };
 
-  const openPaymentModal = (order: OrderForPaymentTrigger) => {
+  const openPaymentModal = async (order: OrderForPaymentTrigger) => {
     const matchedOrder = orders.find((o) => o.id === order.id);
     const source = matchedOrder ?? order;
 
+    // Open modal immediately with data we have
     setIsOrderDetailModalOpen(false);
     setSelectedOrderForDetail(null);
+    const subTotalInitial = matchedOrder?.subTotal ?? source.total;
     setSelectedOrder({
       id: source.id,
       reference: source.reference,
       total: source.total,
-      subTotal: matchedOrder?.subTotal ?? source.total,
+      subTotal: subTotalInitial,
       customerId:
         matchedOrder?.customerId || source.raw?.customerId || undefined,
-      raw: {
-        paymentStatusId: source.raw?.paymentStatusId,
-      },
+      depositAmount: 0,
+      serviceCharge: 0,
+      serviceChargePercent: 0,
+      raw: { paymentStatusId: source.raw?.paymentStatusId },
     });
     setCashReceived(source.total);
     setFinalTotal(source.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
+
+    // Fetch full order to get serviceCharge & reservation.depositAmount
+    try {
+      const res = await orderService.getOrderById(source.id) as any;
+      // Unwrap API wrapper: { data: {...} } or { success, data: {...} } or raw object
+      const orderData = res?.data ?? res;
+      console.log("[PaymentModal] full order data:", orderData);
+
+      const subTotalRaw: number = Number(orderData?.subTotal ?? subTotalInitial);
+
+      // serviceCharge from API is a flat VND amount (not percent)
+      const serviceChargeRaw: number = Number(orderData?.serviceCharge ?? 0);
+      // Compute display percent from subTotal (round to nearest whole %)
+      const serviceChargePercent: number =
+        serviceChargeRaw > 0 && subTotalRaw > 0
+          ? Math.round((serviceChargeRaw / subTotalRaw) * 100)
+          : 0;
+
+      const depositAmount: number = Number(
+        orderData?.reservation?.depositAmount ?? 0,
+      );
+
+      console.log("[PaymentModal] serviceCharge:", serviceChargeRaw, "deposit:", depositAmount);
+
+      setSelectedOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              depositAmount,
+              serviceCharge: serviceChargeRaw,
+              serviceChargePercent,
+            }
+          : prev,
+      );
+    } catch (err) {
+      console.error("[PaymentModal] failed to fetch order detail:", err);
+    }
   };
 
   const handlePayment = async () => {
@@ -1167,9 +1181,7 @@ export default function OrderManagement() {
           const currentOrder = orders.find((o) => o.id === orderId);
           if (currentOrder && isOrderPaid(currentOrder.raw)) {
             message.warning(
-              t("staff.orders.messages.paid_order_locked", {
-                defaultValue: "Order đã thanh toán, không thể thêm món.",
-              }),
+              t("staff.orders.messages.paid_order_locked"),
             );
             return;
           }

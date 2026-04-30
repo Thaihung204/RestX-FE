@@ -621,12 +621,42 @@ export default function AdminOrderDetailPage() {
                   highlight
                 />
               </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5 text-sm">
+
+              {/* Breakdown row: SubTotal / Discount / Tax / Service Charge / Deposit */}
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5 text-sm mb-3">
                 <MoneyItem label={t("admin.order_detail.money.sub_total")} value={order.subTotal} />
-                <MoneyItem label={t("admin.order_detail.money.discount")} value={order.discountAmount} />
+                <MoneyItem
+                  label={t("admin.order_detail.money.discount")}
+                  value={order.discountAmount}
+                  sign="negative"
+                />
                 <MoneyItem label={t("admin.order_detail.money.tax")} value={order.taxAmount} />
-                <MoneyItem label={t("admin.order_detail.money.service_charge")} value={order.serviceCharge} />
-                <MoneyItem label={t("admin.order_detail.money.total")} value={order.totalAmount} isPrimary={true} />
+                <MoneyItem
+                  label={t("admin.order_detail.money.service_charge")}
+                  value={order.serviceCharge}
+                  sign="positive"
+                />
+                <MoneyItem
+                  label={t("admin.order_detail.reservation.deposit_amount")}
+                  value={order.reservation?.depositAmount}
+                  sign="negative"
+                />
+              </div>
+
+              {/* Total: full-width row */}
+              <div
+                className="rounded-lg border px-4 py-3 flex items-center justify-between"
+                style={{
+                  borderColor: "var(--primary, #3b82f6)",
+                  background: "var(--surface)",
+                  boxShadow: "0 0 0 1px var(--primary, #3b82f6)",
+                }}>
+                <span className="text-sm font-medium" style={{ color: "var(--primary, #3b82f6)" }}>
+                  {t("admin.order_detail.money.total")}
+                </span>
+                <span className="text-lg font-bold tracking-tight" style={{ color: "var(--primary, #3b82f6)" }}>
+                  {formatCurrency(order.totalAmount)}
+                </span>
               </div>
             </section>
           </>
@@ -677,11 +707,26 @@ function MoneyItem({
   label,
   value,
   isPrimary,
+  sign,
 }: {
   label: string;
   value?: number;
   isPrimary?: boolean;
+  sign?: "positive" | "negative";
 }) {
+  const amount = Number(value ?? 0);
+  const hasValue = amount !== 0;
+
+  const amountColor = isPrimary
+    ? "var(--primary, #3b82f6)"
+    : sign === "negative" && hasValue
+      ? "#cf1322"
+      : sign === "positive" && hasValue
+        ? "#d46b08"
+        : "var(--text)";
+
+  const prefix = sign === "negative" && hasValue ? "−" : sign === "positive" && hasValue ? "+" : "";
+
   return (
     <div
       className="rounded-lg border px-3 py-2 transition"
@@ -696,8 +741,8 @@ function MoneyItem({
       <div className={`text-xs ${isPrimary ? 'font-medium' : ''}`} style={{ color: isPrimary ? "var(--primary, #3b82f6)" : "var(--text-muted)" }}>
         {label}
       </div>
-      <div className={`mt-1 ${isPrimary ? 'font-bold text-base tracking-tight' : 'font-semibold'}`} style={{ color: isPrimary ? "var(--primary, #3b82f6)" : "var(--text)" }}>
-        {formatCurrency(value)}
+      <div className={`mt-1 ${isPrimary ? 'font-bold text-base tracking-tight' : 'font-semibold'}`} style={{ color: amountColor }}>
+        {prefix}{formatCurrency(value)}
       </div>
     </div>
   );

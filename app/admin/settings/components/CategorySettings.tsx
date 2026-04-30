@@ -1,16 +1,16 @@
 "use client";
 
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import aiService from "@/lib/services/aiService";
 import categoryService, { Category } from "@/lib/services/categoryService";
+import type { AIContentVariant } from "@/lib/types/ai";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined } from "@ant-design/icons";
-import { App, Button, Popconfirm, Table, Modal } from "antd";
+import { App, Button, Modal, Table } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import aiService from "@/lib/services/aiService";
-import type { AIContentVariant } from "@/lib/types/ai";
 
 type ImagePosition = { x: number; y: number };
 
@@ -65,25 +65,22 @@ export default function CategorySettings() {
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
   const handleGenerateDescription = async () => {
-    const normalizedName = formData.name?.trim() || "";
     const normalizedPrompt = aiPrompt.trim();
+
+    if (!normalizedPrompt) {
+      message.warning(
+        t("dashboard.settings.ai_content.empty_result", {
+          defaultValue: "Please enter a prompt before generating AI content.",
+        }),
+      );
+      return;
+    }
 
     try {
       setAiGenerating(true);
       setAiSuggestions([]);
 
-      const payload: {
-        dishName: string;
-        customContext?: string;
-      } = {
-        dishName: normalizedName, // Fake it for backend compatibility
-      };
-
-      if (normalizedPrompt) {
-        payload.customContext = normalizedPrompt;
-      }
-
-      const response = await aiService.generateContent(payload);
+      const response = await aiService.generateContent({ prompt: normalizedPrompt });
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,
@@ -209,7 +206,11 @@ export default function CategorySettings() {
       message.success(t("dashboard.settings.notifications.success_delete"));
       setCategories(categories.filter((c) => c.id !== id));
     } catch (error) {
-      message.error(extractApiErrorMessage(error, t("dashboard.settings.notifications.error_delete")));
+      const apiMsg = extractApiErrorMessage(error, "");
+      const errorMsg = /cannot delete category because it is being used by one or more dishes/i.test(apiMsg)
+        ? t("dashboard.settings.notifications.error_delete_category_in_use")
+        : apiMsg || t("dashboard.settings.notifications.error_delete");
+      message.error(errorMsg);
     } finally {
       setDeletingId(null);
       setPendingDelete(null);

@@ -154,13 +154,12 @@ export default function MenuItemFormPage() {
   };
 
   const handleGenerateDescription = async () => {
-    const normalizedDishName = formData.name.trim();
     const normalizedPrompt = aiPrompt.trim();
 
-    if (!normalizedDishName) {
+    if (!normalizedPrompt) {
       message.warning(
         t("dashboard.menu.ai_content.name_required", {
-          defaultValue: "Please enter dish name before generating AI content.",
+          defaultValue: "Please enter a prompt before generating AI content.",
         }),
       );
       return;
@@ -170,18 +169,7 @@ export default function MenuItemFormPage() {
       setAiGenerating(true);
       setAiSuggestions([]);
 
-      const payload: {
-        dishName: string;
-        customContext?: string;
-      } = {
-        dishName: normalizedDishName,
-      };
-
-      if (normalizedPrompt) {
-        payload.customContext = normalizedPrompt;
-      }
-
-      const response = await aiService.generateContent(payload);
+      const response = await aiService.generateContent({ prompt: normalizedPrompt });
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,
