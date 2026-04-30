@@ -75,6 +75,10 @@ export interface CartItem {
   image?: string;
   status?: string;
   note?: string;
+  /** Set when this row is a combo parent */
+  comboId?: string;
+  /** Child dish rows nested under a combo */
+  children?: CartItem[];
 }
 
 export type DishTag = "spicy" | "vegan" | "best" | "popular";

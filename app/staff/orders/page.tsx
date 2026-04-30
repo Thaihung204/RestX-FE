@@ -1,5 +1,6 @@
 "use client";
 
+import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
 import AddOrderItem from "@/components/staff/orders/AddOrderItem";
 import CardOrder from "@/components/staff/orders/CardOrder";
 import CreateOrderModal from "@/components/staff/orders/CreateOrderModal";
@@ -21,7 +22,7 @@ import orderStatusService, {
     OrderStatus,
 } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
-import { tableService, TableItem } from "@/lib/services/tableService";
+import { TableItem, tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { App, Empty, Space } from "antd";
@@ -29,7 +30,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
-import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
 
 type OrderItemStatus = string;
 
@@ -40,12 +40,16 @@ type OrderStatusUi = string;
 interface OrderItem {
   id: string;
   dishId: string;
+  comboId?: string | null;
+  parentId?: string | null;
   name: string;
   quantity: number;
   price: number;
   note?: string;
   status: OrderItemStatus;
   ids?: string[];
+  /** Child items when this is a combo row */
+  children?: OrderItem[];
 }
 
 interface Order {
@@ -218,13 +222,16 @@ export default function OrderManagement() {
             .map((s) => s?.tableCode || s?.table?.code)
             .find((code): code is string => !!code) || resolvedTableId;
 
-        const items: OrderItem[] = (order.orderDetails ?? []).map(
+        // Map all raw details to OrderItem
+        const allItems: OrderItem[] = (order.orderDetails ?? []).map(
           (detail, index) => {
             const statusValue = detail.status || "";
             const normalizedStatus = normalizeStatusValue(statusValue);
             return {
               id: detail.id || `${order.id || "order"}-${index}`,
               dishId: detail.dishId,
+              comboId: detail.comboId ?? null,
+              parentId: detail.parentId ?? null,
               name:
                 detail.dishName || dishNameMap[detail.dishId] || detail.dishId,
               quantity: detail.quantity ?? 0,
@@ -235,7 +242,28 @@ export default function OrderManagement() {
           },
         );
 
-        const summaryItems = aggregateOrderItems(items);
+        // Separate combo parents from standalone dishes and combo children
+        const comboParents = allItems.filter((i) => i.comboId && !i.parentId);
+        const comboChildrenMap = new Map<string, OrderItem[]>();
+        allItems
+          .filter((i) => i.parentId)
+          .forEach((child) => {
+            const list = comboChildrenMap.get(child.parentId!) ?? [];
+            list.push(child);
+            comboChildrenMap.set(child.parentId!, list);
+          });
+        const standaloneItems = allItems.filter((i) => !i.comboId && !i.parentId);
+
+        // Build structured list: combos with children, then standalone dishes
+        const structuredItems: OrderItem[] = [
+          ...comboParents.map((combo) => ({
+            ...combo,
+            children: comboChildrenMap.get(combo.id) ?? [],
+          })),
+          ...aggregateOrderItems(standaloneItems),
+        ];
+
+        const summaryItems = structuredItems;
 
         const status = mapOrderStatus(order.orderStatusId, orderStatuses);
 
@@ -1007,8 +1035,27 @@ export default function OrderManagement() {
 
             const filteredDetailItems = order.detailItems.filter((item) => {
               if (preparingStatuses.length === 0) return true;
+              // For combo parents: keep if the combo itself or any child is preparing
+              if (item.comboId && !item.parentId) {
+                const comboStatus = normalizeStatusValue(item.status).toLowerCase();
+                if (preparingStatuses.includes(comboStatus)) return true;
+                return (item.children ?? []).some((child) =>
+                  preparingStatuses.includes(normalizeStatusValue(child.status).toLowerCase())
+                );
+              }
               const nStatus = normalizeStatusValue(item.status).toLowerCase();
               return preparingStatuses.includes(nStatus);
+            }).map((item) => {
+              // Filter children of combos to only preparing ones
+              if (item.comboId && !item.parentId && item.children) {
+                const filteredChildren = preparingStatuses.length === 0
+                  ? item.children
+                  : item.children.filter((child) =>
+                      preparingStatuses.includes(normalizeStatusValue(child.status).toLowerCase())
+                    );
+                return { ...item, children: filteredChildren };
+              }
+              return item;
             });
 
             return (

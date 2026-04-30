@@ -74,6 +74,8 @@ interface OrderDetailsResponse {
   orderDetails?: Array<{
     id: string;
     dishId: string;
+    comboId?: string | null;
+    parentId?: string | null;
     dishName?: string | null;
     unitPrice?: number;
     quantity: number;
@@ -99,24 +101,53 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString("vi-VN");
 };
 
-/** Gộp các dòng cùng tên món + cùng status, cộng dồn quantity */
-const aggregateAdminItems = (
+type RawDetail = NonNullable<OrderDetailsResponse["orderDetails"]>[number];
+
+interface StructuredDetail extends RawDetail {
+  ids: string[];
+  children?: RawDetail[];
+}
+
+/** Build structured list: combo parents with children nested, standalone dishes aggregated */
+const buildStructuredItems = (
   items: NonNullable<OrderDetailsResponse["orderDetails"]>,
-) => {
-  const map = new Map<string, (typeof items)[number] & { quantity: number; ids: string[] }>();
-  for (const item of items) {
+): StructuredDetail[] => {
+  const comboParents = items.filter((i) => i.comboId && !i.parentId);
+  const childrenByParentId = new Map<string, RawDetail[]>();
+  items
+    .filter((i) => i.parentId)
+    .forEach((i) => {
+      const list = childrenByParentId.get(i.parentId!) ?? [];
+      list.push(i);
+      childrenByParentId.set(i.parentId!, list);
+    });
+  const standaloneItems = items.filter((i) => !i.comboId && !i.parentId);
+
+  // Aggregate standalone items by name+status
+  const aggregated = new Map<string, StructuredDetail>();
+  for (const item of standaloneItems) {
     const nameKey = (item.dishName || item.dishId).toLowerCase().trim();
     const statusKey = (item.status ?? "").toLowerCase();
     const key = `${nameKey}||${statusKey}`;
-    const existing = map.get(key);
+    const existing = aggregated.get(key);
     if (existing) {
       existing.quantity += item.quantity;
       existing.ids.push(item.id);
     } else {
-      map.set(key, { ...item, quantity: item.quantity, ids: [item.id] });
+      aggregated.set(key, { ...item, ids: [item.id] });
     }
   }
-  return Array.from(map.values());
+
+  const result: StructuredDetail[] = [
+    ...comboParents.map((p) => ({
+      ...p,
+      ids: [p.id],
+      children: childrenByParentId.get(p.id) ?? [],
+    })),
+    ...Array.from(aggregated.values()),
+  ];
+
+  return result;
 };
 
 export default function AdminOrderDetailPage() {
@@ -491,39 +522,81 @@ export default function AdminOrderDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {aggregateAdminItems(order.orderDetails).map((item) => (
-                        <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                          <td className="px-2 py-2">{item.dishName || item.dishId}</td>
-                          <td className="px-2 py-2 text-center">{item.quantity}</td>
-                          <td className="px-2 py-2 text-center">
-                            {formatCurrency((item.unitPrice ?? 0) * Number(item.quantity ?? 0))}
-                          </td>
-                          <td className="px-2 py-2 text-center">
-                            {availableStatuses.length > 0 ? (
-                                <select
-                                  className="w-full rounded-md border p-1 text-xs"
-                                  style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text)" }}
-                                  value={availableStatuses.find(s => s.name === item.status)?.id ?? ""}
-                                  disabled={item.status?.toLowerCase() === "cancelled"}
-                                  onChange={(e) => {
-                                    if (e.target.value && item.ids && item.ids.length > 0) {
-                                      handleDetailStatusChange(item.ids, Number(e.target.value), item.dishName ?? undefined);
-                                    }
-                                  }}
-                                >
-                                  <option value="" disabled>-</option>
-                                  {availableStatuses.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                  ))}
-                                </select>
-                            ) : (
-                              item.status ?? "-"
-                            )}
-                          </td>
-                          <td className="px-2 py-2 text-center">{formatDateTime(item.createdDate)}</td>
-                          <td className="px-2 py-2">{item.note || "-"}</td>
-                        </tr>
-                      ))}
+                      {buildStructuredItems(order.orderDetails).map((item) => {
+                        const isCombo = !!item.comboId && !item.parentId;
+                        return (
+                          <>
+                            <tr
+                              key={item.id}
+                              style={{
+                                borderBottom: isCombo && (item.children ?? []).length > 0
+                                  ? "none"
+                                  : "1px solid var(--border)",
+                                background: isCombo ? "var(--surface)" : undefined,
+                              }}>
+                              <td className="px-2 py-2 font-medium">
+                                {isCombo ? (
+                                  <span style={{ color: "var(--text)", fontWeight: 600 }}>
+                                    {item.dishName || item.dishId}
+                                  </span>
+                                ) : (
+                                  item.dishName || item.dishId
+                                )}
+                              </td>
+                              <td className="px-2 py-2 text-center">{item.quantity}</td>
+                              <td className="px-2 py-2 text-center">
+                                {formatCurrency((item.unitPrice ?? 0) * Number(item.quantity ?? 0))}
+                              </td>
+                              <td className="px-2 py-2 text-center">
+                                {availableStatuses.length > 0 ? (
+                                  <select
+                                    className="w-full rounded-md border p-1 text-xs"
+                                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text)" }}
+                                    value={availableStatuses.find(s => s.name === item.status)?.id ?? ""}
+                                    disabled={item.status?.toLowerCase() === "cancelled"}
+                                    onChange={(e) => {
+                                      if (e.target.value && item.ids && item.ids.length > 0) {
+                                        handleDetailStatusChange(item.ids, Number(e.target.value), item.dishName ?? undefined);
+                                      }
+                                    }}
+                                  >
+                                    <option value="" disabled>-</option>
+                                    {availableStatuses.map(s => (
+                                      <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  item.status ?? "-"
+                                )}
+                              </td>
+                              <td className="px-2 py-2 text-center">{formatDateTime(item.createdDate)}</td>
+                              <td className="px-2 py-2">{item.note || "-"}</td>
+                            </tr>
+                            {/* Combo children */}
+                            {isCombo && (item.children ?? []).map((child, idx) => (
+                              <tr
+                                key={child.id}
+                                style={{
+                                  borderBottom: idx === (item.children!.length - 1)
+                                    ? "1px solid var(--border)"
+                                    : "1px dashed var(--border)",
+                                  background: "rgba(0,0,0,0.015)",
+                                }}>
+                                <td className="px-2 py-1.5 text-xs" style={{ color: "var(--text-muted)", paddingLeft: 28 }}>
+                                  ↳ {child.dishName || child.dishId}
+                                </td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+                                  {child.quantity}
+                                </td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                                <td className="px-2 py-1.5 text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                              </tr>
+                            ))}
+                          </>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

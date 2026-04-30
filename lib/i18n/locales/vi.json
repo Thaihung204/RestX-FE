@@ -3371,6 +3371,9 @@
       "add_to_cart": "Thêm vào giỏ",
       "price": "Giá"
     },
+    "combo_section_title": "Combo",
+    "combo_includes": "Bao gồm",
+    "combo_added_to_cart": "Đã thêm combo {{name}} vào giỏ hàng",
     "best_seller": "Bán chạy",
     "default_food_desc": "Món ăn tuyệt vời từ nguyên liệu tươi ngon nhất.",
     "tags": {

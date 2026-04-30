@@ -3324,6 +3324,9 @@
       "add_to_cart": "Add to Cart",
       "price": "Price"
     },
+    "combo_section_title": "Combo",
+    "combo_includes": "Includes",
+    "combo_added_to_cart": "Combo {{name}} added to cart",
     "best_seller": "Best Seller",
     "default_food_desc": "Excellent dish made from the freshest ingredients.",
     "tags": {
