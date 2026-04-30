@@ -4,25 +4,25 @@ import { TableData } from "@/app/admin/tables/components/DraggableTable";
 import { Layout, TableMap2D } from "@/app/admin/tables/components/TableMap2D";
 import TablePreview3DModal from "@/app/restaurant/components/TablePreview3DModal";
 import MenuPreOrder, {
-    PreOrderSelectionItem,
+  PreOrderSelectionItem,
 } from "@/components/customer/MenuPreOrder";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import customerService from "@/lib/services/customerService";
 import dishService, {
-    MenuCategory,
-    MenuItem,
+  MenuCategory,
+  MenuItem,
 } from "@/lib/services/dishService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, {
-    ReservationDetail,
-    ReservationStatus,
+  ReservationDetail,
+  ReservationStatus,
 } from "@/lib/services/reservationService";
 import {
-    FloorLayoutTableItem,
-    floorService,
-    tableService,
+  FloorLayoutTableItem,
+  floorService,
+  tableService,
 } from "@/lib/services/tableService";
 import { formatVND } from "@/lib/utils/currency";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -1687,12 +1687,16 @@ export default function ReservationDetailsView({
     if (!detail || !resolvedCustomerId) return;
 
     const orderDetails = selectedItems
-      .map((item) => ({
-        ...(item.comboId ? { comboId: item.comboId } : { dishId: item.dishId }),
-        quantity: Number(item.quantity || 0),
-        note: item.note?.trim() || undefined,
-      }))
-      .filter((item) => (item.comboId || item.dishId) && item.quantity > 0);
+      .filter((item) => item.quantity > 0 && (item.comboId || item.dishId))
+      .map((item) => {
+        const base = {
+          quantity: Number(item.quantity || 0),
+          note: item.note?.trim() || undefined,
+        };
+        return item.comboId
+          ? { ...base, comboId: item.comboId }
+          : { ...base, dishId: item.dishId };
+      });
 
     if (orderDetails.length === 0) {
       messageApi.warning(t("reservation_detail.order.no_selected_items"));
