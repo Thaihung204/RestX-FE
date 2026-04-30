@@ -11,18 +11,18 @@ import { useTenant } from "@/lib/contexts/TenantContext";
 import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
-    OrderDetailStatus,
+  OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import orderService, {
-    OrderDto,
-    OrderRequestDto,
+  OrderDto,
+  OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-    OrderStatus,
+  OrderStatus,
 } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
-import { tableService, TableItem } from "@/lib/services/tableService";
+import { TableItem, tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { App, Empty, Space } from "antd";
@@ -40,12 +40,16 @@ type OrderStatusUi = string;
 interface OrderItem {
   id: string;
   dishId: string;
+  comboId?: string | null;
+  parentId?: string | null;
   name: string;
   quantity: number;
   price: number;
   note?: string;
   status: OrderItemStatus;
   ids?: string[];
+  /** Child items when this is a combo row */
+  children?: OrderItem[];
 }
 
 interface Order {
@@ -221,13 +225,16 @@ export default function OrderManagement() {
             .map((s) => s?.tableCode || s?.table?.code)
             .find((code): code is string => !!code) || resolvedTableId;
 
-        const items: OrderItem[] = (order.orderDetails ?? []).map(
+        // Map all raw details to OrderItem
+        const allItems: OrderItem[] = (order.orderDetails ?? []).map(
           (detail, index) => {
             const statusValue = detail.status || "";
             const normalizedStatus = normalizeStatusValue(statusValue);
             return {
               id: detail.id || `${order.id || "order"}-${index}`,
               dishId: detail.dishId,
+              comboId: detail.comboId ?? null,
+              parentId: detail.parentId ?? null,
               name:
                 detail.dishName || dishNameMap[detail.dishId] || detail.dishId,
               quantity: detail.quantity ?? 0,
@@ -238,7 +245,28 @@ export default function OrderManagement() {
           },
         );
 
-        const summaryItems = aggregateOrderItems(items);
+        // Separate combo parents from standalone dishes and combo children
+        const comboParents = allItems.filter((i) => i.comboId && !i.parentId);
+        const comboChildrenMap = new Map<string, OrderItem[]>();
+        allItems
+          .filter((i) => i.parentId)
+          .forEach((child) => {
+            const list = comboChildrenMap.get(child.parentId!) ?? [];
+            list.push(child);
+            comboChildrenMap.set(child.parentId!, list);
+          });
+        const standaloneItems = allItems.filter((i) => !i.comboId && !i.parentId);
+
+        // Build structured list: combos with children, then standalone dishes
+        const structuredItems: OrderItem[] = [
+          ...comboParents.map((combo) => ({
+            ...combo,
+            children: comboChildrenMap.get(combo.id) ?? [],
+          })),
+          ...aggregateOrderItems(standaloneItems),
+        ];
+
+        const summaryItems = structuredItems;
 
         const status = mapOrderStatus(order.orderStatusId, orderStatuses);
 
@@ -366,7 +394,7 @@ export default function OrderManagement() {
     useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
-  const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ item: DishItem; quantity: number; comboId?: string; comboDetails?: { dishName: string; quantity: number }[] }[]>([]);
   const [activeMenuCategory, setActiveMenuCategory] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -387,7 +415,7 @@ export default function OrderManagement() {
   // Create new order state (staff creates order without customerId)
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [createOrderTableId, setCreateOrderTableId] = useState<string>("");
-  const [createOrderCart, setCreateOrderCart] = useState<{ item: DishItem; quantity: number }[]>([]);
+  const [createOrderCart, setCreateOrderCart] = useState<{ item: DishItem; quantity: number; comboId?: string; comboDetails?: { dishName: string; quantity: number }[] }[]>([]);
   const [createOrderActiveCategory, setCreateOrderActiveCategory] = useState("");
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
@@ -678,42 +706,39 @@ export default function OrderManagement() {
   };
 
   const addComboToCreateOrderCart = (combo: ComboSummaryDto) => {
-    if (!combo?.details?.length) {
-      message.warning(
-        t("staff.orders.messages.combo_empty", { defaultValue: "Combo has no dishes" }),
-      );
-      return;
-    }
     setCreateOrderCart((prev) => {
-      const nextCart = [...prev];
-      combo.details.forEach((detail) => {
-        if (!detail.dishId) return;
-        const matchedDish = menuCategories
-          .flatMap((category) => category.items)
-          .find((dish) => dish.id === detail.dishId);
-        const resolvedDish: DishItem = matchedDish || {
-          id: detail.dishId,
-          name: detail.dishName || detail.dishId,
-          description: "",
-          price: Number(detail.dishPrice ?? 0),
-          unit: "portion",
-          isVegetarian: false,
-          isSpicy: false,
-          isBestSeller: false,
-          images: [],
-          imageUrl: null,
-          categoryId: "combo",
-          categoryName: "Combo",
-        };
-        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
-        const existing = nextCart.find((line) => line.item.id === detail.dishId);
-        if (existing) {
-          existing.quantity += quantityToAdd;
-          return;
-        }
-        nextCart.push({ item: resolvedDish, quantity: quantityToAdd });
-      });
-      return nextCart;
+      const existing = prev.find((c) => c.comboId === combo.id);
+      if (existing) {
+        return prev.map((c) =>
+          c.comboId === combo.id ? { ...c, quantity: c.quantity + 1 } : c,
+        );
+      }
+      const comboAsDish: DishItem = {
+        id: combo.id,
+        name: combo.name,
+        description: combo.description || "",
+        price: Number(combo.price ?? 0),
+        unit: "combo",
+        isVegetarian: false,
+        isSpicy: false,
+        isBestSeller: false,
+        images: [],
+        imageUrl: combo.imageUrl ?? null,
+        categoryId: "combo",
+        categoryName: "Combo",
+      };
+      return [
+        ...prev,
+        {
+          item: comboAsDish,
+          quantity: 1,
+          comboId: combo.id,
+          comboDetails: combo.details.map((d) => ({
+            dishName: d.dishName || d.dishId,
+            quantity: d.quantity > 0 ? d.quantity : 1,
+          })),
+        },
+      ];
     });
     message.success(t("staff.orders.messages.combo_added", { defaultValue: "Combo added to order" }));
   };
@@ -742,11 +767,11 @@ export default function OrderManagement() {
       const payload: OrderRequestDto = {
         tableId: createOrderTableId,
         // Không truyền customerId — staff tạo order trực tiếp
-        orderDetails: createOrderCart.map((c) => ({
-          dishId: c.item.id,
-          quantity: c.quantity,
-          note: "",
-        })),
+        orderDetails: createOrderCart.map((c) =>
+          c.comboId
+            ? { comboId: c.comboId, quantity: c.quantity, note: "" }
+            : { dishId: c.item.id, quantity: c.quantity, note: "" },
+        ),
       };
       await orderService.createOrder(payload);
       message.success(t("staff.orders.messages.order_created"));
@@ -763,61 +788,41 @@ export default function OrderManagement() {
   };
 
   const addComboToCart = (combo: ComboSummaryDto) => {
-    if (!combo?.details?.length) {
-      message.warning(
-        t("staff.orders.messages.combo_empty"),
-      );
-      return;
-    }
-
     setCart((prev) => {
-      const nextCart = [...prev];
-
-      combo.details.forEach((detail) => {
-        if (!detail.dishId) {
-          return;
-        }
-
-        const matchedDish = menuCategories
-          .flatMap((category) => category.items)
-          .find((dish) => dish.id === detail.dishId);
-
-        const resolvedDish: DishItem =
-          matchedDish || {
-            id: detail.dishId,
-            name: detail.dishName || detail.dishId,
-            description: "",
-            price: Number(detail.dishPrice ?? 0),
-            unit: "portion",
-            isVegetarian: false,
-            isSpicy: false,
-            isBestSeller: false,
-            images: [],
-            imageUrl: null,
-            categoryId: "combo",
-            categoryName: "Combo",
-          };
-
-        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
-        const existing = nextCart.find((line) => line.item.id === detail.dishId);
-
-        if (existing) {
-          existing.quantity += quantityToAdd;
-          return;
-        }
-
-        nextCart.push({
-          item: resolvedDish,
-          quantity: quantityToAdd,
-        });
-      });
-
-      return nextCart;
+      const existing = prev.find((c) => c.comboId === combo.id);
+      if (existing) {
+        return prev.map((c) =>
+          c.comboId === combo.id ? { ...c, quantity: c.quantity + 1 } : c,
+        );
+      }
+      const comboAsDish: DishItem = {
+        id: combo.id,
+        name: combo.name,
+        description: combo.description || "",
+        price: Number(combo.price ?? 0),
+        unit: "combo",
+        isVegetarian: false,
+        isSpicy: false,
+        isBestSeller: false,
+        images: [],
+        imageUrl: combo.imageUrl ?? null,
+        categoryId: "combo",
+        categoryName: "Combo",
+      };
+      return [
+        ...prev,
+        {
+          item: comboAsDish,
+          quantity: 1,
+          comboId: combo.id,
+          comboDetails: combo.details.map((d) => ({
+            dishName: d.dishName || d.dishId,
+            quantity: d.quantity > 0 ? d.quantity : 1,
+          })),
+        },
+      ];
     });
-
-    message.success(
-      t("staff.orders.messages.combo_added"),
-    );
+    message.success(t("staff.orders.messages.combo_added"));
   };
 
   const updateCartQuantity = (itemId: string, delta: number) => {
@@ -865,11 +870,11 @@ export default function OrderManagement() {
       const payload: OrderRequestDto = {
         tableId: resolvedTableId,
         ...(customerId && customerId !== EMPTY_GUID ? { customerId } : {}),
-        orderDetails: cart.map((c) => ({
-          dishId: c.item.id,
-          quantity: c.quantity,
-          note: "",
-        })),
+        orderDetails: cart.map((c) =>
+          c.comboId
+            ? { comboId: c.comboId, quantity: c.quantity, note: "" }
+            : { dishId: c.item.id, quantity: c.quantity, note: "" },
+        ),
       };
 
       await orderService.createOrder(payload);
@@ -1044,8 +1049,27 @@ export default function OrderManagement() {
 
             const filteredDetailItems = order.detailItems.filter((item) => {
               if (preparingStatuses.length === 0) return true;
+              // For combo parents: keep if the combo itself or any child is preparing
+              if (item.comboId && !item.parentId) {
+                const comboStatus = normalizeStatusValue(item.status).toLowerCase();
+                if (preparingStatuses.includes(comboStatus)) return true;
+                return (item.children ?? []).some((child) =>
+                  preparingStatuses.includes(normalizeStatusValue(child.status).toLowerCase())
+                );
+              }
               const nStatus = normalizeStatusValue(item.status).toLowerCase();
               return preparingStatuses.includes(nStatus);
+            }).map((item) => {
+              // Filter children of combos to only preparing ones
+              if (item.comboId && !item.parentId && item.children) {
+                const filteredChildren = preparingStatuses.length === 0
+                  ? item.children
+                  : item.children.filter((child) =>
+                      preparingStatuses.includes(normalizeStatusValue(child.status).toLowerCase())
+                    );
+                return { ...item, children: filteredChildren };
+              }
+              return item;
             });
 
             return (

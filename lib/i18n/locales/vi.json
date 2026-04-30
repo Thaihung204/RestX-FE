@@ -362,12 +362,26 @@
       },
       "modal": {
         "cart": "Giỏ hàng",
-        "select_table": "Chọn bàn",
+        "select_table": "Chọn bàn *",
+        "select_table_placeholder": "Chọn bàn để tạo order...",
+        "select_order": "Chọn order",
+        "select_category": "Danh mục",
         "no_items": "Chưa có món nào",
+        "no_dishes": "Không có món trong danh mục này",
         "print": "In hóa đơn",
         "print_short": "In",
         "add_item": "Thêm món",
-        "order_detail": "Chi tiết đơn"
+        "order_detail": "Chi tiết đơn",
+        "create_order": "Tạo Order Mới",
+        "cancel": "Hủy",
+        "cart_title": "Giỏ hàng",
+        "cart_empty": "Chưa có món nào được chọn",
+        "cart_summary": "Tóm tắt giỏ hàng",
+        "total_estimate": "Tổng ước tính",
+        "review_cart": "Xem giỏ hàng",
+        "cart_confirm_title": "Xác nhận giỏ hàng",
+        "cart_confirm_back": "Quay lại",
+        "cart_confirm_submit": "Xác nhận"
       },
       "menu": {
         "appetizer": "Khai vị",
@@ -3405,6 +3419,9 @@
       "add_to_cart": "Thêm vào giỏ",
       "price": "Giá"
     },
+    "combo_section_title": "Combo",
+    "combo_includes": "Bao gồm",
+    "combo_added_to_cart": "Đã thêm combo {{name}} vào giỏ hàng",
     "best_seller": "Bán chạy",
     "default_food_desc": "Món ăn tuyệt vời từ nguyên liệu tươi ngon nhất.",
     "tags": {

@@ -8,6 +8,7 @@ import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
   CustomerResponseDto,
 } from "@/lib/services/customerService";
+import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import type {
   CartItem,
@@ -19,7 +20,6 @@ import { formatVND } from "@/lib/utils/currency";
 import {
   ArrowLeftOutlined,
   CloseOutlined,
-
   MinusOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -38,7 +38,7 @@ import {
   Row,
   Spin,
   theme,
-  Typography,
+  Typography
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -75,6 +75,7 @@ export default function MenuPage() {
     addToCart: addToCartContext,
     updateQuantity,
     setOrderContext,
+    addComboToCart: addComboToCartContext,
   } = useCart();
 
   // Ref to track if data has been fetched
@@ -90,6 +91,7 @@ export default function MenuPage() {
   // API state
   const [dishes, setDishes] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [combos, setCombos] = useState<ComboSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,7 +157,10 @@ export default function MenuPage() {
       setLoading(true);
       setError(null);
 
-      const menuData = await menuService.getMenu();
+      const [menuData, comboData] = await Promise.all([
+        menuService.getMenu(),
+        dishService.getActiveCombos().catch(() => []),
+      ]);
 
       if (menuData && Array.isArray(menuData)) {
         const allDishes: MenuItem[] = [];
@@ -201,6 +206,8 @@ export default function MenuPage() {
         setDishes(allDishes);
         setCategories(extractedCategories);
       }
+
+      setCombos(comboData ?? []);
     } catch (err) {
       console.error("Failed to fetch menu data:", err);
       setError(t("menu_page.error_load"));
@@ -256,6 +263,31 @@ export default function MenuPage() {
       }))
       .filter((group) => group.dishes.length > 0);
   }, [dishes, categories, searchText]);
+
+  const filteredCombos = useMemo(() => {
+    if (!searchText) return combos;
+    const lower = searchText.toLowerCase();
+    return combos.filter((c) => c.name.toLowerCase().includes(lower));
+  }, [combos, searchText]);
+
+  const [selectedCombo, setSelectedCombo] = useState<ComboSummaryDto | null>(null);
+  const [comboDetailModalOpen, setComboDetailModalOpen] = useState(false);
+
+  const dishImageMap = useMemo<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    dishes.forEach((d) => {
+      if (d.image) map[d.id] = d.image;
+    });
+    return map;
+  }, [dishes]);
+
+  const handleAddComboToCart = (combo: ComboSummaryDto) => {
+    addComboToCartContext(
+      combo,
+      t("menu_page.combo_added_to_cart", { name: combo.name }),
+      dishImageMap,
+    );
+  };
 
   const handleOpenFoodDetail = (item: MenuItem) => {
     setSelectedFood(item);
@@ -527,6 +559,220 @@ export default function MenuPage() {
             }}>
             {/* Hiển thị phẳng các category và dishes */}
             <div style={{ display: "flex", flexDirection: "column", gap: sectionGap }}>
+              {/* --- Combo Section --- */}
+              {filteredCombos.length > 0 && (
+                <div id="combos">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 16,
+                      padding: "0 4px",
+                      borderLeft: "4px solid var(--primary)",
+                      paddingLeft: 12,
+                    }}>
+                    <Title
+                      level={3}
+                      style={{
+                        color: "var(--text)",
+                        margin: 0,
+                        fontSize: 22,
+                        fontWeight: 700,
+                        letterSpacing: "0.5px",
+                      }}>
+                      {t("menu_page.combo_section_title")}
+                    </Title>
+                    <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      {filteredCombos.length} {t("menu_page.items")}
+                    </Text>
+                  </div>
+
+                  <Row gutter={[16, 16]}>
+                    {filteredCombos.map((combo) => (
+                      <Col xs={24} sm={12} md={12} lg={8} key={combo.id}>
+                        <Card
+                          hoverable
+                          variant="borderless"
+                          onClick={() => {
+                            setSelectedCombo(combo);
+                            setComboDetailModalOpen(true);
+                          }}
+                          style={{
+                            background: "var(--card)",
+                            borderRadius: 12,
+                            border: "1px solid var(--border)",
+                            overflow: "hidden",
+                            transition: "all 0.3s ease",
+                            boxShadow: "var(--shadow-sm)",
+                          }}
+                          styles={{ body: { padding: 0 } }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "row",
+                              gap: isSmallPhone ? 8 : 12,
+                              padding: isSmallPhone ? 10 : 12,
+                              alignItems: "flex-start",
+                            }}>
+                            {/* Image */}
+                            <div
+                              style={{
+                                flexShrink: 0,
+                                width: isSmallPhone ? 72 : 85,
+                                height: isSmallPhone ? 72 : 85,
+                                borderRadius: 12,
+                                overflow: "hidden",
+                                border: "1px solid var(--stroke-subtle)",
+                              }}>
+                              {combo.imageUrl ? (
+                                <img
+                                  src={combo.imageUrl}
+                                  alt={combo.name}
+                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    background: "var(--surface-subtle)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}>
+                                  <img
+                                    src="/images/dishStatus/spicy.png"
+                                    alt=""
+                                    style={{ width: 28, height: 28, objectFit: "contain", opacity: 0.3 }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Text
+                                style={{
+                                  fontSize: isSmallPhone ? 15 : 16,
+                                  fontWeight: 600,
+                                  color: "var(--text)",
+                                  display: "block",
+                                  marginBottom: 2,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}>
+                                {combo.name}
+                              </Text>
+                              <Text
+                                style={{
+                                  color: "var(--primary)",
+                                  fontWeight: 700,
+                                  fontSize: isSmallPhone ? 15 : 16,
+                                  display: "block",
+                                  marginBottom: 6,
+                                }}>
+                                {formatVND(combo.price)}
+                              </Text>
+                              {/* Dish list */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                {combo.details.map((d) => (
+                                  <Text
+                                    key={d.id ?? d.dishId}
+                                    style={{
+                                      fontSize: 12,
+                                      color: "var(--text-muted)",
+                                      display: "block",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}>
+                                    • {d.dishName} x{d.quantity}
+                                  </Text>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Add / Quantity controls */}
+                            {(() => {
+                              const cartItem = cartItems.find((c) => c.id === combo.id);
+                              if (cartItem) {
+                                return (
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 4,
+                                      flexShrink: 0,
+                                    }}>
+                                    <Button
+                                      type="text"
+                                      icon={<MinusOutlined />}
+                                      onClick={() => updateQuantity(combo.id, cartItem.quantity - 1)}
+                                      style={{
+                                        color: "var(--text)",
+                                        border: "1px solid var(--border)",
+                                        width: 32,
+                                        height: 32,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                      size="small"
+                                    />
+                                    <Text
+                                      style={{
+                                        color: "var(--text)",
+                                        fontSize: 14,
+                                        fontWeight: 600,
+                                        width: 20,
+                                        textAlign: "center",
+                                      }}>
+                                      {cartItem.quantity}
+                                    </Text>
+                                    <Button
+                                      type="text"
+                                      icon={<PlusOutlined />}
+                                      onClick={() => updateQuantity(combo.id, cartItem.quantity + 1)}
+                                      style={{
+                                        color: "var(--text)",
+                                        border: "1px solid var(--border)",
+                                        width: 32,
+                                        height: 32,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                      size="small"
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <Button
+                                  type="primary"
+                                  shape="circle"
+                                  icon={<PlusOutlined />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddComboToCart(combo);
+                                  }}
+                                  style={{ background: "var(--primary)", border: "none", flexShrink: 0 }}
+                                />
+                              );
+                            })()}
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              )}
+
+              {/* --- Regular categories --- */}
+              {/* --- Regular categories --- */}
               {categoriesWithDishes.map((categoryGroup) => (
                 <div
                   key={categoryGroup.category.id}
@@ -795,6 +1041,237 @@ export default function MenuPage() {
                 </div>
               ))}
             </div>
+
+            {/* Combo Detail Modal */}
+            <Modal
+              open={comboDetailModalOpen}
+              onCancel={() => setComboDetailModalOpen(false)}
+              footer={null}
+              centered
+              closeIcon={null}
+              width="100%"
+              styles={{
+                mask: {
+                  backdropFilter: "blur(12px)",
+                  background: "var(--modal-overlay)",
+                },
+                wrapper: { background: "transparent" },
+                body: { background: "transparent", padding: 0 },
+              }}>
+              {selectedCombo && (
+                <div
+                  style={{
+                    position: "relative",
+                    background: "var(--card)",
+                    borderRadius: 20,
+                    padding: "30px 24px",
+                    overflow: "hidden",
+                    border: "1px solid var(--border)",
+                    boxShadow: "var(--shadow-lg)",
+                  }}>
+                  {/* Glow */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -50,
+                      right: -50,
+                      width: 150,
+                      height: 150,
+                      background: "var(--decoration-glow)",
+                      filter: "blur(60px)",
+                      borderRadius: "50%",
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  {/* Close */}
+                  <div
+                    onClick={() => setComboDetailModalOpen(false)}
+                    style={{
+                      position: "absolute",
+                      top: 16,
+                      right: 16,
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: "var(--surface)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      zIndex: 10,
+                      border: "1px solid var(--border)",
+                    }}>
+                    <CloseOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />
+                  </div>
+
+                  <div style={{ position: "relative", zIndex: 1 }}>
+                    {/* Image */}
+                    <div
+                      style={{
+                        width: "100%",
+                        aspectRatio: "4/3",
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        marginBottom: 20,
+                        border: "1px solid var(--border)",
+                        boxShadow: "var(--shadow-md)",
+                      }}>
+                      {selectedCombo.imageUrl ? (
+                        <img
+                          src={selectedCombo.imageUrl}
+                          alt={selectedCombo.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            background: "var(--surface)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}>
+                          <img
+                            src="/images/dishStatus/spicy.png"
+                            alt=""
+                            style={{ width: 48, height: 48, objectFit: "contain", opacity: 0.25 }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Name */}
+                    <Title
+                      level={3}
+                      style={{
+                        color: "var(--text)",
+                        margin: "0 0 8px 0",
+                        fontSize: 24,
+                        fontWeight: 700,
+                      }}>
+                      {selectedCombo.name}
+                    </Title>
+
+                    {/* Description */}
+                    {selectedCombo.description && (
+                      <div
+                        style={{
+                          marginBottom: 16,
+                          background: "var(--surface)",
+                          padding: 16,
+                          borderRadius: 12,
+                          border: "1px solid var(--border)",
+                        }}>
+                        <Text style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.7 }}>
+                          {selectedCombo.description}
+                        </Text>
+                      </div>
+                    )}
+
+                    {/* Dishes in combo */}
+                    <div
+                      style={{
+                        marginBottom: 20,
+                        background: "var(--surface)",
+                        padding: 16,
+                        borderRadius: 12,
+                        border: "1px solid var(--border)",
+                      }}>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "var(--text-muted)",
+                          textTransform: "uppercase",
+                          letterSpacing: 1,
+                          display: "block",
+                          marginBottom: 10,
+                        }}>
+                        {t("menu_page.combo_includes")}
+                      </Text>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {selectedCombo.details.map((d) => (
+                          <div
+                            key={d.id ?? d.dishId}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "6px 0",
+                              borderBottom: "1px dashed var(--border)",
+                            }}>
+                            <Text style={{ color: "var(--text)", fontSize: 14 }}>
+                              {d.dishName}
+                            </Text>
+                            <span
+                              style={{
+                                background: "var(--surface-subtle, #f5f5f5)",
+                                border: "1px solid var(--border)",
+                                borderRadius: 8,
+                                padding: "1px 10px",
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: "var(--text)",
+                                whiteSpace: "nowrap",
+                              }}>
+                              x{d.quantity}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action bar */}
+                    <div
+                      style={{
+                        background: "var(--surface)",
+                        borderRadius: 12,
+                        padding: "16px 20px",
+                        border: "1px solid var(--border)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}>
+                      <div>
+                        <Text
+                          style={{
+                            color: "var(--text-muted)",
+                            fontSize: 11,
+                            textTransform: "uppercase",
+                            letterSpacing: 1,
+                            display: "block",
+                            marginBottom: 2,
+                          }}>
+                          {t("menu_page.detail_modal.price")}
+                        </Text>
+                        <Text style={{ color: "var(--text)", fontSize: 20, fontWeight: 700 }}>
+                          {formatVND(selectedCombo.price)}
+                        </Text>
+                      </div>
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                          handleAddComboToCart(selectedCombo);
+                          setComboDetailModalOpen(false);
+                        }}
+                        style={{
+                          background: "var(--primary)",
+                          border: "none",
+                          width: 44,
+                          height: 44,
+                          flexShrink: 0,
+                          boxShadow: "0 4px 12px var(--primary-glow)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Modal>
 
             {/* Food Detail Modal */}
             <Modal
@@ -1154,6 +1631,7 @@ export default function MenuPage() {
                           return (
                             <Button
                               type="primary"
+                              shape="circle"
                               icon={<PlusOutlined />}
                               loading={addingItemId === selectedFood.id}
                               disabled={addingItemId === selectedFood.id}
@@ -1161,15 +1639,12 @@ export default function MenuPage() {
                               style={{
                                 background: "var(--primary)",
                                 border: "none",
+                                width: 44,
                                 height: 44,
-                                padding: "0 24px",
-                                borderRadius: 12,
-                                fontWeight: 600,
-                                fontSize: 14,
+                                flexShrink: 0,
                                 boxShadow: "0 4px 12px var(--primary-glow)",
-                              }}>
-                              {t("menu_page.detail_modal.add_to_cart")}
-                            </Button>
+                              }}
+                            />
                           );
                         }
                       })()}

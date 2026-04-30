@@ -360,12 +360,26 @@
       },
       "modal": {
         "cart": "Cart",
-        "select_table": "Select Table",
+        "select_table": "Select Table *",
+        "select_table_placeholder": "Select a table to create order...",
+        "select_order": "Select Order",
+        "select_category": "Category",
         "no_items": "No items yet",
+        "no_dishes": "No dishes in this category",
         "print": "Print Bill",
         "print_short": "Print",
         "add_item": "Add Item",
-        "order_detail": "Order details"
+        "order_detail": "Order details",
+        "create_order": "Create New Order",
+        "cancel": "Cancel",
+        "cart_title": "Cart",
+        "cart_empty": "No items selected yet",
+        "cart_summary": "Cart Summary",
+        "total_estimate": "Estimated Total",
+        "review_cart": "Review Cart",
+        "cart_confirm_title": "Confirm Cart",
+        "cart_confirm_back": "Back",
+        "cart_confirm_submit": "Confirm"
       },
       "menu": {
         "appetizer": "Appetizers",
@@ -3358,6 +3372,9 @@
       "add_to_cart": "Add to Cart",
       "price": "Price"
     },
+    "combo_section_title": "Combo",
+    "combo_includes": "Includes",
+    "combo_added_to_cart": "Combo {{name}} added to cart",
     "best_seller": "Best Seller",
     "default_food_desc": "Excellent dish made from the freshest ingredients.",
     "tags": {

@@ -13,6 +13,10 @@ interface OrderItem {
   quantity: number;
   note?: string;
   status: OrderItemStatus;
+  comboId?: string | null;
+  parentId?: string | null;
+  /** Child dishes when this is a combo row */
+  children?: OrderItem[];
 }
 
 interface OrderStatus {
@@ -234,63 +238,178 @@ export default function CardOrder({
                 </div>
 
                 {isExpanded &&
-                  order.detailItems.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={(event) => event.stopPropagation()}
-                      onMouseDown={(event) => event.stopPropagation()}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        padding: isMobile ? "6px 0" : "8px 0",
-                        borderBottom:
-                          mode === "dark"
-                            ? "1px dashed rgba(255, 255, 255, 0.08)"
-                            : "1px dashed #EDEDED",
-                      }}>
-                      <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
-                        <Text
-                          style={{
-                            fontSize: textSizes.itemName,
-                            fontWeight: 500,
-                            display: "block",
-                            lineHeight: 1.3,
-                          }}>
-                          {item.name}
-                        </Text>
-                      </div>
-                      <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
-                        <Tag
-                          style={{
-                            margin: 0,
-                            borderRadius: 8,
-                            fontSize: textSizes.quantity,
-                            lineHeight: 1.2,
-                            paddingInline: isMobile ? 6 : 8,
-                          }}>
-                          x{item.quantity}
-                        </Tag>
+                  order.detailItems.map((item) => {
+                    const isCombo = !!item.comboId && !item.parentId;
+
+                    if (isCombo) {
+                      // Render combo card with children nested inside
+                      return (
                         <div
+                          key={item.id}
                           onClick={(event) => event.stopPropagation()}
-                          onMouseDown={(event) => event.stopPropagation()}>
-                          <Select
-                            value={normalizeStatusValue(item.status)}
-                            size="small"
-                            style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
-                            className="order-detail-status-select"
-                            onChange={(value) =>
-                              handleUpdateDetailStatus(order.id, item.id, String(value))
-                            }
-                            disabled={isUpdatingDetailStatus}
-                            options={statusOptions}
-                            popupMatchSelectWidth={false}
-                          />
+                          onMouseDown={(event) => event.stopPropagation()}
+                          style={{
+                            border: mode === "dark"
+                              ? "1px solid rgba(255,255,255,0.12)"
+                              : "1px solid #E8E8E8",
+                            borderRadius: 8,
+                            overflow: "hidden",
+                            marginBottom: 4,
+                          }}>
+                          {/* Combo header row */}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                              padding: isMobile ? "6px 10px" : "8px 12px",
+                              background: mode === "dark"
+                                ? "rgba(255,255,255,0.06)"
+                                : "rgba(0,0,0,0.03)",
+                            }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Text
+                                style={{
+                                  fontSize: textSizes.itemName,
+                                  fontWeight: 600,
+                                  display: "block",
+                                  lineHeight: 1.3,
+                                }}>
+                                {item.name}
+                              </Text>
+                            </div>
+                            <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
+                              <Tag
+                                style={{
+                                  margin: 0,
+                                  borderRadius: 8,
+                                  fontSize: textSizes.quantity,
+                                  lineHeight: 1.2,
+                                  paddingInline: isMobile ? 6 : 8,
+                                }}>
+                                x{item.quantity}
+                              </Tag>
+                              <div
+                                onClick={(event) => event.stopPropagation()}
+                                onMouseDown={(event) => event.stopPropagation()}>
+                                <Select
+                                  value={normalizeStatusValue(item.status)}
+                                  size="small"
+                                  style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
+                                  className="order-detail-status-select"
+                                  onChange={(value) =>
+                                    handleUpdateDetailStatus(order.id, item.id, String(value))
+                                  }
+                                  disabled={isUpdatingDetailStatus}
+                                  options={statusOptions}
+                                  popupMatchSelectWidth={false}
+                                />
+                              </div>
+                            </Space>
+                          </div>
+
+                          {/* Combo children */}
+                          {(item.children ?? []).map((child, idx) => (
+                            <div
+                              key={child.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                                padding: isMobile ? "5px 10px 5px 22px" : "6px 12px 6px 28px",
+                                borderTop: mode === "dark"
+                                  ? "1px dashed rgba(255,255,255,0.08)"
+                                  : "1px dashed #EDEDED",
+                              }}>
+                              <Text
+                                style={{
+                                  fontSize: isMobile ? 13 : 14,
+                                  color: mode === "dark"
+                                    ? "rgba(255,255,255,0.75)"
+                                    : "rgba(0,0,0,0.65)",
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}>
+                                {child.name}
+                              </Text>
+                              <Tag
+                                style={{
+                                  margin: 0,
+                                  borderRadius: 8,
+                                  fontSize: textSizes.quantity,
+                                  lineHeight: 1.2,
+                                  paddingInline: isMobile ? 6 : 8,
+                                  flexShrink: 0,
+                                }}>
+                                x{child.quantity}
+                              </Tag>
+                            </div>
+                          ))}
                         </div>
-                      </Space>
-                    </div>
-                  ))}
+                      );
+                    }
+
+                    // Regular (non-combo) item
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          padding: isMobile ? "6px 0" : "8px 0",
+                          borderBottom:
+                            mode === "dark"
+                              ? "1px dashed rgba(255, 255, 255, 0.08)"
+                              : "1px dashed #EDEDED",
+                        }}>
+                        <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
+                          <Text
+                            style={{
+                              fontSize: textSizes.itemName,
+                              fontWeight: 500,
+                              display: "block",
+                              lineHeight: 1.3,
+                            }}>
+                            {item.name}
+                          </Text>
+                        </div>
+                        <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
+                          <Tag
+                            style={{
+                              margin: 0,
+                              borderRadius: 8,
+                              fontSize: textSizes.quantity,
+                              lineHeight: 1.2,
+                              paddingInline: isMobile ? 6 : 8,
+                            }}>
+                            x{item.quantity}
+                          </Tag>
+                          <div
+                            onClick={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}>
+                            <Select
+                              value={normalizeStatusValue(item.status)}
+                              size="small"
+                              style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
+                              className="order-detail-status-select"
+                              onChange={(value) =>
+                                handleUpdateDetailStatus(order.id, item.id, String(value))
+                              }
+                              disabled={isUpdatingDetailStatus}
+                              options={statusOptions}
+                              popupMatchSelectWidth={false}
+                            />
+                          </div>
+                        </Space>
+                      </div>
+                    );
+                  })}
               </div>
             ) : (
               <Text
