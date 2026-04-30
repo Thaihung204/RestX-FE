@@ -1,6 +1,6 @@
 "use client";
 
-import dishService from "@/lib/services/dishService";
+import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
@@ -39,7 +39,7 @@ interface CartContextType {
 
   // Cart actions
   addToCart: (item: CartItem) => void;
-  addComboToCart: (combo: import("@/lib/services/dishService").ComboSummaryDto, successMessage?: string, dishImageMap?: Record<string, string>) => void;
+  addComboToCart: (combo: ComboSummaryDto, successMessage?: string, dishImageMap?: Record<string, string>) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   updateNote: (itemId: string, note: string) => void;
