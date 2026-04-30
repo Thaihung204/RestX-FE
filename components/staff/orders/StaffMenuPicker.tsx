@@ -228,10 +228,12 @@ export default function StaffMenuPicker({
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                          <Text strong style={{ fontSize: 13, color: "var(--primary)" }}>{combo.name}</Text>
-                          <Text style={{ fontSize: 12, color: "var(--primary)", fontWeight: 600, flexShrink: 0 }}>
-                            {formatVND(Number(combo.price || 0))}
-                          </Text>
+                          <div style={{ minWidth: 0 }}>
+                            <Text strong style={{ fontSize: 13, color: "var(--primary)", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{combo.name}</Text>
+                            <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 600, marginTop: 2 }}>
+                              {formatVND(Number(combo.price || 0))}
+                            </div>
+                          </div>
                         </div>
                         <div style={{ marginTop: 3 }}>
                           {(combo.details || []).map((d) => (
