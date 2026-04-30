@@ -1,6 +1,7 @@
 "use client";
 
 import dishService, {
+  ComboSummaryDto,
     MenuCategory,
     MenuItem
 } from "@/lib/services/dishService";
