@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComboSummaryDto } from "@/lib/services/dishService";
+import type { TableItem } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { Badge, Modal, Select, Typography } from "antd";
@@ -10,20 +11,14 @@ import StaffMenuPicker, { type StaffCartRow } from "./StaffMenuPicker";
 
 const { Text } = Typography;
 
-interface OrderOption {
-  id: string;
-  reference: string;
-  tableName: string;
-  tableCodes?: string[];
-}
-
-interface AddOrderItemProps {
+interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  selectedOrderIdForAdd: string;
-  setSelectedOrderIdForAdd: (value: string) => void;
-  orders: OrderOption[];
+  isCreating: boolean;
+  tables: TableItem[];
+  selectedTableId: string;
+  setSelectedTableId: (value: string) => void;
   menuCategories: MenuCategory[];
   comboItems: ComboSummaryDto[];
   activeMenuCategory: string;
@@ -35,13 +30,14 @@ interface AddOrderItemProps {
   t: (key: string, options?: Record<string, unknown>) => string;
 }
 
-export default function AddOrderItem({
+export default function CreateOrderModal({
   isOpen,
   onClose,
   onConfirm,
-  selectedOrderIdForAdd,
-  setSelectedOrderIdForAdd,
-  orders,
+  isCreating,
+  tables,
+  selectedTableId,
+  setSelectedTableId,
   menuCategories,
   comboItems,
   activeMenuCategory,
@@ -51,16 +47,25 @@ export default function AddOrderItem({
   addComboToCart,
   updateCartQuantity,
   t,
-}: AddOrderItemProps) {
+}: CreateOrderModalProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const cartItemCount = cart.reduce((sum, row) => sum + row.quantity, 0);
 
-  const selectedOrder = orders.find((o) => o.id === selectedOrderIdForAdd);
-  const contextLabel = selectedOrder
-    ? `${selectedOrder.reference} — ${t("staff.orders.order.table")} ${
-        selectedOrder.tableCodes?.join(" - ") || selectedOrder.tableName
+  const selectedTable = tables.find((tbl) => tbl.id === selectedTableId);
+  const contextLabel = selectedTable
+    ? `${t("staff.orders.order.table")} ${selectedTable.code}${
+        selectedTable.floorName ? ` — ${selectedTable.floorName}` : ""
       }`
     : undefined;
+
+  const tableOptions = tables
+    .filter((tbl) => tbl.isActive)
+    .map((table) => ({
+      value: table.id,
+      label: `${t("staff.orders.order.table")} ${table.code}${
+        table.floorName ? ` — ${table.floorName}` : ""
+      }`,
+    }));
 
   return (
     <>
@@ -68,7 +73,7 @@ export default function AddOrderItem({
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ShoppingCartOutlined style={{ fontSize: 18, color: "var(--primary)" }} />
-            <span>{t("staff.orders.modal.add_item")}</span>
+            <span>{t("staff.orders.modal.create_order")}</span>
             {cartItemCount > 0 && (
               <Badge
                 count={cartItemCount}
@@ -87,9 +92,9 @@ export default function AddOrderItem({
           </span>
         }
         okButtonProps={{
-          disabled: cart.length === 0 || !selectedOrderIdForAdd,
+          disabled: !selectedTableId || cart.length === 0,
           style: {
-            background: cart.length === 0 || !selectedOrderIdForAdd
+            background: !selectedTableId || cart.length === 0
               ? undefined
               : "var(--primary)",
             border: "none",
@@ -103,32 +108,27 @@ export default function AddOrderItem({
         centered
         styles={{ body: { padding: "12px 16px", maxHeight: "70vh", overflowY: "auto" } }}
       >
-        {/* Order selector */}
+        {/* Table selector */}
         <div style={{ marginBottom: 12 }}>
           <Text strong style={{ fontSize: 13, display: "block", marginBottom: 4, color: "var(--primary)" }}>
-            {t("staff.orders.modal.select_order")}
+            {t("staff.orders.modal.select_table")}
           </Text>
           <Select
-            placeholder={t("staff.orders.modal.order_detail")}
+            placeholder={t("staff.orders.modal.select_table_placeholder")}
             size="middle"
             style={{ width: "100%" }}
-            value={selectedOrderIdForAdd || undefined}
-            onChange={setSelectedOrderIdForAdd}
+            value={selectedTableId || undefined}
+            onChange={setSelectedTableId}
+            options={tableOptions}
+            showSearch
+            filterOption={(input, option) =>
+              String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
             getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
             listHeight={220}
             virtual={false}
             styles={{ popup: { root: { overscrollBehavior: "contain" } } }}
             onPopupScroll={(e) => e.stopPropagation()}
-            options={orders.map((order) => {
-              const tableLabel =
-                order.tableCodes && order.tableCodes.length > 0
-                  ? order.tableCodes.join(" - ")
-                  : order.tableName;
-              return {
-                value: order.id,
-                label: `${order.reference} — ${t("staff.orders.order.table")} ${tableLabel}`,
-              };
-            })}
           />
         </div>
 
@@ -157,6 +157,7 @@ export default function AddOrderItem({
           setConfirmOpen(false);
           onConfirm();
         }}
+        isConfirming={isCreating}
         t={t}
       />
     </>

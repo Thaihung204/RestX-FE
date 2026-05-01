@@ -1,5 +1,6 @@
 "use client";
 
+import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
@@ -7,13 +8,13 @@ import type { CartItem } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import { useTenant } from "./TenantContext";
 
@@ -38,6 +39,7 @@ interface CartContextType {
 
   // Cart actions
   addToCart: (item: CartItem) => void;
+  addComboToCart: (combo: ComboSummaryDto, successMessage?: string, dishImageMap?: Record<string, string>) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   updateNote: (itemId: string, note: string) => void;
@@ -129,6 +131,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [messageApi],
   );
 
+  const addComboToCart = useCallback(
+    (combo: ComboSummaryDto, successMessage?: string, dishImageMap?: Record<string, string>) => {
+      setCartItems((prev) => {
+        const existing = prev.find((c) => c.id === combo.id);
+        if (existing) {
+          return prev.map((c) =>
+            c.id === combo.id ? { ...c, quantity: c.quantity + 1 } : c,
+          );
+        }
+        const comboItem: CartItem = {
+          id: combo.id,
+          name: combo.name,
+          price: String(combo.price),
+          quantity: 1,
+          category: "food",
+          categoryId: "combo",
+          image: combo.imageUrl ?? undefined,
+          comboId: combo.id,
+          children: combo.details.map((d) => ({
+            id: d.dishId,
+            name: d.dishName || d.dishId,
+            price: String(d.dishPrice ?? 0),
+            quantity: d.quantity,
+            category: "food" as const,
+            categoryId: "combo",
+            image: dishImageMap?.[d.dishId] ?? undefined,
+          })),
+        };
+        return [...prev, comboItem];
+      });
+      messageApi.success(successMessage ?? combo.name);
+    },
+    [messageApi],
+  );
+
   const removeFromCart = useCallback((itemId: string) => {
     setCartItems((prev) => prev.filter((item) => item.id !== itemId));
   }, []);
@@ -157,11 +194,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
 
     try {
-      const [orders, menuData] = await Promise.all([
+      const [orders, menuData, comboData] = await Promise.all([
         orderService.getOrdersByTable(orderTableId),
         menuService.getMenu(),
+        dishService.getActiveCombos().catch(() => []),
       ]);
 
+      // Build dish lookup (id → dish info with image)
       const dishLookup = new Map<
         string,
         {
@@ -172,7 +211,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           image?: string;
         }
       >();
-
       menuData.forEach((category) => {
         category.items?.forEach((dish) => {
           dishLookup.set(dish.id, {
@@ -185,19 +223,99 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
       });
 
-      const aggregatedByDishAndStatus = new Map<string, CartItem>();
+      // Build combo lookup (id → combo info with image)
+      const comboLookup = new Map(comboData.map((c) => [c.id, c]));
+
+      const result: CartItem[] = [];
+      const comboAggregated = new Map<string, CartItem>();
 
       orders.forEach((order) => {
-        order.orderDetails?.forEach((detail) => {
+        const details = order.orderDetails ?? [];
+
+        // Separate combo parents from children and standalone dishes
+        const comboParents = details.filter(
+          (d: any) => d.comboId && !d.parentId,
+        );
+        const childrenByParentId = new Map<string, typeof details>();
+        details
+          .filter((d: any) => d.parentId)
+          .forEach((d: any) => {
+            const list = childrenByParentId.get(d.parentId) ?? [];
+            list.push(d);
+            childrenByParentId.set(d.parentId, list);
+          });
+        const standaloneDetails = details.filter(
+          (d: any) => !d.comboId && !d.parentId,
+        );
+
+        // Process combo parents — aggregate same comboId+status across all orders
+        comboParents.forEach((detail: any) => {
+          const combo = comboLookup.get(detail.comboId);
+          const status = detail.status?.trim() || "Pending";
+          const key = `combo__${detail.comboId}__${status.toLowerCase()}`;
+          const children: CartItem[] = (
+            childrenByParentId.get(detail.id) ?? []
+          ).map((child: any) => {
+            const dish = dishLookup.get(child.dishId);
+            return {
+              id: child.dishId,
+              lineId: child.id,
+              name: dish?.name || child.dishName || child.dishId,
+              price: dish?.price || String(child.dishPrice ?? 0),
+              quantity: child.quantity || 1,
+              category: "food" as const,
+              categoryId: dish?.categoryId || "",
+              categoryName: dish?.categoryName,
+              image: dish?.image,
+              status,
+            };
+          });
+
+          const incomingQty = detail.quantity || 1;
+          const existing = comboAggregated.get(key);
+          if (existing) {
+            // Merge quantity; merge children quantities too
+            const mergedChildren = [...(existing.children ?? [])];
+            children.forEach((newChild) => {
+              const existingChild = mergedChildren.find((c) => c.id === newChild.id);
+              if (existingChild) {
+                existingChild.quantity += newChild.quantity;
+              } else {
+                mergedChildren.push({ ...newChild });
+              }
+            });
+            comboAggregated.set(key, {
+              ...existing,
+              quantity: existing.quantity + incomingQty,
+              children: mergedChildren,
+            });
+          } else {
+            comboAggregated.set(key, {
+              id: detail.comboId,
+              lineId: detail.id,
+              name: combo?.name || detail.dishName || detail.comboId,
+              price: String(detail.dishPrice ?? combo?.price ?? 0),
+              quantity: incomingQty,
+              category: "food" as const,
+              categoryId: "combo",
+              image: combo?.imageUrl ?? undefined,
+              status,
+              note: detail.note || undefined,
+              comboId: detail.comboId,
+              children,
+            });
+          }
+        });
+
+        // Process standalone dishes (aggregate same dish+status)
+        const aggregated = new Map<string, CartItem>();
+        standaloneDetails.forEach((detail: any) => {
           const dish = dishLookup.get(detail.dishId);
           const quantity = detail.quantity || 0;
           if (quantity <= 0) return;
-
           const status = detail.status?.trim() || "Pending";
-          // We include note in the aggregation key so that items with different notes don't get merged incorrectly.
-          // Or we can just merge notes. Let's merge notes.
-          const aggregationKey = `${detail.dishId}__${status.toLowerCase()}`;
-          const existing = aggregatedByDishAndStatus.get(aggregationKey);
+          const key = `${detail.dishId}__${status.toLowerCase()}`;
+          const existing = aggregated.get(key);
           const fallbackPrice =
             typeof detail.dishPrice === "number"
               ? detail.dishPrice.toString()
@@ -206,10 +324,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (existing) {
             let combinedNote = existing.note || "";
             if (detail.note) {
-              combinedNote = combinedNote ? `${combinedNote}; ${detail.note}` : detail.note;
+              combinedNote = combinedNote
+                ? `${combinedNote}; ${detail.note}`
+                : detail.note;
             }
-
-            aggregatedByDishAndStatus.set(aggregationKey, {
+            aggregated.set(key, {
               ...existing,
               quantity: existing.quantity + quantity,
               note: combinedNote || undefined,
@@ -217,7 +336,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          aggregatedByDishAndStatus.set(aggregationKey, {
+          aggregated.set(key, {
             id: detail.dishId,
             name:
               dish?.name ||
@@ -233,19 +352,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             status,
           });
         });
+
+        result.push(...Array.from(aggregated.values()));
       });
 
-      setOrderedItems(Array.from(aggregatedByDishAndStatus.values()));
+      // Push aggregated combos (merged across all orders)
+      result.push(...Array.from(comboAggregated.values()));
+
+      setOrderedItems(result);
 
       if (orders && orders.length > 0) {
-        const active = orders.find((o) => o.orderStatusId !== 3 && o.orderStatusId !== 4);
+        const active = orders.find(
+          (o) => o.orderStatusId !== 3 && o.orderStatusId !== 4,
+        );
         const target = active ?? orders[orders.length - 1];
         setActiveOrderId(target?.id || null);
       } else {
         setActiveOrderId(null);
       }
 
-      // Sum subTotal from all orders (from response, not FE-calculated)
       const responseSubTotal = orders.reduce(
         (sum, order) => sum + (order.subTotal ?? 0),
         0,
@@ -276,7 +401,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const orderDetails = cartItems.map((cartItem) => ({
-        dishId: cartItem.id,
+        ...(cartItem.comboId
+          ? { comboId: cartItem.comboId }
+          : { dishId: cartItem.id }),
         quantity: cartItem.quantity,
         note: cartItem.note,
       }));
@@ -441,6 +568,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       totalOrderAmount: orderedSubTotal,
       activeOrderId,
       addToCart,
+      addComboToCart,
       removeFromCart,
       updateQuantity,
       updateNote,
@@ -465,6 +593,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       orderedSubTotal,
       activeOrderId,
       addToCart,
+      addComboToCart,
       removeFromCart,
       updateQuantity,
       updateNote,

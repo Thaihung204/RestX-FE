@@ -1,13 +1,14 @@
 import {
-  DownloadableFile,
-  getFileNameFromContentDisposition,
+    DownloadableFile,
+    getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
 
 // Backend DTOs (mirrors server DTOs)
 
 export interface OrderDetailRequestDto {
-  dishId: string;
+  dishId?: string;
+  comboId?: string;
   quantity: number;
   note?: string;
 }
@@ -35,6 +36,8 @@ export interface PreOrderByReservationRequestDto {
 export interface OrderDetailDto {
   id?: string;
   dishId: string;
+  comboId?: string | null;
+  parentId?: string | null;
   dishName?: string;
   dishPrice?: number;
   unitPrice?: number;
@@ -161,12 +164,15 @@ export interface StaffOrderQueryParams {
 export interface OrderDetailListItemDto {
   id?: string;
   orderId?: string;
-  dishId?: string;
+  dishId?: string | null;
+  comboId?: string | null;
+  parentId?: string | null;
   dishName?: string;
   quantity?: number;
   note?: string | null;
   status?: string | null;
   createdDate?: string | null;
+  tableCode?: string[] | string | null;
 }
 
 export interface ApplyDiscountRequest {

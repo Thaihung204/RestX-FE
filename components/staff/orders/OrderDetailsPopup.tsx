@@ -12,6 +12,10 @@ interface OrderItem {
   note?: string;
   status: string;
   price?: number;
+  comboId?: string | null;
+  parentId?: string | null;
+  /** Child dishes when this is a combo row */
+  children?: OrderItem[];
 }
 
 interface Order {
@@ -149,8 +153,124 @@ export default function OrderDetailsPopup({
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {order.detailItems.map((item) => {
               const normalizedValue = normalizeStatusValue(item.status);
+              const isCombo = !!item.comboId && !item.parentId;
 
+              if (isCombo) {
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      border: mode === "dark"
+                        ? "1px solid rgba(255,255,255,0.12)"
+                        : "1px solid #E8E8E8",
+                      borderRadius: 8,
+                      overflow: "hidden",
+                    }}>
+                    {/* Combo header row */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        padding: isMobile ? "8px 10px" : "10px 12px",
+                        background: mode === "dark"
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.03)",
+                      }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text
+                          style={{
+                            fontSize: textSizes.itemName,
+                            fontWeight: 600,
+                            display: "block",
+                            lineHeight: 1.3,
+                          }}>
+                           {item.name}
+                        </Text>
+                      </div>
 
+                      <Space size={isMobile ? 8 : 12} align="center" style={{ marginLeft: 6 }}>
+                        <div style={{ textAlign: "right" }}>
+                          <Text
+                            strong
+                            style={{
+                              display: "block",
+                              fontSize: textSizes.itemPrice,
+                              color: mode === "dark" ? "rgba(255, 255, 255, 0.85)" : "#333",
+                              lineHeight: 1.3,
+                            }}>
+                            {formatVND((item.price || 0) * item.quantity)}
+                          </Text>
+                        </div>
+                        <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
+                          <Tag
+                            style={{
+                              margin: 0,
+                              borderRadius: 8,
+                              fontSize: textSizes.quantity,
+                              lineHeight: 1.2,
+                              paddingInline: isMobile ? 6 : 8,
+                            }}>
+                            x{item.quantity}
+                          </Tag>
+                          <Select
+                            value={normalizedValue}
+                            size="small"
+                            onChange={(value) => handleUpdateDetailStatus(order.id, item.id, String(value))}
+                            disabled={isUpdatingDetailStatus || normalizedValue === normalizeStatusValue("cancelled")}
+                            options={statusOptions}
+                            style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
+                            className="order-detail-status-select"
+                            popupMatchSelectWidth={false}
+                          />
+                        </Space>
+                      </Space>
+                    </div>
+
+                    {/* Combo children */}
+                    {(item.children ?? []).map((child) => (
+                      <div
+                        key={child.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          padding: isMobile ? "6px 10px 6px 22px" : "7px 12px 7px 28px",
+                          borderTop: mode === "dark"
+                            ? "1px dashed rgba(255,255,255,0.08)"
+                            : "1px dashed #EDEDED",
+                        }}>
+                        <Text
+                          style={{
+                            fontSize: isMobile ? 13 : 14,
+                            color: mode === "dark"
+                              ? "rgba(255,255,255,0.75)"
+                              : "rgba(0,0,0,0.65)",
+                            flex: 1,
+                            minWidth: 0,
+                          }}>
+                          {child.name}
+                        </Text>
+                        <Tag
+                          style={{
+                            margin: 0,
+                            borderRadius: 8,
+                            fontSize: textSizes.quantity,
+                            lineHeight: 1.2,
+                            paddingInline: isMobile ? 6 : 8,
+                            flexShrink: 0,
+                          }}>
+                          x{child.quantity}
+                        </Tag>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              // Regular (non-combo) item
               return (
                 <div
                   key={item.id}

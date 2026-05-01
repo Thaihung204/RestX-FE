@@ -157,6 +157,12 @@
         "complete_failed": "Failed to complete reservation"
       }
     },
+    "orders": {
+      "messages": {
+        "statuses_load_failed": "Failed to load order statuses",
+        "load_failed": "Failed to load orders"
+      }
+    },
     "order_detail": {
       "title": "Order Details",
       "reference": "Order code: {{reference}}",
@@ -234,6 +240,7 @@
       "messages": {
         "load_error": "Failed to load order details.",
         "update_error": "Update failed.",
+        "update_success": "Order status updated successfully.",
         "add_dish_success": "Dish added to order successfully!",
         "not_found": "Order not found.",
         "no_items": "No items in this order.",
@@ -385,12 +392,26 @@
       },
       "modal": {
         "cart": "Cart",
-        "select_table": "Select Table",
+        "select_table": "Select Table *",
+        "select_table_placeholder": "Select a table to create order...",
+        "select_order": "Select Order",
+        "select_category": "Category",
         "no_items": "No items yet",
+        "no_dishes": "No dishes in this category",
         "print": "Print Bill",
         "print_short": "Print",
         "add_item": "Add Item",
-        "order_detail": "Order details"
+        "order_detail": "Order details",
+        "create_order": "Create New Order",
+        "cancel": "Cancel",
+        "cart_title": "Cart",
+        "cart_empty": "No items selected yet",
+        "cart_summary": "Cart Summary",
+        "total_estimate": "Estimated Total",
+        "review_cart": "Review Cart",
+        "cart_confirm_title": "Confirm Cart",
+        "cart_confirm_back": "Back",
+        "cart_confirm_submit": "Confirm"
       },
       "menu": {
         "appetizer": "Appetizers",
@@ -1232,6 +1253,37 @@
       "overview_load_failed": "Unable to load dashboard overview",
       "export_success": "Report exported successfully",
       "export_failed": "Failed to export report"
+    },
+    "orders": {
+      "title": "Orders",
+      "subtitle": "Manage and track all orders",
+      "search": {
+        "customer": "Customer Name",
+        "customer_placeholder": "Enter customer name...",
+        "reference": "Order Code",
+        "reference_placeholder": "Enter order code..."
+      },
+      "table": {
+        "order": "Order",
+        "customer": "Customer",
+        "items": "Items",
+        "total": "Total",
+        "status": "Status",
+        "payment": "Payment",
+        "time": "Time",
+        "actions": "Actions"
+      },
+      "labels": {
+        "items_count": "{{count}} items"
+      },
+      "payment_status": {
+        "paid": "Paid",
+        "unpaid": "Unpaid"
+      },
+      "actions": {
+        "view_details": "View Details"
+      },
+      "empty": "No orders found"
     },
     "best_selling_dishes": {
       "title": "Best Selling Dishes",
@@ -2721,13 +2773,34 @@
     "actions": {
       "yes": "Yes",
       "no": "No",
+      "exporting_report": "Exporting report...",
       "delete": "Delete",
       "edit": "Edit",
-      "exporting": "Exporting..."
+      "exporting": "Exporting...",
+      "exporting_report": "Exporting..."
+    },
+    "messages": {
+      "export_success": "Report exported successfully",
+      "export_failed": "Failed to export report"
+    },
+    "pagination": {
+      "items_per_page": "Items/page"
     },
     "theme": {
       "switch_to_light": "Switch to Light Mode",
       "switch_to_dark": "Switch to Dark Mode"
+    },
+    "messages": {
+      "export_success": "Report exported successfully",
+      "export_failed": "Failed to export report"
+    }
+  },
+  "deposit": {
+    "cancel": {
+      "title": "Deposit payment cancelled",
+      "message": "You cancelled the deposit payment. The deposit has not been recorded and your reservation is still pending.",
+      "back_to_reservation": "Back to reservation",
+      "back_home": "Go to home"
     }
   },
   "payment": {
@@ -3336,6 +3409,9 @@
       "add_to_cart": "Add to Cart",
       "price": "Price"
     },
+    "combo_section_title": "Combo",
+    "combo_includes": "Includes",
+    "combo_added_to_cart": "Combo {{name}} added to cart",
     "best_seller": "Best Seller",
     "default_food_desc": "Excellent dish made from the freshest ingredients.",
     "tags": {

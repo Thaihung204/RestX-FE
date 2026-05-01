@@ -229,7 +229,7 @@ export default function CartModal() {
                         overflowY: "auto",
                         paddingRight: 2,
                         paddingBottom: 6,
-                        maxHeight: "calc(80vh - 320px)",
+                        maxHeight: "calc(80vh - 220px)",
                       }}>
                       {cartItems.length === 0 ? (
                         <div
@@ -256,7 +256,9 @@ export default function CartModal() {
                         </div>
                       ) : (
                         <>
-                          {cartItems.map((item) => (
+                          {cartItems.map((item) => {
+                            const isCombo = !!item.comboId;
+                            return (
                             <Card
                               key={item.id}
                               style={{
@@ -264,34 +266,51 @@ export default function CartModal() {
                                 border: "1px solid var(--border)",
                                 borderRadius: 12,
                                 marginBottom: 8,
+                                overflow: "hidden",
+                                flexShrink: 0,
                               }}
-                              styles={{ body: { padding: 10 } }}>
+                              styles={{ body: { padding: 0 } }}>
+
+                              {/* Main row: image + name/price + qty controls */}
                               <div
                                 style={{
                                   display: "flex",
                                   gap: 8,
                                   alignItems: "center",
+                                  padding: "10px 10px 8px",
                                 }}>
-                                {item.image && (
+                                {/* Image / emoji */}
+                                {item.image ? (
                                   <img
                                     src={item.image}
                                     alt={item.name}
                                     style={{
-                                      width: 56,
-                                      height: 56,
+                                      width: 52,
+                                      height: 52,
                                       objectFit: "cover",
                                       borderRadius: 8,
                                       border: "1px solid var(--stroke-subtle)",
                                       flexShrink: 0,
                                     }}
                                   />
-                                )}
-
-                                <div
-                                  style={{
-                                    flex: 1,
-                                    minWidth: 0,
+                                ) : isCombo ? (
+                                  <div style={{
+                                    width: 52, height: 52, borderRadius: 8,
+                                    background: "var(--surface-subtle, #f0f0f0)",
+                                    display: "flex", alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0, border: "1px solid var(--stroke-subtle)",
                                   }}>
+                                    <img
+                                      src="/images/dishStatus/spicy.png"
+                                      alt=""
+                                      style={{ width: 24, height: 24, objectFit: "contain", opacity: 0.3 }}
+                                    />
+                                  </div>
+                                ) : null}
+
+                                {/* Name + price */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
                                   <Text
                                     style={{
                                       color: "var(--text)",
@@ -299,105 +318,113 @@ export default function CartModal() {
                                       fontWeight: 600,
                                       display: "block",
                                       marginBottom: 2,
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
                                     }}>
                                     {item.name}
                                   </Text>
-                                  <Text
-                                    style={{
-                                      color: "var(--text)",
-                                      fontSize: 14,
-                                      fontWeight: 600,
-                                    }}>
-                                    {formatVND(
-                                      parseFloat(item.price) * item.quantity,
-                                    )}
+                                  <Text style={{ color: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+                                    {formatVND(parseFloat(item.price) * item.quantity)}
                                   </Text>
                                 </div>
 
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 4,
-                                    background: "var(--surface)",
-                                    padding: "4px 6px",
-                                  }}>
+                                {/* +/- controls */}
+                                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                                   <Button
                                     type="text"
                                     icon={<MinusOutlined />}
-                                    onClick={() =>
-                                      updateQuantity(item.id, item.quantity - 1)
-                                    }
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                     style={{
                                       color: "var(--text)",
                                       border: "1px solid var(--border)",
-                                      width: 32,
-                                      height: 32,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
+                                      width: 30, height: 30,
+                                      display: "flex", alignItems: "center", justifyContent: "center",
                                     }}
                                     size="small"
                                   />
-                                  <Text
-                                    style={{
-                                      color: "var(--text)",
-                                      fontSize: 14,
-                                      fontWeight: 600,
-                                      width: 20,
-                                      textAlign: "center",
-                                    }}>
+                                  <Text style={{ color: "var(--text)", fontSize: 14, fontWeight: 600, width: 20, textAlign: "center" }}>
                                     {item.quantity}
                                   </Text>
                                   <Button
                                     type="text"
                                     icon={<PlusOutlined />}
-                                    onClick={() =>
-                                      updateQuantity(item.id, item.quantity + 1)
-                                    }
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                     style={{
                                       color: "var(--text)",
                                       border: "1px solid var(--border)",
-                                      width: 32,
-                                      height: 32,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
+                                      width: 30, height: 30,
+                                      display: "flex", alignItems: "center", justifyContent: "center",
                                     }}
                                     size="small"
                                   />
                                 </div>
                               </div>
-                              <Input
-                                prefix={
-                                  <EditOutlined
-                                    style={{
-                                      color: "var(--text)",
-                                      fontSize: 14,
-                                      opacity: item.note ? 1 : 0.6,
-                                    }}
-                                  />
-                                }
-                                placeholder={t(
-                                  "customer_page.cart_modal.note_placeholder",
-                                )}
-                                value={item.note || ""}
-                                onChange={(e) =>
-                                  updateNote(item.id, e.target.value)
-                                }
-                                style={{
-                                  marginTop: 12,
-                                  background: "var(--background)",
-                                  borderRadius: 8,
-                                  padding: "6px 12px",
-                                  color: "var(--text)",
-                                  fontSize: 13,
-                                  border: "1px solid var(--border)",
-                                  boxShadow: "none",
-                                }}
-                              />
+
+                              {/* Combo children list */}
+                              {isCombo && (item.children ?? []).length > 0 && (
+                                <div style={{
+                                  borderTop: "1px dashed var(--border)",
+                                  padding: "5px 10px 5px 70px",
+                                  display: "flex", flexDirection: "column", gap: 3,
+                                  background: "rgba(0,0,0,0.02)",
+                                }}>
+                                  {(item.children ?? []).map((child) => (
+                                    <div key={child.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                      {child.image && (
+                                        <img
+                                          src={child.image}
+                                          alt={child.name}
+                                          style={{
+                                            width: 28,
+                                            height: 28,
+                                            objectFit: "cover",
+                                            borderRadius: 6,
+                                            border: "1px solid var(--stroke-subtle)",
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                      )}
+                                      <Text style={{ fontSize: 12, color: "var(--text-muted)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {child.name}
+                                      </Text>
+                                      <Text style={{ fontSize: 12, color: "var(--text-muted)", flexShrink: 0 }}>
+                                        x{child.quantity * item.quantity}
+                                      </Text>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Note input */}
+                              <div style={{ padding: "0 10px 10px" }}>
+                                <Input
+                                  prefix={
+                                    <EditOutlined
+                                      style={{
+                                        color: "var(--text-muted)",
+                                        fontSize: 13,
+                                        opacity: item.note ? 1 : 0.5,
+                                      }}
+                                    />
+                                  }
+                                  placeholder={t("customer_page.cart_modal.note_placeholder")}
+                                  value={item.note || ""}
+                                  onChange={(e) => updateNote(item.id, e.target.value)}
+                                  style={{
+                                    background: "var(--background)",
+                                    borderRadius: 8,
+                                    padding: "5px 10px",
+                                    color: "var(--text)",
+                                    fontSize: 13,
+                                    border: "1px solid var(--border)",
+                                    boxShadow: "none",
+                                  }}
+                                />
+                              </div>
                             </Card>
-                          ))}
+                            );
+                          })}
                         </>
                       )}
                     </div>
@@ -482,130 +509,207 @@ export default function CartModal() {
                                   }}>
                                   {status}
                                 </Text>
-                                {items.map((item, index) => (
-                                  <Card
-                                    key={
-                                      item.lineId ||
-                                      `${item.id}-${status}-${index}`
-                                    }
-                                    style={{
-                                      background: "var(--surface)",
-                                      border: "1px solid var(--border)",
-                                      borderRadius: 12,
-                                      marginBottom: 8,
-                                    }}
-                                    styles={{ body: { padding: 10 } }}>
-                                    <div
+                                {items.map((item, index) => {
+                                  const isCombo = !!item.comboId;
+                                  return (
+                                    <Card
+                                      key={item.lineId || `${item.id}-${status}-${index}`}
                                       style={{
-                                        display: "flex",
-                                        gap: 8,
-                                        alignItems: "center",
-                                      }}>
-                                      {item.image && (
-                                        <img
-                                          src={item.image}
-                                          alt={item.name}
-                                          style={{
-                                            width: 56,
-                                            height: 56,
-                                            objectFit: "cover",
-                                            borderRadius: 8,
-                                            border:
-                                              "1px solid var(--stroke-subtle)",
-                                            flexShrink: 0,
-                                          }}
-                                        />
-                                      )}
+                                        background: "var(--surface)",
+                                        border: "1px solid var(--border)",
+                                        borderRadius: 12,
+                                        marginBottom: 8,
+                                        overflow: "hidden",
+                                      }}
+                                      styles={{ body: { padding: 0 } }}>
+                                      {/* Main row */}
                                       <div
                                         style={{
                                           display: "flex",
-                                          justifyContent: "space-between",
+                                          gap: 8,
                                           alignItems: "center",
-                                          flex: 1,
-                                          minWidth: 0,
+                                          padding: 10,
                                         }}>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                          <Text
+                                        {item.image ? (
+                                          <img
+                                            src={item.image}
+                                            alt={item.name}
+                                            style={{
+                                              width: 56,
+                                              height: 56,
+                                              objectFit: "cover",
+                                              borderRadius: 8,
+                                              border: "1px solid var(--stroke-subtle)",
+                                              flexShrink: 0,
+                                            }}
+                                          />
+                                        ) : isCombo ? (
+                                          <div
+                                            style={{
+                                              width: 56,
+                                              height: 56,
+                                              borderRadius: 8,
+                                              background: "var(--surface-subtle, #f5f5f5)",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              flexShrink: 0,
+                                              border: "1px solid var(--stroke-subtle)",
+                                            }}>
+                                            <img
+                                              src="/images/dishStatus/spicy.png"
+                                              alt=""
+                                              style={{ width: 24, height: 24, objectFit: "contain", opacity: 0.3 }}
+                                            />
+                                          </div>
+                                        ) : null}
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            flex: 1,
+                                            minWidth: 0,
+                                          }}>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <Text
+                                              style={{
+                                                color: "var(--text)",
+                                                fontSize: 14,
+                                                fontWeight: 600,
+                                                display: "block",
+                                                marginBottom: 2,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                              }}>
+                                              {item.name}
+                                            </Text>
+                                            <Text
+                                              style={{
+                                                color: "var(--text)",
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                              }}>
+                                              {formatVND(parseFloat(item.price))} x {item.quantity}
+                                            </Text>
+                                          </div>
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              flexDirection: "column",
+                                              alignItems: "flex-end",
+                                              gap: 4,
+                                              flexShrink: 0,
+                                            }}>
+                                            <Tag
+                                              color={getStatusColor(item.status)}
+                                              style={{ margin: 0, fontSize: 11 }}>
+                                              {item.status || "Pending"}
+                                            </Tag>
+                                            <Text
+                                              style={{
+                                                color: "var(--text)",
+                                                fontSize: 14,
+                                                fontWeight: 600,
+                                              }}>
+                                              {formatVND(parseFloat(item.price) * item.quantity)}
+                                            </Text>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Combo children */}
+                                      {isCombo && (item.children ?? []).length > 0 && (
+                                        <div
+                                          style={{
+                                            borderTop: "1px dashed var(--border)",
+                                            padding: "6px 10px 6px 74px",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 4,
+                                            background: "var(--background, rgba(0,0,0,0.02))",
+                                          }}>
+                                          {(item.children ?? []).map((child) => (
+                                            <div
+                                              key={child.lineId ?? child.id}
+                                              style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 8,
+                                              }}>
+                                              {child.image && (
+                                                <img
+                                                  src={child.image}
+                                                  alt={child.name}
+                                                  style={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    objectFit: "cover",
+                                                    borderRadius: 6,
+                                                    border: "1px solid var(--stroke-subtle)",
+                                                    flexShrink: 0,
+                                                  }}
+                                                />
+                                              )}
+                                              <Text
+                                                style={{
+                                                  fontSize: 13,
+                                                  color: "var(--text-muted)",
+                                                  flex: 1,
+                                                  overflow: "hidden",
+                                                  textOverflow: "ellipsis",
+                                                  whiteSpace: "nowrap",
+                                                }}>
+                                                {child.name}
+                                              </Text>
+                                              <Text
+                                                style={{
+                                                  fontSize: 12,
+                                                  color: "var(--text-muted)",
+                                                  flexShrink: 0,
+                                                }}>
+                                                x{child.quantity}
+                                              </Text>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+
+                                      {/* Note */}
+                                      {item.note && (
+                                        <div
+                                          style={{
+                                            margin: "0 10px 10px",
+                                            background: "var(--background)",
+                                            borderRadius: 8,
+                                            padding: "6px 12px",
+                                            display: "flex",
+                                            alignItems: "flex-start",
+                                            gap: 8,
+                                            border: "1px solid var(--border)",
+                                          }}>
+                                          <EditOutlined
                                             style={{
                                               color: "var(--text)",
-                                              fontSize: 14,
-                                              fontWeight: 600,
-                                              display: "block",
-                                              marginBottom: 2,
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                              whiteSpace: "nowrap",
-                                            }}>
-                                            {item.name}
-                                          </Text>
+                                              fontSize: 13,
+                                              marginTop: 2,
+                                              opacity: 0.8,
+                                            }}
+                                          />
                                           <Text
                                             style={{
                                               color: "var(--text)",
                                               fontSize: 13,
-                                              fontWeight: 600,
+                                              fontStyle: "italic",
                                             }}>
-                                            {formatVND(parseFloat(item.price))}{" "}
-                                            x {item.quantity}
+                                            {item.note}
                                           </Text>
                                         </div>
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "flex-end",
-                                            gap: 4,
-                                          }}>
-                                          <Tag
-                                            color={getStatusColor(item.status)}
-                                            style={{ margin: 0, fontSize: 11 }}>
-                                            {item.status || "Pending"}
-                                          </Tag>
-                                          <Text
-                                            style={{
-                                              color: "var(--text)",
-                                              fontSize: 14,
-                                              fontWeight: 600,
-                                            }}>
-                                            {formatVND(
-                                              parseFloat(item.price) *
-                                                item.quantity,
-                                            )}
-                                          </Text>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {item.note && (
-                                      <div
-                                        style={{
-                                          marginTop: 8,
-                                          background: "var(--background)",
-                                          borderRadius: 8,
-                                          padding: "6px 12px",
-                                          display: "flex",
-                                          alignItems: "flex-start",
-                                          gap: 8,
-                                          border: "1px solid var(--border)",
-                                        }}>
-                                        <EditOutlined
-                                          style={{
-                                            color: "var(--text)",
-                                            fontSize: 13,
-                                            marginTop: 2,
-                                            opacity: 0.8,
-                                          }}
-                                        />
-                                        <Text
-                                          style={{
-                                            color: "var(--text)",
-                                            fontSize: 13,
-                                            fontStyle: "italic",
-                                          }}>
-                                          {item.note}
-                                        </Text>
-                                      </div>
-                                    )}
-                                  </Card>
-                                ))}
+                                      )}
+                                    </Card>
+                                  );
+                                })}
                               </div>
                             );
                           })}

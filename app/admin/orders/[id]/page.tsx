@@ -74,6 +74,8 @@ interface OrderDetailsResponse {
   orderDetails?: Array<{
     id: string;
     dishId: string;
+    comboId?: string | null;
+    parentId?: string | null;
     dishName?: string | null;
     unitPrice?: number;
     quantity: number;
@@ -99,6 +101,55 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString("vi-VN");
 };
 
+type RawDetail = NonNullable<OrderDetailsResponse["orderDetails"]>[number];
+
+interface StructuredDetail extends RawDetail {
+  ids: string[];
+  children?: RawDetail[];
+}
+
+/** Build structured list: combo parents with children nested, standalone dishes aggregated */
+const buildStructuredItems = (
+  items: NonNullable<OrderDetailsResponse["orderDetails"]>,
+): StructuredDetail[] => {
+  const comboParents = items.filter((i) => i.comboId && !i.parentId);
+  const childrenByParentId = new Map<string, RawDetail[]>();
+  items
+    .filter((i) => i.parentId)
+    .forEach((i) => {
+      const list = childrenByParentId.get(i.parentId!) ?? [];
+      list.push(i);
+      childrenByParentId.set(i.parentId!, list);
+    });
+  const standaloneItems = items.filter((i) => !i.comboId && !i.parentId);
+
+  // Aggregate standalone items by name+status
+  const aggregated = new Map<string, StructuredDetail>();
+  for (const item of standaloneItems) {
+    const nameKey = (item.dishName || item.dishId).toLowerCase().trim();
+    const statusKey = (item.status ?? "").toLowerCase();
+    const key = `${nameKey}||${statusKey}`;
+    const existing = aggregated.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+      existing.ids.push(item.id);
+    } else {
+      aggregated.set(key, { ...item, ids: [item.id] });
+    }
+  }
+
+  const result: StructuredDetail[] = [
+    ...comboParents.map((p) => ({
+      ...p,
+      ids: [p.id],
+      children: childrenByParentId.get(p.id) ?? [],
+    })),
+    ...Array.from(aggregated.values()),
+  ];
+
+  return result;
+};
+
 export default function AdminOrderDetailPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
@@ -113,7 +164,7 @@ export default function AdminOrderDetailPage() {
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
-  const [cancelConfirm, setCancelConfirm] = useState<{ detailId: string; dishName: string; newStatusId: number } | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<{ detailIds: string[]; dishName: string; newStatusId: number } | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const inFlightRef = useRef(false);
   const lastFetchRef = useRef<number | null>(null);
@@ -134,17 +185,17 @@ export default function AdminOrderDetailPage() {
     fetchStatuses();
   }, []);
 
-  const handleDetailStatusChange = async (detailId: string, newStatusId: number, dishName?: string) => {
+  const handleDetailStatusChange = async (detailIds: string[], newStatusId: number, dishName?: string) => {
     if (!orderId) return;
     const cancelStatus = availableStatuses.find(
       (s) => s.code?.toLowerCase() === "cancelled" || s.name?.toLowerCase() === "cancelled",
     );
     if (cancelStatus && String(newStatusId) === cancelStatus.id) {
-      setCancelConfirm({ detailId, dishName: dishName ?? "", newStatusId });
+      setCancelConfirm({ detailIds, dishName: dishName ?? "", newStatusId });
       return;
     }
     try {
-      await orderService.updateOrderDetailStatus(orderId, detailId, newStatusId);
+      await Promise.all(detailIds.map((id) => orderService.updateOrderDetailStatus(orderId, id, newStatusId)));
     } catch (err: unknown) {
       console.error("Failed to update status", err);
       const errorMsg = extractApiErrorMessage(
@@ -159,13 +210,13 @@ export default function AdminOrderDetailPage() {
     if (!cancelConfirm || !orderId) return;
     setIsCancelling(true);
     try {
-      await orderService.updateOrderDetailStatus(orderId, cancelConfirm.detailId, cancelConfirm.newStatusId);
+      await Promise.all(cancelConfirm.detailIds.map((id) => orderService.updateOrderDetailStatus(orderId, id, cancelConfirm.newStatusId)));
       setOrder((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
           orderDetails: (prev.orderDetails ?? []).map((d) =>
-            d.id === cancelConfirm.detailId ? { ...d, status: "Cancelled" } : d,
+            cancelConfirm.detailIds.includes(d.id) ? { ...d, status: "Cancelled" } : d,
           ),
         };
       });
@@ -471,39 +522,81 @@ export default function AdminOrderDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.orderDetails.map((item) => (
-                        <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                          <td className="px-2 py-2">{item.dishName || item.dishId}</td>
-                          <td className="px-2 py-2 text-center">{item.quantity}</td>
-                          <td className="px-2 py-2 text-center">
-                            {formatCurrency((item.unitPrice ?? 0) * Number(item.quantity ?? 0))}
-                          </td>
-                          <td className="px-2 py-2 text-center">
-                            {availableStatuses.length > 0 ? (
-                                <select
-                                  className="w-full rounded-md border p-1 text-xs"
-                                  style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text)" }}
-                                  value={availableStatuses.find(s => s.name === item.status)?.id ?? ""}
-                                  disabled={item.status?.toLowerCase() === "cancelled"}
-                                  onChange={(e) => {
-                                    if (e.target.value && item.id) {
-                                      handleDetailStatusChange(item.id, Number(e.target.value), item.dishName ?? undefined);
-                                    }
-                                  }}
-                                >
-                                  <option value="" disabled>-</option>
-                                  {availableStatuses.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                  ))}
-                                </select>
-                            ) : (
-                              item.status ?? "-"
-                            )}
-                          </td>
-                          <td className="px-2 py-2 text-center">{formatDateTime(item.createdDate)}</td>
-                          <td className="px-2 py-2">{item.note || "-"}</td>
-                        </tr>
-                      ))}
+                      {buildStructuredItems(order.orderDetails).map((item) => {
+                        const isCombo = !!item.comboId && !item.parentId;
+                        return (
+                          <>
+                            <tr
+                              key={item.id}
+                              style={{
+                                borderBottom: isCombo && (item.children ?? []).length > 0
+                                  ? "none"
+                                  : "1px solid var(--border)",
+                                background: isCombo ? "var(--surface)" : undefined,
+                              }}>
+                              <td className="px-2 py-2 font-medium">
+                                {isCombo ? (
+                                  <span style={{ color: "var(--text)", fontWeight: 600 }}>
+                                    {item.dishName || item.dishId}
+                                  </span>
+                                ) : (
+                                  item.dishName || item.dishId
+                                )}
+                              </td>
+                              <td className="px-2 py-2 text-center">{item.quantity}</td>
+                              <td className="px-2 py-2 text-center">
+                                {formatCurrency((item.unitPrice ?? 0) * Number(item.quantity ?? 0))}
+                              </td>
+                              <td className="px-2 py-2 text-center">
+                                {availableStatuses.length > 0 ? (
+                                  <select
+                                    className="w-full rounded-md border p-1 text-xs"
+                                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text)" }}
+                                    value={availableStatuses.find(s => s.name === item.status)?.id ?? ""}
+                                    disabled={item.status?.toLowerCase() === "cancelled"}
+                                    onChange={(e) => {
+                                      if (e.target.value && item.ids && item.ids.length > 0) {
+                                        handleDetailStatusChange(item.ids, Number(e.target.value), item.dishName ?? undefined);
+                                      }
+                                    }}
+                                  >
+                                    <option value="" disabled>-</option>
+                                    {availableStatuses.map(s => (
+                                      <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  item.status ?? "-"
+                                )}
+                              </td>
+                              <td className="px-2 py-2 text-center">{formatDateTime(item.createdDate)}</td>
+                              <td className="px-2 py-2">{item.note || "-"}</td>
+                            </tr>
+                            {/* Combo children */}
+                            {isCombo && (item.children ?? []).map((child, idx) => (
+                              <tr
+                                key={child.id}
+                                style={{
+                                  borderBottom: idx === (item.children!.length - 1)
+                                    ? "1px solid var(--border)"
+                                    : "1px dashed var(--border)",
+                                  background: "rgba(0,0,0,0.015)",
+                                }}>
+                                <td className="px-2 py-1.5 text-xs" style={{ color: "var(--text-muted)", paddingLeft: 28 }}>
+                                  ↳ {child.dishName || child.dishId}
+                                </td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+                                  {child.quantity}
+                                </td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                                <td className="px-2 py-1.5 text-center text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                                <td className="px-2 py-1.5 text-xs" style={{ color: "var(--text-muted)" }}>-</td>
+                              </tr>
+                            ))}
+                          </>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
