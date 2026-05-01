@@ -55,8 +55,15 @@
         "quick_view": "Quick view",
         "open_deposit_link": "Open deposit payment link",
         "deposit_link": "Deposit link",
-        "confirm_cash_deposit": "Confirm cash deposit received",
-        "confirm_deposit": "Confirm deposit"
+        "confirm_cash_deposit": "Confirm deposit",
+        "confirm_deposit": "Confirm deposit",
+        "actions_menu": "Actions",
+        "confirm_reservation": "Confirm reservation",
+        "confirm_cash": "Confirm cash deposit",
+        "deposit_link_action": "Open deposit link",
+        "noshow": "No-show",
+        "delete": "Delete reservation",
+        "complete_reservation": "Complete"
       },
       "confirm": {
         "cancel_title": "Confirm reservation cancellation",
@@ -70,7 +77,23 @@
         "deposit_title": "Confirm cash deposit",
         "deposit_description": "Are you sure you want to confirm cash deposit received for this reservation?",
         "deposit_confirm": "Confirm",
-        "deposit_cancel": "Go back"
+        "deposit_cancel": "Go back",
+        "delete_title": "Delete reservation",
+        "delete_description": "Are you sure you want to delete this reservation? Data will be permanently removed.",
+        "delete_confirm": "Delete",
+        "delete_cancel": "Go back",
+        "confirm_title": "Confirm reservation",
+        "confirm_description": "Confirm this reservation? The table will be marked as Reserved.",
+        "confirm_confirm": "Confirm",
+        "confirm_cancel": "Go back",
+        "noshow_title": "Mark as no-show",
+        "noshow_description": "Mark this guest as no-show? The reservation will be cancelled.",
+        "noshow_confirm": "Confirm",
+        "noshow_cancel": "Go back",
+        "complete_title": "Complete reservation",
+        "complete_description": "Are you sure you want to mark this reservation as completed?",
+        "complete_confirm": "Complete",
+        "complete_cancel": "Go back"
       },
       "side_effects": {
         "CONFIRMED": "Table will be marked as Reserved",
@@ -118,11 +141,20 @@
         "cancel_only_from_status": "Cancellation is only supported from status options",
         "checkin_success": "Checked in successfully",
         "checkin_failed": "Failed to check in reservation",
-        "deposit_pending": "Deposit payment pending",
-        "deposit_confirmed": "Cash deposit confirmed",
+        "deposit_pending": "Deposit pending",
+        "deposit_confirmed": "Deposit confirmed",
+        "not_checked_in": "Not checked in",
         "deposit_failed": "Failed to process deposit request",
         "already_checked_in": "This reservation has already been checked in",
-        "checked_in_at": "Checked in at"
+        "checked_in_at": "Checked in at",
+        "confirm_success": "Reservation confirmed",
+        "confirm_failed": "Failed to confirm reservation",
+        "delete_success": "Reservation deleted",
+        "delete_failed": "Failed to delete reservation",
+        "noshow_success": "Marked as no-show",
+        "noshow_failed": "Failed to mark as no-show",
+        "complete_success": "Reservation completed",
+        "complete_failed": "Failed to complete reservation"
       }
     },
     "order_detail": {

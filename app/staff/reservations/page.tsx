@@ -8,6 +8,7 @@ import reservationService, {
   ReservationStatus,
 } from "@/lib/services/reservationService";
 import { tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { HubConnectionState } from "@microsoft/signalr";
 import { Select, message } from "antd";
 import Link from "next/link";
@@ -16,6 +17,18 @@ import { DayPicker } from '@/components/ui/DayPicker';
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import { formatVND } from "@/lib/utils/currency";
+import { ReservationRowActions } from "@/components/admin/reservations/ReservationRowActions";
+
+
+const STATUS_FLOW_ORDER: Record<string, number> = {
+  PENDING: 0,
+  CONFIRMED: 1,
+  CHECKED_IN: 2,
+  COMPLETED: 3,
+  CANCELLED: 99,
+  NO_SHOW: 99,
+  NOSHOW: 99,
+};
 
 // ─── Badge component ──────────────────────────────────────────────────────────
 function StatusBadge({
@@ -542,8 +555,6 @@ export default function ReservationsPage() {
   // Detail modal
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tenantId, setTenantId] = useState<string>("");
-  const [checkingInId, setCheckingInId] = useState<string | null>(null);
-  const [checkedInIds, setCheckedInIds] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -579,6 +590,33 @@ export default function ReservationsPage() {
       setLoading(false);
     }
   }, [page, search, statusId, todayDate, todayDay, todayMonth, todayYear]);
+
+  const handleReservationStatusChange = useCallback(
+    async (reservationId: string, newStatusId: number, currentStatusId: number) => {
+      if (newStatusId === currentStatusId) return;
+
+      try {
+        await reservationService.updateReservationStatus(reservationId, newStatusId);
+        message.success(
+          t("admin.reservations.messages.status_updated", {
+            defaultValue: "Đã cập nhật trạng thái",
+          }),
+        );
+        fetchData();
+      } catch (e) {
+        console.error(e);
+        message.error(
+          extractApiErrorMessage(
+            e,
+            t("admin.reservations.messages.update_status_failed", {
+              defaultValue: "Không thể cập nhật trạng thái đặt bàn",
+            }),
+          ),
+        );
+      }
+    },
+    [fetchData, t],
+  );
 
   const [statuses, setStatuses] = useState<ReservationStatus[]>([]);
   const [globalStats, setGlobalStats] = useState<{
@@ -636,32 +674,6 @@ export default function ReservationsPage() {
       })
       .catch(() => { });
   }, []);
-
-  const handleCheckInReservation = async (
-    reservationId: string,
-    confirmationCode: string,
-  ) => {
-    setCheckingInId(reservationId);
-    try {
-      await reservationService.checkInReservation(confirmationCode);
-      message.success(
-        t("admin.reservations.messages.checkin_success", {
-          defaultValue: "Check-in thành công",
-        }),
-      );
-      setCheckedInIds((prev) => new Set(prev).add(reservationId));
-      await fetchData();
-    } catch (e) {
-      console.error(e);
-      message.error(
-        t("admin.reservations.messages.checkin_failed", {
-          defaultValue: "Không thể check-in đặt bàn",
-        }),
-      );
-    } finally {
-      setCheckingInId(null);
-    }
-  };
 
   useEffect(() => {
     if (!tenantId) return;
@@ -762,30 +774,6 @@ export default function ReservationsPage() {
               })}
             </p>
           </div>
-          <button
-            onClick={fetchData}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              color: "var(--text)",
-            }}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            {t("admin.reservations.refresh")}
-          </button>
         </div>
 
         {/* ── Stats ── */}
@@ -1197,88 +1185,83 @@ export default function ReservationsPage() {
 
                       <td className="px-4 py-3 whitespace-nowrap text-center">
                         <div className="flex justify-center">
-                          <StatusBadge {...item.status} />
+                          {(() => {
+                            const rawColor =
+                              item.status.code === "CONFIRMED"
+                                ? "#3b82f6"
+                                : item.status.colorCode || "#3b82f6";
+                            const currentColor = /^#([\da-f]{3}|[\da-f]{6})$/i.test(rawColor)
+                              ? rawColor
+                              : "#3b82f6";
+                            const badgeBackground = `${currentColor}1A`;
+                            const badgeBorder = `${currentColor}33`;
+                            const currentFlowOrder =
+                              STATUS_FLOW_ORDER[item.status?.code?.toUpperCase() ?? ""] ??
+                              0;
+
+                            return (
+                              <select
+                                className="pl-3 pr-8 py-1 rounded-full text-[13px] font-semibold border cursor-pointer outline-none transition-colors appearance-none text-center"
+                                style={{
+                                  backgroundColor: badgeBackground,
+                                  borderColor: badgeBorder,
+                                  color: currentColor,
+                                  textAlignLast: "center",
+                                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(currentColor)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                                  backgroundRepeat: "no-repeat",
+                                  backgroundPosition: "right 0.6rem center",
+                                  backgroundSize: "1em",
+                                }}
+                                value={String(item.status.id)}
+                                onChange={(e) =>
+                                  handleReservationStatusChange(
+                                    item.id,
+                                    Number(e.target.value),
+                                    item.status.id,
+                                  )
+                                }
+                              >
+                                {statuses
+                                  .filter((status) => status.code !== "CHECKED_IN")
+                                  .map((status) => {
+                                    const label = t(
+                                      `admin.reservations.status.${status.code.toLowerCase()}`,
+                                      { defaultValue: status.name },
+                                    );
+                                    const statusOrder =
+                                      STATUS_FLOW_ORDER[status.code?.toUpperCase() ?? ""] ??
+                                      0;
+                                    const isPast =
+                                      statusOrder < currentFlowOrder &&
+                                      status.id !== item.status.id;
+
+                                    return (
+                                      <option
+                                        key={status.id}
+                                        value={status.id}
+                                        disabled={isPast}
+                                        style={{
+                                          color: "var(--text)",
+                                          background: "var(--card)",
+                                        }}
+                                      >
+                                        {label}
+                                      </option>
+                                    );
+                                  })}
+                              </select>
+                            );
+                          })()}
                         </div>
                       </td>
 
                       <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {item.status.code === "CONFIRMED" &&
-                            isSameLocalDate(
-                              item.reservationDateTime,
-                              todayYear,
-                              todayMonth,
-                              todayDay,
-                            ) &&
-                            !item.checkedInAt &&
-                            !checkedInIds.has(item.id) && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCheckInReservation(
-                                    item.id,
-                                    item.confirmationCode,
-                                  )
-                                }
-                                disabled={checkingInId === item.id}
-                                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                                style={{
-                                  background: "var(--primary)",
-                                  color: "#fff",
-                                }}
-                                title={t("admin.reservations.actions.checkin")}
-                              >
-                                {checkingInId === item.id
-                                  ? t("admin.reservations.modal.processing")
-                                  : t("admin.reservations.actions.checkin")}
-                              </button>
-                            )}
-                          {(item.checkedInAt || checkedInIds.has(item.id)) && (
-                            <span
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{
-                                background: "rgba(34, 197, 94, 0.1)",
-                                color: "#22c55e",
-                                border: "1px solid rgba(34, 197, 94, 0.2)",
-                              }}
-                              title={
-                                item.checkedInAt
-                                  ? t("admin.reservations.checked_in_at") + " " + new Date(item.checkedInAt).toLocaleTimeString()
-                                  : undefined
-                              }
-                            >
-                              {t("admin.reservations.checked_in")}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => setSelectedId(item.id)}
-                            className="p-2 rounded-lg transition-all"
-                            style={{
-                              background: "var(--primary-soft)",
-                              color: "var(--primary)",
-                            }}
-                            title={t("admin.reservations.actions.view_detail")}
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
-                          </button>
+                        <div className="flex items-center justify-center">
+                          <ReservationRowActions
+                            item={item}
+                            onActionComplete={fetchData}
+                            onViewDetail={() => setSelectedId(item.id)}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -1360,7 +1343,73 @@ export default function ReservationsPage() {
                           })}
                         </p>
                       </div>
-                      <StatusBadge {...item.status} />
+                      {(() => {
+                        const rawColor =
+                          item.status.code === "CONFIRMED"
+                            ? "#3b82f6"
+                            : item.status.colorCode || "#3b82f6";
+                        const currentColor = /^#([\da-f]{3}|[\da-f]{6})$/i.test(rawColor)
+                          ? rawColor
+                          : "#3b82f6";
+                        const badgeBackground = `${currentColor}1A`;
+                        const badgeBorder = `${currentColor}33`;
+                        const currentFlowOrder =
+                          STATUS_FLOW_ORDER[item.status?.code?.toUpperCase() ?? ""] ??
+                          0;
+
+                        return (
+                          <select
+                            className="pl-3 pr-8 py-1 rounded-full text-[13px] font-semibold border cursor-pointer outline-none transition-colors appearance-none text-center"
+                            style={{
+                              backgroundColor: badgeBackground,
+                              borderColor: badgeBorder,
+                              color: currentColor,
+                              textAlignLast: "center",
+                              backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(currentColor)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                              backgroundRepeat: "no-repeat",
+                              backgroundPosition: "right 0.6rem center",
+                              backgroundSize: "1em",
+                            }}
+                            value={String(item.status.id)}
+                            onChange={(e) =>
+                              handleReservationStatusChange(
+                                item.id,
+                                Number(e.target.value),
+                                item.status.id,
+                              )
+                            }
+                          >
+                            {statuses
+                              .filter((status) => status.code !== "CHECKED_IN")
+                              .map((status) => {
+                                const label = t(
+                                  `admin.reservations.status.${status.code.toLowerCase()}`,
+                                  { defaultValue: status.name },
+                                );
+                                const statusOrder =
+                                  STATUS_FLOW_ORDER[status.code?.toUpperCase() ?? ""] ??
+                                  0;
+                                const isPast =
+                                  statusOrder < currentFlowOrder &&
+                                  status.id !== item.status.id;
+
+                                return (
+                                  <option
+                                    key={status.id}
+                                    value={status.id}
+                                    disabled={isPast}
+                                    style={{
+                                      color: "var(--text)",
+                                      background: "var(--card)",
+                                    }}
+                                  >
+                                    {label}
+                                  </option>
+                                );
+                              })}
+                          </select>
+                        );
+                      })()}
                     </div>
 
                     {/* Customer */}
@@ -1467,83 +1516,11 @@ export default function ReservationsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      {item.status.code === "CONFIRMED" &&
-                        isSameLocalDate(
-                          item.reservationDateTime,
-                          todayYear,
-                          todayMonth,
-                          todayDay,
-                        ) &&
-                        !item.checkedInAt &&
-                        !checkedInIds.has(item.id) && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleCheckInReservation(
-                                item.id,
-                                item.confirmationCode,
-                              )
-                            }
-                            disabled={checkingInId === item.id}
-                            className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-                            style={{
-                              background: "var(--primary)",
-                              color: "#fff",
-                            }}
-                          >
-                            {checkingInId === item.id
-                              ? t("admin.reservations.modal.processing")
-                              : t("admin.reservations.actions.checkin")}
-                          </button>
-                        )}
-                      {(item.checkedInAt || checkedInIds.has(item.id)) && (
-                        <span
-                          className="flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center text-center"
-                          style={{
-                            background: "rgba(34, 197, 94, 0.1)",
-                            color: "#22c55e",
-                            border: "1px solid rgba(34, 197, 94, 0.2)",
-                          }}
-                          title={
-                            item.checkedInAt
-                              ? t("admin.reservations.checked_in_at") + " " + new Date(item.checkedInAt).toLocaleTimeString()
-                              : undefined
-                          }
-                        >
-                          {t("admin.reservations.checked_in")}
-                        </span>
-                      )}
-                      <button
-                        onClick={() => setSelectedId(item.id)}
-                        className="flex-1 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all"
-                        style={{
-                          background: "var(--primary-soft)",
-                          color: "var(--primary)",
-                        }}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        {t("admin.reservations.actions.view_detail")}
-                      </button>
-                    </div>
+                    <ReservationRowActions
+                      item={item}
+                      onActionComplete={fetchData}
+                      onViewDetail={() => setSelectedId(item.id)}
+                    />
                   </div>
                 ))
               )}

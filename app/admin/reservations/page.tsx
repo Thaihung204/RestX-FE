@@ -3,22 +3,22 @@
 import { DropDown } from "@/components/ui/DropDown";
 import reservationService, {
   PaginatedReservations,
-  ReservationDetail,
   ReservationListItem,
   ReservationStatus,
 } from "@/lib/services/reservationService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
-import { formatVND } from "@/lib/utils/currency";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
-import { DownloadOutlined, ReloadOutlined, PlusOutlined } from "@ant-design/icons";
-import { Select, message } from "antd";
-import { useRouter } from "next/navigation";
+import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import { useCallback, useEffect, useState } from "react";
-import { DayPicker } from '@/components/ui/DayPicker';
-import dayjs from 'dayjs';
+import { DayPicker } from "@/components/ui/DayPicker";
+import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ReservationRowActions } from "../../../components/admin/reservations/ReservationRowActions";
+import { tenantService } from "@/lib/services/tenantService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
+import { HubConnectionState } from "@microsoft/signalr";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -32,682 +32,16 @@ const tableHeaderKeys = [
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
-// ─── Badge component ──────────────────────────────────────────────────────────
-function StatusBadge({
-  code,
-  name,
-  colorCode,
-}: {
-  code: string;
-  name: string;
-  colorCode: string;
-}) {
-  const { t } = useTranslation();
-  const finalColorCode = code === "CONFIRMED" ? "#3b82f6" : colorCode;
-  const bg = finalColorCode ? `${finalColorCode}22` : "rgba(255,255,255,0.08)";
-  const fallbackName = name || code;
-  return (
-    <span
-      className="px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap"
-      style={{
-        color: finalColorCode,
-        backgroundColor: bg,
-        borderColor: `${finalColorCode}44`,
-      }}
-    >
-      {code
-        ? t(`admin.reservations.status.${code.toLowerCase()}`, {
-          defaultValue: fallbackName,
-        })
-        : fallbackName}
-    </span>
-  );
-}
-
-// ─── Detail Modal ─────────────────────────────────────────────────────────────
-function ReservationDetailModal({
-  reservationId,
-  onClose,
-  onStatusUpdated,
-}: {
-  reservationId: string;
-  onClose: () => void;
-  onStatusUpdated: () => void;
-}) {
-  const router = useRouter();
-  const { t } = useTranslation();
-  const [detail, setDetail] = useState<ReservationDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [allStatuses, setAllStatuses] = useState<ReservationStatus[]>([]);
-  const [selectedStatusId, setSelectedStatusId] = useState<number | "">("");
-  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
-  const [pendingCancelStatusId, setPendingCancelStatusId] = useState<number | null>(null);
-  const [confirmCheckInOpen, setConfirmCheckInOpen] = useState(false);
-  const [confirmCashDepositOpen, setConfirmCashDepositOpen] = useState(false);
-  const [cashDepositLoading, setCashDepositLoading] = useState(false);
-
-  useEffect(() => {
-    reservationService
-      .getReservationStatuses()
-      .then(setAllStatuses)
-      .catch((error) => {
-        console.error(error);
-        message.error(
-          extractApiErrorMessage(
-            error,
-            t("admin.reservations.messages.statuses_load_failed"),
-          ),
-        );
-      });
-  }, []);
-
-  useEffect(() => {
-    reservationService
-      .getReservationById(reservationId)
-      .then((d) => {
-        setDetail(d);
-        setSelectedStatusId(d.status.id);
-      })
-      .catch((error) => {
-        console.error(error);
-        setDetail(null);
-        message.error(
-          extractApiErrorMessage(
-            error,
-            t("admin.reservations.modal.load_error"),
-          ),
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [reservationId]);
-
-  const cancelledStatusId = allStatuses.find((s) => s.code === "CANCELLED")?.id;
-
-  // Define the logical order of statuses for enabling/disabling
-  const STATUS_FLOW_ORDER: Record<string, number> = {
-    PENDING: 0,
-    CONFIRMED: 1,
-    CHECKED_IN: 2,
-    COMPLETED: 3,
-    CANCELLED: 99,
-    NO_SHOW: 99,
-    NOSHOW: 99,
-  };
-
-  const currentFlowOrder =
-    STATUS_FLOW_ORDER[detail?.status?.code?.toUpperCase() ?? ""] ?? 0;
-  const isTerminalStatus = [
-    "CANCELLED",
-    "NO_SHOW",
-    "NOSHOW",
-    "COMPLETED",
-  ].includes(detail?.status?.code?.toUpperCase() ?? "");
-
-  const handleStatusChange = async (newStatusId: number) => {
-    if (!detail || newStatusId === detail.status.id) return;
-
-    const selectedStatus = allStatuses.find((s) => s.id === newStatusId);
-    if (selectedStatus?.code !== "CANCELLED") {
-      message.warning(
-        t("admin.reservations.messages.cancel_only_from_status"),
-      );
-      setSelectedStatusId(detail.status.id);
-      return;
-    }
-
-    setPendingCancelStatusId(newStatusId);
-    setConfirmCancelOpen(true);
-  };
-
-  const executeCancelStatus = async () => {
-    if (!detail || !pendingCancelStatusId) return;
-    setConfirmCancelOpen(false);
-    setActionLoading(true);
-    try {
-      await reservationService.updateReservationStatus(
-        reservationId,
-        pendingCancelStatusId,
-      );
-      message.success(t("admin.reservations.messages.status_updated"));
-      onStatusUpdated();
-      onClose();
-    } catch (e) {
-      console.error(e);
-      message.error(
-        extractApiErrorMessage(
-          e,
-          t("admin.reservations.messages.update_status_failed"),
-        ),
-      );
-      setSelectedStatusId(detail.status.id);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCancelCancel = () => {
-    setConfirmCancelOpen(false);
-    setPendingCancelStatusId(null);
-    if (detail) setSelectedStatusId(detail.status.id);
-  };
-
-  const now = new Date();
-  const canCheckIn =
-    detail?.status.code === "CONFIRMED" &&
-    !detail.checkedInAt &&
-    isSameLocalDate(
-      detail.reservationDateTime,
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-  const currentStatusLabel = detail
-    ? t(`admin.reservations.status.${detail.status.code.toLowerCase()}`, {
-      defaultValue: detail.status.name,
-    })
-    : undefined;
-  const selectedStatusValue =
-    selectedStatusId !== "" &&
-    allStatuses.some((s) => s.id === selectedStatusId)
-      ? selectedStatusId
-      : undefined;
-
-  const executeCheckIn = async () => {
-    if (!detail || !canCheckIn) return;
-    setConfirmCheckInOpen(false);
-    setActionLoading(true);
-    try {
-      await reservationService.checkInReservation(detail.confirmationCode);
-      message.success(t("admin.reservations.messages.checkin_success"));
-      onStatusUpdated();
-      onClose();
-    } catch (e) {
-      console.error(e);
-      message.error(
-        extractApiErrorMessage(
-          e,
-          t("admin.reservations.messages.checkin_failed"),
-        ),
-      );
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleConfirmCashDeposit = async () => {
-    if (!detail || (detail.depositAmount ?? 0) <= 0) return;
-    setConfirmCashDepositOpen(false);
-    setCashDepositLoading(true);
-    try {
-      await reservationService.confirmCashDeposit(reservationId, {
-        cashReceive: detail.depositAmount,
-      });
-      message.success(t("admin.reservations.messages.deposit_confirmed"));
-      onStatusUpdated();
-      onClose();
-    } catch (e) {
-      console.error(e);
-      message.error(
-        extractApiErrorMessage(
-          e,
-          t("admin.reservations.messages.deposit_failed"),
-        ),
-      );
-    } finally {
-      setCashDepositLoading(false);
-    }
-  };
-
-  return (
-    <>
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        backgroundColor: "rgba(0,0,0,0.6)",
-        backdropFilter: "blur(4px)",
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden"
-        style={{
-          background: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <div>
-            <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
-              {t("admin.reservations.modal.title")}
-            </h2>
-            {detail && (
-              <span
-                className="text-sm font-mono"
-                style={{ color: "var(--primary)" }}
-              >
-                #{detail.confirmationCode}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-            style={{
-              background: "var(--surface)",
-              color: "var(--text-muted)",
-            }}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div
-                className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-                style={{
-                  borderColor: "var(--primary)",
-                  borderTopColor: "transparent",
-                }}
-              />
-            </div>
-          ) : !detail ? (
-            <p className="text-center" style={{ color: "var(--text-muted)" }}>
-              {t("admin.reservations.modal.load_error")}
-            </p>
-          ) : (
-            <div className="space-y-6">
-              {/* Status + Actions */}
-              <div
-                className="rounded-xl p-4 flex flex-wrap items-center gap-3"
-                style={{ background: "var(--surface)" }}
-              >
-                <span
-                  className="text-sm font-medium shrink-0"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {t("admin.reservations.modal.status_label")}
-                </span>
-                <Select
-                  value={selectedStatusValue}
-                  placeholder={currentStatusLabel}
-                  disabled={
-                    actionLoading ||
-                    allStatuses.length === 0 ||
-                    isTerminalStatus
-                  }
-                  loading={actionLoading}
-                  onChange={(val: number) => handleStatusChange(val)}
-                  style={{ minWidth: 180 }}
-                  options={allStatuses.map((s) => {
-                    const color =
-                      s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
-                    const label = t(
-                      `admin.reservations.status.${s.code.toLowerCase()}`,
-                      {
-                        defaultValue: s.name,
-                      },
-                    );
-                    const statusOrder =
-                      STATUS_FLOW_ORDER[s.code?.toUpperCase() ?? ""] ?? 0;
-                    const isPast =
-                      statusOrder < currentFlowOrder &&
-                      s.id !== detail.status.id;
-                    const isDisabled =
-                      isPast ||
-                      isTerminalStatus ||
-                      (s.code !== "CANCELLED" && s.id !== detail.status.id);
-                    return {
-                      value: s.id,
-                      disabled: isDisabled,
-                      label: (
-                        <span
-                          style={{
-                            color: isPast ? "var(--text-muted)" : color,
-                            fontWeight: 600,
-                            fontSize: 13,
-                            opacity: isPast ? 0.45 : 1,
-                          }}
-                        >
-                          {label}
-                        </span>
-                      ),
-                      rawlabel: label,
-                      color,
-                      isPast,
-                    };
-                  })}
-                  optionRender={(opt: any) => (
-                    <div
-                      className="flex items-center gap-2"
-                      style={{ opacity: opt.data.isPast ? 0.4 : 1 }}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: (opt.data as any).color }}
-                      />
-                      <span
-                        style={{
-                          color: opt.data.isPast
-                            ? "var(--text-muted)"
-                            : (opt.data as any).color,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {(opt.data as any).rawlabel}
-                      </span>
-                    </div>
-                  )}
-                />
-                {canCheckIn && (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmCheckInOpen(true)}
-                    disabled={actionLoading}
-                    className="px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-                    style={{
-                      background: "var(--primary)",
-                      color: "#fff",
-                    }}
-                  >
-                    {t("admin.reservations.actions.checkin")}
-                  </button>
-                )}
-                {detail.checkedInAt && (
-                  <span
-                    className="reservation-checkin-badge"
-                    title={
-                      t("admin.reservations.checked_in_at") +
-                      " " +
-                      new Date(detail.checkedInAt).toLocaleTimeString()
-                    }
-                  >
-                    {t("admin.reservations.checked_in")}{" "}
-                    {new Date(detail.checkedInAt).toLocaleTimeString()}
-                  </span>
-                )}
-                {/* Deposit actions - for PENDING with unpaid deposit */}
-                {detail.status.code === "PENDING" &&
-                  (detail.depositAmount ?? 0) > 0 &&
-                  !detail.depositPaid && (
-                    <>
-                      {detail.checkoutUrl && (
-                        <a
-                          href={detail.checkoutUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-2 rounded-lg text-sm font-semibold transition-all"
-                          style={{
-                            background: "rgba(234, 179, 8, 0.15)",
-                            color: "#eab308",
-                            border: "1px solid rgba(234, 179, 8, 0.3)",
-                          }}
-                        >
-                          {t("admin.reservations.actions.deposit_link")}
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setConfirmCashDepositOpen(true)}
-                        disabled={cashDepositLoading}
-                        className="px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-                        style={{
-                          background: "rgba(234, 179, 8, 0.2)",
-                          color: "#ca8a04",
-                          border: "1px solid rgba(234, 179, 8, 0.3)",
-                        }}
-                      >
-                        {cashDepositLoading
-                          ? t("admin.reservations.modal.processing")
-                          : t("admin.reservations.actions.confirm_deposit")}
-                      </button>
-                    </>
-                  )}
-              </div>
-
-              {/* Info grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Contact */}
-                <div
-                  className="rounded-xl p-4 space-y-2"
-                  style={{ background: "var(--surface)" }}
-                >
-                  <p
-                    className="text-xs font-bold uppercase tracking-widest mb-3"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {t("admin.reservations.modal.contact_title")}
-                  </p>
-                  <InfoRow
-                    label={t("admin.reservations.modal.contact.name")}
-                    value={detail.contact.name}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.contact.phone")}
-                    value={detail.contact.phone}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.contact.email")}
-                    value={detail.contact.email ?? "—"}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.contact.type")}
-                    value={
-                      detail.contact.isGuest
-                        ? t("admin.reservations.modal.contact.guest")
-                        : t("admin.reservations.modal.contact.member")
-                    }
-                  />
-                  {detail.contact.membershipLevel && (
-                    <InfoRow
-                      label={t("admin.reservations.modal.contact.level")}
-                      value={detail.contact.membershipLevel}
-                    />
-                  )}
-                </div>
-
-                {/* Booking info */}
-                <div
-                  className="rounded-xl p-4 space-y-2"
-                  style={{ background: "var(--surface)" }}
-                >
-                  <p
-                    className="text-xs font-bold uppercase tracking-widest mb-3"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {t("admin.reservations.modal.booking_title")}
-                  </p>
-                  <InfoRow
-                    label={t("admin.reservations.modal.booking.date_time")}
-                    value={new Date(
-                      detail.reservationDateTime,
-                    ).toLocaleString()}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.booking.guests")}
-                    value={`${detail.numberOfGuests} ${t("admin.reservations.modal.booking.guests_suffix")}`}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.booking.table")}
-                    value={detail.tables
-                      .map((tb) => `${tb.code} (${tb.floorName})`)
-                      .join(", ")}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.booking.deposit")}
-                    value={formatVND(detail.depositAmount)}
-                  />
-                  <InfoRow
-                    label={t("admin.reservations.modal.booking.deposit_paid")}
-                    value={
-                      detail.depositPaid
-                        ? t("admin.reservations.modal.booking.deposit_yes")
-                        : t("admin.reservations.modal.booking.deposit_no")
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Special requests */}
-              {detail.specialRequests && (
-                <div
-                  className="rounded-xl p-4"
-                  style={{ background: "var(--surface)" }}
-                >
-                  <p
-                    className="text-xs font-bold uppercase tracking-widest mb-2"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {t("admin.reservations.modal.special_requests")}
-                  </p>
-                  <p
-                    className="text-sm italic"
-                    style={{ color: "var(--text)" }}
-                  >
-                    &ldquo;{detail.specialRequests}&rdquo;
-                  </p>
-                </div>
-              )}
-
-              {/* Timestamps */}
-              <div
-                className="flex flex-wrap gap-4 text-xs"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <span>
-                  {t("admin.reservations.modal.created_at")}{" "}
-                  {new Date(detail.createdAt).toLocaleString()}
-                </span>
-                {detail.checkedInAt &&
-                  ["CHECKED_IN", "COMPLETED"].includes(detail.status.code) && (
-                    <span style={{ color: "#8b5cf6" }}>
-                      {t("admin.reservations.checked_in_at")} {new Date(detail.checkedInAt).toLocaleString()}
-                    </span>
-                  )}
-              </div>
-
-              {/* View full detail link */}
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    router.push(`/admin/reservation/${reservationId}`);
-                  }}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
-                  style={{
-                    background: "var(--surface)",
-                    color: "var(--primary)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  {t("admin.reservations.actions.view_detail")}
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-
-      <ConfirmModal
-        open={confirmCancelOpen}
-        title={t("admin.reservations.confirm.cancel_title", { defaultValue: "Xác nhận hủy đặt bàn" })}
-        description={t("admin.reservations.confirm.cancel_description", { defaultValue: "Bạn có chắc chắn muốn hủy đặt bàn này? Hành động này không thể hoàn tác." })}
-        confirmText={t("admin.reservations.confirm.cancel_confirm", { defaultValue: "Hủy đặt bàn" })}
-        cancelText={t("admin.reservations.confirm.cancel_cancel", { defaultValue: "Quay lại" })}
-        variant="danger"
-        loading={actionLoading}
-        onConfirm={executeCancelStatus}
-        onCancel={handleCancelCancel}
-      />
-
-      <ConfirmModal
-        open={confirmCheckInOpen}
-        title={t("admin.reservations.confirm.checkin_title", { defaultValue: "Xác nhận check-in" })}
-        description={t("admin.reservations.confirm.checkin_description", { defaultValue: "Bạn có chắc chắn muốn check-in cho đặt bàn này?" })}
-        confirmText={t("admin.reservations.confirm.checkin_confirm", { defaultValue: "Check-in" })}
-        cancelText={t("admin.reservations.confirm.checkin_cancel", { defaultValue: "Quay lại" })}
-        variant="info"
-        loading={actionLoading}
-        onConfirm={executeCheckIn}
-        onCancel={() => setConfirmCheckInOpen(false)}
-      />
-
-      <ConfirmModal
-        open={confirmCashDepositOpen}
-        title={t("admin.reservations.confirm.deposit_title", { defaultValue: "Xác nhận cọc tiền mặt" })}
-        description={t("admin.reservations.confirm.deposit_description", { defaultValue: "Bạn có chắc chắn muốn xác nhận đã nhận cọc tiền mặt cho đặt bàn này?" })}
-        confirmText={t("admin.reservations.confirm.deposit_confirm", { defaultValue: "Xác nhận" })}
-        cancelText={t("admin.reservations.confirm.deposit_cancel", { defaultValue: "Quay lại" })}
-        variant="warning"
-        loading={cashDepositLoading}
-        onConfirm={handleConfirmCashDeposit}
-        onCancel={() => setConfirmCashDepositOpen(false)}
-      />
-    </>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-start gap-2">
-      <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
-        {label}
-      </span>
-      <span
-        className="text-xs font-medium text-right"
-        style={{ color: "var(--text)" }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-const isSameLocalDate = (
-  value: string | Date,
-  y: number,
-  m: number,
-  d: number,
-) => {
-  const dt = new Date(value);
-  return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
+const STATUS_FLOW_ORDER: Record<string, number> = {
+  PENDING: 0,
+  CONFIRMED: 1,
+  CHECKED_IN: 2,
+  COMPLETED: 3,
+  CANCELLED: 99,
+  NO_SHOW: 99,
+  NOSHOW: 99,
 };
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ReservationsPage() {
   const { t } = useTranslation();
   const [data, setData] = useState<PaginatedReservations | null>(null);
@@ -721,8 +55,7 @@ export default function ReservationsPage() {
   const [date, setDate] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
+  const [tenantId, setTenantId] = useState<string>("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -748,7 +81,34 @@ export default function ReservationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [date, page, pageSize, search, statusId]);
+  }, [date, page, pageSize, search, statusId, t]);
+
+  const handleReservationStatusChange = useCallback(
+    async (reservationId: string, newStatusId: number, currentStatusId: number) => {
+      if (newStatusId === currentStatusId) return;
+
+      try {
+        await reservationService.updateReservationStatus(reservationId, newStatusId);
+        message.success(
+          t("admin.reservations.messages.status_updated", {
+            defaultValue: "Đã cập nhật trạng thái",
+          }),
+        );
+        fetchData();
+      } catch (e) {
+        console.error(e);
+        message.error(
+          extractApiErrorMessage(
+            e,
+            t("admin.reservations.messages.update_status_failed", {
+              defaultValue: "Không thể cập nhật trạng thái đặt bàn",
+            }),
+          ),
+        );
+      }
+    },
+    [fetchData, t],
+  );
 
   const [globalStats, setGlobalStats] = useState<{
     total: number;
@@ -779,7 +139,7 @@ export default function ReservationsPage() {
     } catch (e) {
       console.error(e);
     }
-  }, [search, date, statuses]);
+  }, [date, search, statuses]);
 
   useEffect(() => {
     fetchStats();
@@ -806,7 +166,70 @@ export default function ReservationsPage() {
           ),
         );
       });
+  }, [t]);
+
+  useEffect(() => {
+    tenantService
+      .getTenantConfig(window.location.hostname)
+      .then((tenant) => {
+        if (tenant?.id) setTenantId(tenant.id);
+      })
+      .catch(() => { });
   }, []);
+
+  useEffect(() => {
+    if (!tenantId) return;
+
+    let isMounted = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleReservationChanged = (payload: any) => {
+      if (!isMounted) return;
+      const changedTenantId =
+        payload?.tenantId || payload?.reservation?.tenantId;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!isMounted) return;
+        fetchData();
+        fetchStats();
+      }, 300);
+    };
+
+    const events = [
+      "reservations.created",
+      "reservations.updated",
+      "reservations.cancelled",
+      "reservations.status_updated",
+    ];
+
+    const setupSignalR = async () => {
+      try {
+        await orderSignalRService.start();
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+          events.forEach((event) =>
+            orderSignalRService.on(event, handleReservationChanged),
+          );
+        }
+      } catch (error) {
+        console.error("SignalR: setup reservations failed", error);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      isMounted = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      events.forEach((event) =>
+        orderSignalRService.off(event, handleReservationChanged),
+      );
+      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => { });
+    };
+  }, [tenantId, fetchData, fetchStats]);
 
   useEffect(() => {
     const timer = setInterval(
@@ -897,18 +320,6 @@ export default function ReservationsPage() {
                 : t("dashboard.actions.export_report")}
             </button>
 
-            <button
-              onClick={fetchData}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            >
-              <ReloadOutlined />
-              {t("admin.reservations.refresh")}
-            </button>
           </div>
         </div>
 
@@ -1081,9 +492,9 @@ export default function ReservationsPage() {
           )}
         </div>
 
-        {/* ── Table ── */}
+        {/* Table */}
         <div
-          className="rounded-xl overflow-hidden"
+          className="rounded-xl overflow-visible"
           style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
@@ -1305,76 +716,77 @@ export default function ReservationsPage() {
                       </td>
 
                       <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <StatusBadge {...item.status} />
-                          {item.status.code === "PENDING" &&
-                            (item.depositAmount ?? 0) > 0 &&
-                            !item.depositPaid && (
-                              <span
-                                className="text-[11px] font-medium"
-                                style={{ color: "#b45309" }}
-                              >
-                                {t(
-                                  "admin.reservations.messages.deposit_pending",
-                                  {
-                                    defaultValue: "Chờ thanh toán cọc",
-                                  },
-                                )}
-                              </span>
-                            )}
-                          {item.status.code === "CONFIRMED" &&
-                            !item.checkedInAt &&
-                            isSameLocalDate(
-                              item.reservationDateTime,
-                              new Date().getFullYear(),
-                              new Date().getMonth(),
-                              new Date().getDate(),
-                            ) && (
-                              <span
-                                className="text-[11px] font-medium"
-                                style={{ color: "#10b981" }}
-                              >
-                                {t(
-                                  "admin.reservations.messages.not_checked_in",
-                                  {
-                                    defaultValue: "Chưa check-in",
-                                  },
-                                )}
-                              </span>
-                            )}
-                        </div>
+                        {(() => {
+                          const rawColor =
+                            item.status.code === "CONFIRMED"
+                              ? "#3b82f6"
+                              : item.status.colorCode || "#3b82f6";
+                          const currentColor = /^#([\da-f]{3}|[\da-f]{6})$/i.test(rawColor)
+                            ? rawColor
+                            : "#3b82f6";
+                          const badgeBackground = `${currentColor}1A`;
+                          const badgeBorder = `${currentColor}33`;
+                          const currentFlowOrder =
+                            STATUS_FLOW_ORDER[item.status?.code?.toUpperCase() ?? ""] ??
+                            0;
+
+                          return (
+                            <select
+                              className="pl-3 pr-8 py-1 rounded-full text-[13px] font-semibold border cursor-pointer outline-none transition-colors appearance-none text-center"
+                              style={{
+                                backgroundColor: badgeBackground,
+                                borderColor: badgeBorder,
+                                color: currentColor,
+                                textAlignLast: "center",
+                                backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(currentColor)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                                backgroundRepeat: "no-repeat",
+                                backgroundPosition: "right 0.6rem center",
+                                backgroundSize: "1em",
+                              }}
+                              value={String(item.status.id)}
+                              onChange={(e) =>
+                                handleReservationStatusChange(
+                                  item.id,
+                                  Number(e.target.value),
+                                  item.status.id,
+                                )
+                              }
+                            >
+                              {statuses
+                                .filter((status) => status.code !== "CHECKED_IN")
+                                .map((status) => {
+                                  const label = t(
+                                    `admin.reservations.status.${status.code.toLowerCase()}`,
+                                    { defaultValue: status.name },
+                                  );
+                                  const statusOrder =
+                                    STATUS_FLOW_ORDER[status.code?.toUpperCase() ?? ""] ??
+                                    0;
+                                  const isPast =
+                                    statusOrder < currentFlowOrder &&
+                                    status.id !== item.status.id;
+
+                                  return (
+                                    <option
+                                      key={status.id}
+                                      value={status.id}
+                                      disabled={isPast}
+                                      style={{
+                                        color: "var(--text)",
+                                        background: "var(--card)",
+                                      }}
+                                    >
+                                      {label}
+                                    </option>
+                                  );
+                                })}
+                            </select>
+                          );
+                        })()}
                       </td>
 
                       <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <div className="reservation-action-group">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedId(item.id)}
-                            className="reservation-action-btn reservation-action-btn--icon reservation-action-btn--soft"
-                            title={t("admin.reservations.actions.quick_view")}
-                            aria-label={t("admin.reservations.actions.quick_view")}
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
-                          </button>
-                        </div>
+                        <ReservationRowActions item={item} onActionComplete={fetchData} />
                       </td>
                     </tr>
                   ))
@@ -1383,7 +795,7 @@ export default function ReservationsPage() {
             </table>
           </div>
 
-          {/* ── Pagination ── */}
+          {/* Ã¢â€â‚¬Ã¢â€â‚¬ Pagination Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {data && data.totalCount > 0 && (
             <div
               className="flex items-center justify-between px-4 py-3"
@@ -1394,7 +806,7 @@ export default function ReservationsPage() {
                   {t("admin.reservations.pagination.page_info_compact", {
                     page: data.pageNumber,
                     total: data.totalPages,
-                    defaultValue: `Trang ${data.pageNumber}/${data.totalPages} ·`,
+                    defaultValue: `Trang ${data.pageNumber} / ${data.totalPages} ·`,
                   })}
                 </p>
                 <div className="flex items-center gap-2">
@@ -1481,15 +893,6 @@ export default function ReservationsPage() {
           )}
         </div>
       </div>
-
-      {/* ── Detail Modal ── */}
-      {selectedId && (
-        <ReservationDetailModal
-          reservationId={selectedId}
-          onClose={() => setSelectedId(null)}
-          onStatusUpdated={fetchData}
-        />
-      )}
 
       <AdminReservationCreateModal
         open={isCreateModalOpen}
