@@ -139,11 +139,6 @@ export function ReservationRowActions({
             defaultValue: "Xác nhận đã cọc",
           }),
           variant: "success",
-          icon: (
-            <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ),
           onClick: () => openConfirm("deposit"),
           disabled: actionLoading !== null,
         });

@@ -732,16 +732,11 @@ export default function ReservationsPage() {
 
                           return (
                             <select
-                              className="pl-3 pr-8 py-1 rounded-full text-[13px] font-semibold border cursor-pointer outline-none transition-colors appearance-none text-center"
+                              className="px-2 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none transition-colors"
                               style={{
                                 backgroundColor: badgeBackground,
                                 borderColor: badgeBorder,
                                 color: currentColor,
-                                textAlignLast: "center",
-                                backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(currentColor)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                                backgroundRepeat: "no-repeat",
-                                backgroundPosition: "right 0.6rem center",
-                                backgroundSize: "1em",
                               }}
                               value={String(item.status.id)}
                               onChange={(e) =>
