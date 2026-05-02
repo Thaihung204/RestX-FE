@@ -884,6 +884,27 @@ textarea::placeholder {
   padding-inline: 0;
 }
 
+.reservation-action-btn--trigger {
+  position: relative;
+}
+
+.reservation-action-btn-badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
 .reservation-action-btn--primary {
   background: var(--primary);
   color: var(--on-primary);
@@ -928,6 +949,238 @@ textarea::placeholder {
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* Reservation action dropdown menu */
+.reservation-action-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* ── Reservation Action Panel (custom dropdown content) ── */
+.rsv-action-panel {
+  min-width: 220px;
+  max-width: 280px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: reservation-dropdown-in 0.15s ease-out;
+}
+
+/* Status indicators section - read-only pills */
+.rsv-action-panel-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 4px 6px;
+}
+
+.rsv-action-panel-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.rsv-action-panel-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* Status variant colors */
+.rsv-action-panel-status--warning {
+  background: var(--warning-soft, rgba(245, 158, 11, 0.08));
+  color: var(--warning, #f59e0b);
+  border-color: var(--warning-border, rgba(245, 158, 11, 0.2));
+}
+
+.rsv-action-panel-status--success {
+  background: var(--success-soft, rgba(16, 185, 129, 0.08));
+  color: var(--success, #10b981);
+  border-color: var(--success-border, rgba(16, 185, 129, 0.2));
+}
+
+.rsv-action-panel-status--danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger, #ef4444);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.rsv-action-panel-status--primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.rsv-action-panel-status--default {
+  background: var(--surface);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+/* Action buttons section */
+.rsv-action-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.rsv-action-panel-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.rsv-action-panel-btn:hover {
+  filter: brightness(0.92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.rsv-action-panel-btn:active {
+  filter: brightness(0.88);
+}
+
+.rsv-action-panel-btn-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rsv-action-panel-btn-label {
+  flex: 1;
+}
+
+/* Action button variant colors */
+.rsv-action-panel-btn--warning {
+  background: var(--warning-soft, rgba(245, 158, 11, 0.1));
+  color: var(--warning, #f59e0b);
+  border-color: var(--warning-border, rgba(245, 158, 11, 0.25));
+}
+
+.rsv-action-panel-btn--success {
+  background: var(--success-soft, rgba(16, 185, 129, 0.1));
+  color: var(--success, #10b981);
+  border-color: var(--success-border, rgba(16, 185, 129, 0.25));
+}
+
+.rsv-action-panel-btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger, #ef4444);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.rsv-action-panel-btn--primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.rsv-action-panel-btn--default {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* Reservation status dropdown (custom dropdown button) */
+.reservation-status-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.reservation-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border-radius: 9999px;
+  padding: 6px 28px 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  height: auto;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.reservation-status-select .ant-select-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-inline: 0 !important;
+}
+
+.reservation-status-select .ant-select-selection-item,
+.reservation-status-select .ant-select-selection-placeholder {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.reservation-status-select .ant-select-selection-search-input {
+  text-align: center;
+}
+
+.reservation-status-select:hover:not(:disabled) {
+  filter: brightness(1.03);
+  border-color: var(--primary);
+}
+
+.reservation-status-select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.reservation-status-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reservation-status-select-caret {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.reservation-status-options {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* =========================================================

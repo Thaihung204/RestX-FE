@@ -1405,31 +1405,11 @@ function TableMapCard({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              {selectedTableActivity.orderSummaries[0]?.orderId &&
-                viewMode === "admin" && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/admin/orders/${selectedTableActivity.orderSummaries[0].orderId}`,
-                      )
-                    }
-                    className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
-                    style={{
-                      background: "var(--primary)",
-                      color: "var(--on-primary)",
-                    }}>
-                    {t("reservation_detail.floor_activity.goto_order_detail")}
-                  </button>
-                )}
-
               <button
                 type="button"
                 onClick={() =>
                   router.push(
-                    viewMode === "admin"
-                      ? "/admin/pos"
-                      : `/menu/${selectedTableActivity.tableId}`,
+                    `/menu/${selectedTableActivity.tableId}`,
                   )
                 }
                 className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
@@ -1737,10 +1717,6 @@ export default function ReservationDetailsView({
   };
 
   const handleBack = () => {
-    if (viewMode === "admin") {
-      router.push("/admin/reservations");
-      return;
-    }
     router.back();
   };
 

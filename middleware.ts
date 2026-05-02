@@ -11,10 +11,14 @@ export function middleware(req: NextRequest) {
   // Super Admin domain - serve /tenants (manage all tenants)
   const ADMIN_DOMAIN = 'admin.restx.food';
 
+  // Standalone landing domains — served as dedicated pages, not tenant subdomains
+  const STANDALONE_LANDING_DOMAINS: Record<string, string> = {
+    "lebon.io.vn": "/lebon",
+    "www.lebon.io.vn": "/lebon",
+  };
+
   // Custom tenant domains (mapped in DB)
-  const CUSTOM_TENANT_DOMAINS = new Set([
-    "lebon.io.vn",
-  ]);
+  const CUSTOM_TENANT_DOMAINS = new Set<string>([]);
 
   // Public routes accessible on any domain (no auth needed)
   const PUBLIC_ROUTES = new Set([
@@ -54,6 +58,16 @@ export function middleware(req: NextRequest) {
   }
 
   const hostWithoutPort = host.includes(':') ? host.split(':')[0] : host;
+
+  // Standalone restaurant landing pages (e.g. lebon.io.vn → /lebon)
+  const standalonePath = STANDALONE_LANDING_DOMAINS[hostWithoutPort] ?? STANDALONE_LANDING_DOMAINS[host];
+  if (standalonePath) {
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL(standalonePath, req.url));
+    }
+    return NextResponse.next();
+  }
+
   const isAdminDomain = host === ADMIN_DOMAIN || hostWithoutPort === 'admin.localhost';
 
   // ── Auth token check (read cookie set by authService on login) ──
