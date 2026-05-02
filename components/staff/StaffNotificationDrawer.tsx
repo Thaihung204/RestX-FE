@@ -4,15 +4,15 @@ import { useThemeMode } from "@/app/theme/AutoDarkThemeProvider";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import notificationService, {
-  NotificationItem,
+    NotificationItem,
 } from "@/lib/services/notificationService";
 import {
-  BellOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  CreditCardOutlined,
-  CustomerServiceOutlined,
-  ReloadOutlined,
+    BellOutlined,
+    CheckOutlined,
+    CloseOutlined,
+    CreditCardOutlined,
+    CustomerServiceOutlined,
+    ReloadOutlined,
 } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import { Badge, Button, Drawer, Tag, Typography } from "antd";
@@ -391,12 +391,12 @@ export default function StaffNotificationDrawer() {
         open={open}
         onClose={() => setOpen(false)}
         placement="right"
-        width={360}
+        size="default"
         style={{ background: "var(--card)" }}
         styles={{
           header: { display: "none" },
           body: { padding: 0, background: "var(--card)" },
-          wrapper: { boxShadow: "-4px 0 24px rgba(0,0,0,0.12)" },
+          wrapper: { boxShadow: "-4px 0 24px rgba(0,0,0,0.12)", width: 360 },
         }}>
         {/* Header */}
         <div

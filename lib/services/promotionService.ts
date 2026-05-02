@@ -81,9 +81,11 @@ const extractObject = <T>(raw: any): T => {
 };
 
 const promotionService = {
-  getActivePromotions: async (): Promise<Promotion[]> => {
+  getActivePromotions: async (orderId?: string): Promise<Promotion[]> => {
     try {
-      const response = await axiosInstance.get(`${PROMOTIONS_API}/active`);
+      const response = await axiosInstance.get(`${PROMOTIONS_API}/active`, {
+        params: orderId ? { orderId } : undefined,
+      });
       const items = extractArray<any>(response.data);
       return items.map(normalizePromotion);
     } catch (error: any) {

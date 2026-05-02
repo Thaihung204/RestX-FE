@@ -1,19 +1,15 @@
 "use client";
 
-import orderService, {
-    ApplyDiscountResponse,
-} from "@/lib/services/orderService";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
 import { formatVND } from "@/lib/utils/currency";
 import {
     BankOutlined,
     CheckCircleFilled,
-    CrownOutlined,
     DollarOutlined,
     TagOutlined,
 } from "@ant-design/icons";
 import { Button, InputNumber, Modal, Spin, Typography } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const { Text } = Typography;
 
@@ -39,6 +35,7 @@ interface PaymentOrderProps {
   isOpen: boolean;
   selectedOrder: SelectedOrder | null;
   onFinalTotalChange?: (value: number) => void;
+  onPromotionChange?: (promo: Promotion | null) => void;
   paymentMethod: PaymentMethod;
   setPaymentMethod: (method: PaymentMethod) => void;
   cashReceived: number;
@@ -50,10 +47,23 @@ interface PaymentOrderProps {
   t: (key: string) => string;
 }
 
+/** Tính discount amount từ promotion và subTotal (thuần FE) */
+function calcDiscountAmount(promo: Promotion, subTotal: number): number {
+  if (promo.discountType === "PERCENTAGE") {
+    const raw = subTotal * (promo.discountValue / 100);
+    return promo.maxDiscountAmount > 0
+      ? Math.min(raw, promo.maxDiscountAmount)
+      : raw;
+  }
+  // FIXED
+  return Math.min(promo.discountValue, subTotal);
+}
+
 export default function PaymentOrder({
   isOpen,
   selectedOrder,
   onFinalTotalChange,
+  onPromotionChange,
   paymentMethod,
   setPaymentMethod,
   cashReceived,
@@ -64,50 +74,41 @@ export default function PaymentOrder({
   onConfirm,
   t,
 }: PaymentOrderProps) {
-  const [discountData, setDiscountData] =
-    useState<ApplyDiscountResponse | null>(null);
-  const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
   const [activePromotions, setActivePromotions] = useState<Promotion[]>([]);
   const [isLoadingPromotions, setIsLoadingPromotions] = useState(false);
-  const [discountMode, setDiscountMode] = useState<
-    "none" | "promotion" | "membership"
-  >("none");
-  const [selectedPromoCode, setSelectedPromoCode] = useState<string | null>(
-    null,
-  );
+  const [selectedPromo, setSelectedPromo] = useState<Promotion | null>(null);
 
-  const hasCustomer = !!(
-    selectedOrder?.customerId &&
-    selectedOrder.customerId !== "00000000-0000-0000-0000-000000000000"
-  );
-
-  // subTotal = tạm tính (giá gốc bill từ OrderDto.subTotal)
-  // total = totalAmount của order (trước khi apply discount API)
-  // finalTotal = totalAmount sau khi apply discount API (hoặc total nếu chưa apply)
-  const subTotal = selectedOrder?.subTotal ?? selectedOrder?.total ?? 0;
-  const finalTotal = discountData?.totalAmount ?? selectedOrder?.total ?? 0;
-  const hasDiscount = !!(discountData && discountData.discountAmount > 0);
-  const depositAmount = selectedOrder?.depositAmount ?? 0;
-  const serviceChargeAmt = discountData?.serviceCharge ?? selectedOrder?.serviceCharge ?? 0;
+  // ── Derived values (all FE) ──────────────────────────────────────────────
+  const subTotal = selectedOrder?.subTotal ?? 0;
+  const serviceChargeAmt = selectedOrder?.serviceCharge ?? 0;
   const serviceChargePercent = selectedOrder?.serviceChargePercent ?? 0;
+  const depositAmount = selectedOrder?.depositAmount ?? 0;
+  const totalBeforeDiscount = subTotal + serviceChargeAmt - depositAmount;
 
+  const discountAmount = selectedPromo
+    ? calcDiscountAmount(selectedPromo, subTotal)
+    : 0;
+  const finalTotal = Math.max(0, totalBeforeDiscount - discountAmount);
+
+  // ── Sync finalTotal to parent ────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
     onFinalTotalChange?.(finalTotal);
   }, [isOpen, finalTotal, onFinalTotalChange]);
 
+  // ── Reset on close / fetch promotions on open ────────────────────────────
   useEffect(() => {
     if (!isOpen) {
-      setDiscountData(null);
-      setDiscountMode("none");
-      setSelectedPromoCode(null);
+      setSelectedPromo(null);
       setActivePromotions([]);
       return;
     }
     const fetchPromotions = async () => {
       setIsLoadingPromotions(true);
       try {
-        const data = await promotionService.getActivePromotions();
+        const data = await promotionService.getActivePromotions(
+          selectedOrder?.id,
+        );
         setActivePromotions(data);
       } catch {
         setActivePromotions([]);
@@ -116,67 +117,21 @@ export default function PaymentOrder({
       }
     };
     fetchPromotions();
-  }, [isOpen]);
+  }, [isOpen, selectedOrder?.id]);
 
-  const applyDiscount = useCallback(
-    async (mode: "promotion" | "membership", promoCode?: string | null) => {
-      if (!selectedOrder) return;
-      setIsApplyingDiscount(true);
-      try {
-        const result = await orderService.applyDiscount(selectedOrder.id, {
-          promotionCode: mode === "promotion" ? (promoCode ?? null) : null,
-          applyMembership: mode === "membership",
-        });
-        setDiscountData(result);
-        setCashReceived(result.totalAmount);
-      } catch (error) {
-        console.error("Failed to apply discount:", error);
-      } finally {
-        setIsApplyingDiscount(false);
-      }
-    },
-    [selectedOrder, setCashReceived],
-  );
+  // ── Notify parent whenever selected promo changes ────────────────────────
+  useEffect(() => {
+    onPromotionChange?.(selectedPromo);
+  }, [selectedPromo, onPromotionChange]);
 
-  const cancelDiscount = useCallback(async () => {
-    if (!selectedOrder) return;
-    setIsApplyingDiscount(true);
-    try {
-      const result = await orderService.applyDiscount(selectedOrder.id, {
-        promotionCode: null,
-        applyMembership: false,
-      });
-      setDiscountData(null);
-      setCashReceived(result.totalAmount);
-    } catch (error) {
-      console.error("Failed to cancel discount:", error);
-    } finally {
-      setIsApplyingDiscount(false);
-    }
-  }, [selectedOrder, setCashReceived]);
-
-  const handleSelectPromotion = async (code: string) => {
-    if (selectedPromoCode === code && discountMode === "promotion") {
-      setSelectedPromoCode(null);
-      setDiscountMode("none");
-      await cancelDiscount();
-      return;
-    }
-    setDiscountMode("promotion");
-    setSelectedPromoCode(code);
-    await applyDiscount("promotion", code);
-  };
-
-  const handleSelectMembership = async () => {
-    if (discountMode === "membership") {
-      setDiscountMode("none");
-      setSelectedPromoCode(null);
-      await cancelDiscount();
-      return;
-    }
-    setDiscountMode("membership");
-    setSelectedPromoCode(null);
-    await applyDiscount("membership");
+  const handleSelectPromotion = (promo: Promotion) => {
+    setSelectedPromo((prev) => {
+      const next = prev?.id === promo.id ? null : promo;
+      const newDiscount = next ? calcDiscountAmount(next, subTotal) : 0;
+      const newFinal = Math.max(0, totalBeforeDiscount - newDiscount);
+      setCashReceived(newFinal);
+      return next;
+    });
   };
 
   return (
@@ -205,7 +160,6 @@ export default function PaymentOrder({
               border: "1px solid #f0f0f0",
               padding: "12px 14px",
             }}>
-            {/* Row 1: subTotal vs finalTotal */}
             <div
               style={{
                 display: "grid",
@@ -253,38 +207,66 @@ export default function PaymentOrder({
                 borderTop: "1px dashed #f0f0f0",
                 paddingTop: 8,
               }}>
-              {/* Service charge */}
               {serviceChargeAmt > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}>
                   <span style={{ fontSize: 12, color: "#8c8c8c" }}>
-                    {t("staff.orders.payment.discount.service_charge")}{serviceChargePercent > 0 ? ` (${serviceChargePercent}%)` : ""}
+                    {t("staff.orders.payment.discount.service_charge")}
+                    {serviceChargePercent > 0
+                      ? ` (${serviceChargePercent}%)`
+                      : ""}
                   </span>
-                  <span style={{ fontSize: 12, color: "#d46b08", fontWeight: 600 }}>
+                  <span
+                    style={{ fontSize: 12, color: "#d46b08", fontWeight: 600 }}>
                     +{formatVND(serviceChargeAmt)}
                   </span>
                 </div>
               )}
 
-              {/* Discount */}
-              {hasDiscount && !isApplyingDiscount && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: "#8c8c8c", display: "flex", alignItems: "center", gap: 4 }}>
-                    <CheckCircleFilled style={{ color: "#52c41a", fontSize: 11 }} />
+              {discountAmount > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: "#8c8c8c",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}>
+                    <CheckCircleFilled
+                      style={{ color: "#52c41a", fontSize: 11 }}
+                    />
                     {t("staff.orders.payment.discount.discount_label")}
+                    {selectedPromo && ` (${selectedPromo.code})`}
                   </span>
-                  <span style={{ fontSize: 12, color: "#52c41a", fontWeight: 600 }}>
-                    -{formatVND(discountData!.discountAmount)}
+                  <span
+                    style={{ fontSize: 12, color: "#52c41a", fontWeight: 600 }}>
+                    -{formatVND(discountAmount)}
                   </span>
                 </div>
               )}
 
-              {/* Deposit */}
               {depositAmount > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}>
                   <span style={{ fontSize: 12, color: "#8c8c8c" }}>
                     {t("staff.orders.payment.discount.deposit_label")}
                   </span>
-                  <span style={{ fontSize: 12, color: "#cf1322", fontWeight: 600 }}>
+                  <span
+                    style={{ fontSize: 12, color: "#cf1322", fontWeight: 600 }}>
                     -{formatVND(depositAmount)}
                   </span>
                 </div>
@@ -308,9 +290,6 @@ export default function PaymentOrder({
               <Text strong style={{ fontSize: 13 }}>
                 {t("staff.orders.payment.discount.title")}
               </Text>
-              {isApplyingDiscount && (
-                <Spin size="small" style={{ marginLeft: "auto" }} />
-              )}
             </div>
 
             <div
@@ -320,7 +299,6 @@ export default function PaymentOrder({
                 flexDirection: "column",
                 gap: 6,
               }}>
-              {/* Promotion list */}
               {isLoadingPromotions ? (
                 <div style={{ textAlign: "center", padding: "10px 0" }}>
                   <Spin size="small" />
@@ -335,16 +313,13 @@ export default function PaymentOrder({
                     overflowY: "auto",
                   }}>
                   {activePromotions.map((promo) => {
-                    const isSelected =
-                      discountMode === "promotion" &&
-                      selectedPromoCode === promo.code;
+                    const isSelected = selectedPromo?.id === promo.id;
                     const isPct = promo.discountType === "PERCENTAGE";
                     return (
                       <button
                         key={promo.id}
                         type="button"
-                        disabled={isApplyingDiscount}
-                        onClick={() => handleSelectPromotion(promo.code)}
+                        onClick={() => handleSelectPromotion(promo)}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -355,12 +330,9 @@ export default function PaymentOrder({
                             ? "1.5px solid var(--primary, #1677ff)"
                             : "1px solid #e8e8e8",
                           background: isSelected ? "#f0f7ff" : "#fff",
-                          cursor: isApplyingDiscount
-                            ? "not-allowed"
-                            : "pointer",
+                          cursor: "pointer",
                           textAlign: "left",
                           transition: "border-color 0.15s, background 0.15s",
-                          opacity: isApplyingDiscount && !isSelected ? 0.55 : 1,
                         }}>
                         <TagOutlined
                           style={{
@@ -400,15 +372,14 @@ export default function PaymentOrder({
                                 : `-${formatVND(promo.discountValue)}`}
                             </span>
                           </div>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            <span
-                              style={{
-                                color: "#1f1f1f",
-                                fontSize: 13,
-                                fontWeight: 500,
-                              }}>
-                              {promo.name}
-                            </span>
+                          <Text
+                            style={{
+                              color: "#1f1f1f",
+                              fontSize: 13,
+                              fontWeight: 500,
+                              display: "block",
+                            }}>
+                            {promo.name}
                           </Text>
                           {promo.minOrderAmount > 0 && (
                             <Text
@@ -457,95 +428,6 @@ export default function PaymentOrder({
                   }}>
                   {t("staff.orders.payment.discount.no_promotions")}
                 </Text>
-              )}
-
-              {/* Divider */}
-              {hasCustomer && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    margin: "2px 0",
-                  }}>
-                  <div style={{ flex: 1, height: 1, background: "#f0f0f0" }} />
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {t("staff.orders.payment.discount.or")}
-                  </Text>
-                  <div style={{ flex: 1, height: 1, background: "#f0f0f0" }} />
-                </div>
-              )}
-
-              {/* Membership option */}
-              {hasCustomer && (
-                <button
-                  type="button"
-                  disabled={isApplyingDiscount}
-                  onClick={handleSelectMembership}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "9px 11px",
-                    borderRadius: 8,
-                    border:
-                      discountMode === "membership"
-                        ? "1.5px solid var(--primary, #1677ff)"
-                        : "1px solid #e8e8e8",
-                    background:
-                      discountMode === "membership" ? "#f0f7ff" : "#fff",
-                    cursor: isApplyingDiscount ? "not-allowed" : "pointer",
-                    textAlign: "left",
-                    transition: "border-color 0.15s, background 0.15s",
-                    opacity:
-                      isApplyingDiscount && discountMode !== "membership"
-                        ? 0.55
-                        : 1,
-                  }}>
-                  <CrownOutlined
-                    style={{
-                      fontSize: 14,
-                      color:
-                        discountMode === "membership"
-                          ? "var(--primary, #1677ff)"
-                          : "#bfbfbf",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text strong style={{ fontSize: 13 }}>
-                      {t("staff.orders.payment.discount.membership_label")}
-                    </Text>
-                    {discountMode === "membership" &&
-                      discountData?.appliedMembership && (
-                        <Text
-                          type="secondary"
-                          style={{ fontSize: 12, display: "block" }}>
-                          {discountData.appliedMembership.level} · -
-                          {discountData.appliedMembership.discountPercentage}%
-                        </Text>
-                      )}
-                  </div>
-                  {discountMode === "membership" ? (
-                    <CheckCircleFilled
-                      style={{
-                        color: "var(--primary, #1677ff)",
-                        fontSize: 15,
-                        flexShrink: 0,
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: 15,
-                        height: 15,
-                        borderRadius: "50%",
-                        border: "1.5px solid #d9d9d9",
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                </button>
               )}
             </div>
           </div>
@@ -646,7 +528,9 @@ export default function PaymentOrder({
                   borderRadius: 8,
                   background:
                     cashReceived >= finalTotal ? "#f6ffed" : "#fff1f0",
-                  border: `1px solid ${cashReceived >= finalTotal ? "#b7eb8f" : "#ffa39e"}`,
+                  border: `1px solid ${
+                    cashReceived >= finalTotal ? "#b7eb8f" : "#ffa39e"
+                  }`,
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
@@ -689,8 +573,7 @@ export default function PaymentOrder({
               fontWeight: 700,
               marginTop: 2,
             }}>
-            {t("staff.orders.payment.actions.confirm")} ·{" "}
-            {formatVND(finalTotal)}
+            {t("staff.orders.payment.actions.confirm")} · {formatVND(finalTotal)}
           </Button>
         </div>
       )}
