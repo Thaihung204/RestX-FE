@@ -133,11 +133,16 @@ const normalizeReservationDetail = (
   detail: ReservationDetail,
 ): ReservationDetailViewModel => {
   const raw = detail as ReservationDetailViewModel;
+  const code = raw.status?.code?.toUpperCase() ?? "";
+  const isConfirmed = code === "CONFIRMED";
+  const isCheckedIn = code === "CHECKED_IN" || Boolean(raw.checkedInAt);
+  const isCompleted = code === "COMPLETED";
+  const isDepositPaid = Boolean(raw.depositPaid) || isConfirmed || isCheckedIn || isCompleted;
 
   return {
     ...detail,
     depositAmount: Number(detail.depositAmount || 0),
-    depositPaid: Boolean(raw.depositPaid),
+    depositPaid: isDepositPaid,
     paymentDeadline: raw.paymentDeadline ?? null,
     checkoutUrl: raw.checkoutUrl ?? null,
     depositStatus: raw.depositStatus ?? null,
@@ -151,16 +156,23 @@ const mergeDepositStatusIntoDetail = (
 ): ReservationDetailViewModel => {
   if (!depositStatus) return detail;
 
+  const code = detail.status?.code?.toUpperCase() ?? "";
+  const isConfirmed = code === "CONFIRMED";
+  const isCheckedIn = code === "CHECKED_IN" || Boolean(detail.checkedInAt);
+  const isCompleted = code === "COMPLETED";
+
+  const isDepositPaid =
+      typeof depositStatus.isPaid === "boolean"
+        ? depositStatus.isPaid || isConfirmed || isCheckedIn || isCompleted
+        : detail.depositPaid;
+
   return {
     ...detail,
     depositAmount:
       typeof depositStatus.depositAmount === "number"
         ? Number(depositStatus.depositAmount)
         : detail.depositAmount,
-    depositPaid:
-      typeof depositStatus.isPaid === "boolean"
-        ? depositStatus.isPaid
-        : detail.depositPaid,
+    depositPaid: isDepositPaid,
     paymentDeadline:
       depositStatus.paymentDeadline ?? detail.paymentDeadline ?? null,
     checkoutUrl: depositStatus.checkoutUrl ?? detail.checkoutUrl ?? null,

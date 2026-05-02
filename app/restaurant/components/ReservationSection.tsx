@@ -972,7 +972,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
 
                     if (activeFloors.length > 0) {
-                        const selectedAt = `${booking.date}T${booking.time}:00`;
+                        const selectedAt = `${booking.date}T${booking.time}:59.999`;
                         // Fetch layout for each floor in parallel
                         const layoutResults = await Promise.allSettled(
                             activeFloors.map(f => floorService.getFloorLayout(f.id, selectedAt))
