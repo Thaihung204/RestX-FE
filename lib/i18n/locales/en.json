@@ -3318,10 +3318,18 @@
       "status_preparing": "Preparing",
       "total": "Total:",
       "items_count": "{{count}} items",
-      "confirm_order": "Send Order Request",
-      "request_payment": "Request Payment",
+      "confirm_order": "Order",
+      "request_payment": "Staff Payment",
       "payment_request_sent": "Payment request sent",
-      "note_placeholder": "Note for this dish"
+      "payment_request_failed": "Failed to send payment request",
+      "note_placeholder": "Note for this dish",
+      "self_payment": "Pay with PayOS",
+      "no_order_to_pay": "No order found to pay",
+      "self_pay_failed": "Unable to create payment link",
+      "self_pay_unauthorized": "Please log in to self-pay",
+      "self_pay_not_available": "Self-payment is not available yet. Please call a staff member.",
+      "self_pay_success": "Payment successful!",
+      "self_pay_cancelled": "Payment was cancelled"
     },
     "feedback_modal": {
       "title": "Rate your experience",
