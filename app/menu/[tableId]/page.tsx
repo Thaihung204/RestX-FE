@@ -78,9 +78,9 @@ export default function MenuPage() {
     if (!payosStatus) return;
 
     if (payosStatus === "success") {
-      messageApi.success(t("customer_page.cart_modal.self_pay_success", "Thanh toán thành công!"));
+      messageApi.success(t("customer_page.cart_modal.self_pay_success"));
     } else if (payosStatus === "cancel") {
-      messageApi.warning(t("customer_page.cart_modal.self_pay_cancelled", "Thanh toán đã bị huỷ"));
+      messageApi.warning(t("customer_page.cart_modal.self_pay_cancelled"));
     }
 
     const nextParams = new URLSearchParams(searchParams.toString());

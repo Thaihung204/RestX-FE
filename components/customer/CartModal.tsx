@@ -57,7 +57,7 @@ export default function CartModal() {
       closeCartModal();
       setFeedbackOpen(true);
     } catch {
-      messageApi.error(t("customer_page.cart_modal.payment_request_failed", "Yêu cầu thanh toán thất bại"));
+      messageApi.error(t("customer_page.cart_modal.payment_request_failed"));
     } finally {
       setIsRequestingPayment(false);
     }
@@ -65,7 +65,7 @@ export default function CartModal() {
 
   const handleSelfPayment = async () => {
     if (!activeOrderId) {
-      messageApi.error(t("customer_page.cart_modal.no_order_to_pay", "Không tìm thấy đơn hàng để thanh toán"));
+      messageApi.error(t("customer_page.cart_modal.no_order_to_pay"));
       return;
     }
     setIsSelfPaying(true);
@@ -75,21 +75,19 @@ export default function CartModal() {
         window.location.assign(response.checkoutUrl);
         return;
       }
-      messageApi.error(t("customer_page.cart_modal.self_pay_failed", "Không thể tạo liên kết thanh toán"));
+      messageApi.error(t("customer_page.cart_modal.self_pay_failed"));
     } catch (err: any) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.message || err?.response?.data?.title || err?.message || "";
       console.error("[SelfPayment] error", status, detail, err?.response?.data);
       if (status === 403) {
-        // Backend chưa hỗ trợ Customer role cho endpoint này
-        // Cần backend thêm: POST /payments/orders/{id}/self-pay hoặc cho phép Customer role với isCustomer=true
-        messageApi.error("Tính năng tự thanh toán chưa được kích hoạt. Vui lòng gọi nhân viên.");
+        messageApi.error(t("customer_page.cart_modal.self_pay_not_available"));
       } else if (status === 401) {
-        messageApi.error(t("customer_page.cart_modal.self_pay_unauthorized", "Bạn cần đăng nhập để tự thanh toán"));
+        messageApi.error(t("customer_page.cart_modal.self_pay_unauthorized"));
       } else if (status === 400) {
-        messageApi.error(detail || t("customer_page.cart_modal.self_pay_failed", "Không thể tạo liên kết thanh toán"));
+        messageApi.error(detail || t("customer_page.cart_modal.self_pay_failed"));
       } else {
-        messageApi.error(t("customer_page.cart_modal.self_pay_failed", "Không thể tạo liên kết thanh toán"));
+        messageApi.error(t("customer_page.cart_modal.self_pay_failed"));
       }
     } finally {
       setIsSelfPaying(false);
@@ -802,7 +800,7 @@ export default function CartModal() {
                               fontSize: 15,
                               boxShadow: "0 10px 25px var(--primary-glow)",
                             }}>
-                            {t("customer_page.cart_modal.self_payment", "Tự thanh toán (PayOS)")}
+                            {t("customer_page.cart_modal.self_payment")}
                           </Button>
                           {/* Nhân viên thanh toán — phụ, ở dưới */}
                           <Button

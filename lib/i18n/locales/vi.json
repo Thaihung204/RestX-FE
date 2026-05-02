@@ -3368,7 +3368,15 @@
       "confirm_order": "Gọi món",
       "request_payment": "Nhân viên thanh toán",
       "payment_request_sent": "Đã gửi yêu cầu thanh toán",
-      "note_placeholder": "Ghi chú cho món này"
+      "payment_request_failed": "Gửi yêu cầu thanh toán thất bại",
+      "note_placeholder": "Ghi chú cho món này",
+      "self_payment": "Thanh toán với PayOS",
+      "no_order_to_pay": "Không tìm thấy đơn hàng để thanh toán",
+      "self_pay_failed": "Không thể tạo liên kết thanh toán",
+      "self_pay_unauthorized": "Bạn cần đăng nhập để tự thanh toán",
+      "self_pay_not_available": "Tính năng tự thanh toán chưa được kích hoạt. Vui lòng gọi nhân viên.",
+      "self_pay_success": "Thanh toán thành công!",
+      "self_pay_cancelled": "Thanh toán đã bị huỷ"
     },
     "feedback_modal": {
       "title": "Đánh giá trải nghiệm",
