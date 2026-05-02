@@ -80,8 +80,6 @@ const getConnection = (): HubConnection => {
   if (!connection) {
     connection = new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
-        skipNegotiation: true,
-        transport: HttpTransportType.WebSockets,
         accessTokenFactory: () => {
           if (typeof window === "undefined") return "";
           return (

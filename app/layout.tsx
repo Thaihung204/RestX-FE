@@ -60,18 +60,45 @@ export default function RootLayout({
                     }
                   }
                   
-                  // 2. Preload tenant colors from localStorage (prevents FOUC)
+                  // 2. Preload ALL tenant colors from localStorage (prevents FOUC)
                   var tenantColors = localStorage.getItem(TENANT_COLORS_KEY);
                   if (tenantColors) {
                     try {
-                      var colors = JSON.parse(tenantColors);
-                      // Only inject primary color, other colors use defaults from globals.css
-                      if (colors.primary) {
-                        root.style.setProperty('--primary', colors.primary);
+                      var c = JSON.parse(tenantColors);
+                      // Color field -> CSS variable mapping (must match themeDefaults THEME_COLOR_MAP)
+                      var map = {
+                        primaryColor: '--primary',
+                        lightBaseColor: '--bg-light-base',
+                        lightSurfaceColor: '--light-surface',
+                        lightCardColor: '--light-card',
+                        darkBaseColor: '--bg-dark-base',
+                        darkSurfaceColor: '--dark-surface',
+                        darkCardColor: '--dark-card'
+                      };
+                      // Apply each cached color field
+                      for (var field in map) {
+                        var val = (c[field] || '').trim();
+                        if (val) {
+                          root.style.setProperty(map[field], val);
+                        }
                       }
-                      if (colors.onPrimary) {
-                        root.style.setProperty('--on-primary', colors.onPrimary);
-                        root.style.setProperty('--text-inverse', colors.onPrimary);
+                      // Logo URL
+                      if (c.logoUrl && c.logoUrl.trim()) {
+                        root.style.setProperty('--brand-logo-url', c.logoUrl.trim());
+                      }
+                      // Auto-calculate readable text color on primary (WCAG)
+                      var p = (c.primaryColor || '').trim();
+                      if (p) {
+                        var hex = p.replace('#','').trim();
+                        if (hex.length <= 4) hex = hex.split('').map(function(ch){return ch+ch}).join('');
+                        var pr = parseInt(hex.slice(0,2),16), pg = parseInt(hex.slice(2,4),16), pb = parseInt(hex.slice(4,6),16);
+                        if (!isNaN(pr) && !isNaN(pg) && !isNaN(pb)) {
+                          var f = function(v){v=v/255; return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4)};
+                          var lum = 0.2126*f(pr)+0.7152*f(pg)+0.0722*f(pb);
+                          var onP = lum > 0.55 ? '#111111' : '#FFFFFF';
+                          root.style.setProperty('--text-inverse', onP);
+                          root.style.setProperty('--on-primary', onP);
+                        }
                       }
                     } catch (e) {
                       // Invalid JSON, ignore

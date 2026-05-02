@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 
 type DropDownProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   containerClassName?: string;
+  iconStyle?: React.CSSProperties;
 };
 
 const baseSelectClassName =
@@ -21,7 +22,7 @@ const iconStyle: React.CSSProperties = {
 };
 
 export const DropDown = forwardRef<HTMLSelectElement, DropDownProps>(
-  ({ className = "", style, containerClassName = "", children, ...props }, ref) => {
+  ({ className = "", style, containerClassName = "", iconStyle: customIconStyle, children, ...props }, ref) => {
     return (
       <div className={`relative ${containerClassName}`.trim()}>
         <select
@@ -35,7 +36,7 @@ export const DropDown = forwardRef<HTMLSelectElement, DropDownProps>(
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
           <svg
             className="w-4 h-4"
-            style={iconStyle}
+            style={{ ...iconStyle, ...customIconStyle }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

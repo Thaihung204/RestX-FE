@@ -1,9 +1,9 @@
 "use client";
 
-import ReservationDetailsModal from "@/components/admin/reservations/ReservationDetailsModal";
 import { PaginatedReservations, ReservationListItem } from "@/lib/services/reservationService";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
+import { ReservationRowActions } from "@/components/admin/reservations/ReservationRowActions";
 
 type ReservationListProps = {
   data: PaginatedReservations | null;
@@ -30,7 +30,6 @@ function StatusBadge({ code, name, colorCode }: { code: string; name: string; co
 
 export default function ReservationList({ data, loading, setPage, onStatusUpdated }: ReservationListProps) {
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const tableHeaderKeys = ["code", "customer", "table_floor", "date_time", "guests", "status", "actions"] as const;
 
   return (
@@ -128,12 +127,7 @@ export default function ReservationList({ data, loading, setPage, onStatusUpdate
 
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <div className="flex justify-center">
-                        <button onClick={() => setSelectedId(item.id)} className="p-2 rounded-lg transition-all" style={{ background: "var(--primary-soft)", color: "var(--primary)" }} title={t("admin.reservations.actions.view_detail")}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
+                        <ReservationRowActions item={item} onActionComplete={onStatusUpdated} />
                       </div>
                     </td>
                   </tr>
@@ -167,10 +161,6 @@ export default function ReservationList({ data, loading, setPage, onStatusUpdate
           </div>
         )}
       </div>
-
-      {selectedId && (
-        <ReservationDetailsModal reservationId={selectedId} onClose={() => setSelectedId(null)} onStatusUpdated={onStatusUpdated} />
-      )}
     </>
   );
 }

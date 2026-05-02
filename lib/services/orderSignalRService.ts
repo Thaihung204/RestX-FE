@@ -91,8 +91,6 @@ const getConnection = () => {
     
     connection = new HubConnectionBuilder()
       .withUrl(hubUrl, {
-        skipNegotiation: true,
-        transport: HttpTransportType.WebSockets,
         accessTokenFactory: () =>
           typeof window !== "undefined"
             ? localStorage.getItem("accessToken") || ""
