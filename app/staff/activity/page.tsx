@@ -133,7 +133,7 @@ function parseFilterDateTime(dateValue: string, timeValue: string): Date | null 
 }
 
 function toLocalDateTimeParam(date: Date): string {
-  return `${toYmd(date)}T${toHm(date)}:00`;
+  return `${toYmd(date)}T${toHm(date)}:59.999`;
 }
 
 function pickReservationForSlot(
