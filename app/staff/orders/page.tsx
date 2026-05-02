@@ -11,15 +11,15 @@ import { useTenant } from "@/lib/contexts/TenantContext";
 import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
-  OrderDetailStatus,
+    OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import orderService, {
-  OrderDto,
-  OrderRequestDto,
+    OrderDto,
+    OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-  OrderStatus,
+    OrderStatus,
 } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
 import { TableItem, tableService } from "@/lib/services/tableService";
@@ -152,6 +152,8 @@ export default function OrderManagement() {
   const statusValueMapRef = useRef<Record<string, string>>({});
   const dishNameMapRef = useRef<Record<string, string>>({});
   const initializedRef = useRef(false);
+  // Stable ref to always call the latest refreshOrders without re-triggering SignalR effect
+  const refreshOrdersRef = useRef<(force?: boolean) => Promise<void>>(() => Promise.resolve());
 
   const getTodayOrderQuery = useCallback(() => {
     const now = new Date();
@@ -331,6 +333,11 @@ export default function OrderManagement() {
     [fetchOrders],
   );
 
+  // Keep ref in sync so SignalR handler always calls the latest version
+  useEffect(() => {
+    refreshOrdersRef.current = refreshOrders;
+  }, [refreshOrders]);
+
   const loadInitialData = useCallback(async () => {
     if (inFlightRef.current || initializedRef.current) return;
     inFlightRef.current = true;
@@ -404,6 +411,7 @@ export default function OrderManagement() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PaymentOrder | null>(null);
+  const [selectedPromotion, setSelectedPromotion] = useState<import("@/lib/services/promotionService").Promotion | null>(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] =
     useState<Order | null>(null);
   const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
@@ -467,7 +475,8 @@ export default function OrderManagement() {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         if (!isMounted) return;
-        refreshOrders();
+        // Use ref to always call the latest refreshOrders without re-triggering this effect
+        refreshOrdersRef.current();
       }, 300);
     };
 
@@ -502,7 +511,8 @@ export default function OrderManagement() {
       );
       orderSignalRService.leaveTenantGroup(tenantId).catch(() => {});
     };
-  }, [tenant?.id, refreshOrders]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.id]);
 
   // Check viewport
   React.useEffect(() => {
@@ -890,19 +900,39 @@ export default function OrderManagement() {
     }
   };
 
+  /**
+   * Tính subTotal từ detailItems trên FE.
+   * Chỉ tính các item không bị cancelled và không phải combo-child (parentId != null).
+   */
+  const calcSubTotal = useCallback((items: OrderItem[]): number => {
+    return items
+      .filter((item) => {
+        // Bỏ qua combo children (chúng không có giá riêng, giá đã tính ở combo parent)
+        if (item.parentId) return false;
+        // Bỏ qua các item đã cancelled
+        const status = normalizeStatusValue(item.status ?? "");
+        return status !== normalizeStatusValue("cancelled");
+      })
+      .reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
+  }, [normalizeStatusValue]);
+
   const openPaymentModal = async (order: OrderForPaymentTrigger) => {
     const matchedOrder = orders.find((o) => o.id === order.id);
     const source = matchedOrder ?? order;
 
+    // Tính subTotal từ FE (không dùng giá trị từ API)
+    const subTotalFE = matchedOrder
+      ? calcSubTotal(matchedOrder.detailItems)
+      : source.total;
+
     // Open modal immediately with data we have
     setIsOrderDetailModalOpen(false);
     setSelectedOrderForDetail(null);
-    const subTotalInitial = matchedOrder?.subTotal ?? source.total;
     setSelectedOrder({
       id: source.id,
       reference: source.reference,
-      total: source.total,
-      subTotal: subTotalInitial,
+      total: subTotalFE, // total ban đầu = subTotal (chưa có serviceCharge/deposit)
+      subTotal: subTotalFE,
       customerId:
         matchedOrder?.customerId || source.raw?.customerId || undefined,
       depositAmount: 0,
@@ -910,44 +940,45 @@ export default function OrderManagement() {
       serviceChargePercent: 0,
       raw: { paymentStatusId: source.raw?.paymentStatusId },
     });
-    setCashReceived(source.total);
-    setFinalTotal(source.total);
+    setCashReceived(subTotalFE);
+    setFinalTotal(subTotalFE);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
 
-    // Fetch full order to get serviceCharge & reservation.depositAmount
+    // Fetch full order chỉ để lấy serviceCharge & reservation.depositAmount
     try {
       const res = await orderService.getOrderById(source.id) as any;
-      // Unwrap API wrapper: { data: {...} } or { success, data: {...} } or raw object
       const orderData = res?.data ?? res;
-      console.log("[PaymentModal] full order data:", orderData);
 
-      const subTotalRaw: number = Number(orderData?.subTotal ?? subTotalInitial);
-
-      // serviceCharge from API is a flat VND amount (not percent)
+      // serviceCharge từ API là số tiền VND phẳng
       const serviceChargeRaw: number = Number(orderData?.serviceCharge ?? 0);
-      // Compute display percent from subTotal (round to nearest whole %)
+      // Tính % hiển thị từ subTotal FE
       const serviceChargePercent: number =
-        serviceChargeRaw > 0 && subTotalRaw > 0
-          ? Math.round((serviceChargeRaw / subTotalRaw) * 100)
+        serviceChargeRaw > 0 && subTotalFE > 0
+          ? Math.round((serviceChargeRaw / subTotalFE) * 100)
           : 0;
 
       const depositAmount: number = Number(
         orderData?.reservation?.depositAmount ?? 0,
       );
 
-      console.log("[PaymentModal] serviceCharge:", serviceChargeRaw, "deposit:", depositAmount);
+      // total = subTotal (FE) + serviceCharge - deposit
+      const totalFE = subTotalFE + serviceChargeRaw - depositAmount;
 
       setSelectedOrder((prev) =>
         prev
           ? {
               ...prev,
+              subTotal: subTotalFE,
+              total: totalFE,
               depositAmount,
               serviceCharge: serviceChargeRaw,
               serviceChargePercent,
             }
           : prev,
       );
+      setCashReceived(totalFE);
+      setFinalTotal(totalFE);
     } catch (err) {
       console.error("[PaymentModal] failed to fetch order detail:", err);
     }
@@ -958,17 +989,23 @@ export default function OrderManagement() {
 
     setIsProcessingPayment(true);
     try {
+      const promoOptions = {
+        promotionCode: selectedPromotion?.code ?? null,
+        applyMembership: false,
+      };
+
       if (paymentMethod === "cash") {
         if (cashReceived < finalTotal) {
           message.error(t("staff.orders.payment.messages.cash_insufficient"));
           return;
         }
 
-        await paymentService.payByCash(selectedOrder.id, cashReceived);
+        await paymentService.payByCash(selectedOrder.id, cashReceived, promoOptions);
         message.success(t("staff.orders.payment.messages.cash_success"));
       } else {
         const response = await paymentService.createPaymentLink(
           selectedOrder.id,
+          promoOptions,
         );
         if (response.checkoutUrl) {
           window.location.assign(response.checkoutUrl);
@@ -979,6 +1016,7 @@ export default function OrderManagement() {
 
       setIsPaymentModalOpen(false);
       setSelectedOrder(null);
+      setSelectedPromotion(null);
       setFinalTotal(0);
       refreshOrders();
     } catch (error) {
@@ -1154,9 +1192,11 @@ export default function OrderManagement() {
         paymentOptions={paymentOptions}
         isProcessingPayment={isProcessingPayment}
         onFinalTotalChange={setFinalTotal}
+        onPromotionChange={setSelectedPromotion}
         onClose={() => {
           setIsPaymentModalOpen(false);
           setSelectedOrder(null);
+          setSelectedPromotion(null);
           setCashReceived(0);
           setFinalTotal(0);
         }}

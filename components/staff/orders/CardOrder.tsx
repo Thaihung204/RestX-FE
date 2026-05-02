@@ -13,10 +13,13 @@ interface OrderItem {
   quantity: number;
   note?: string;
   status: OrderItemStatus;
+  price?: number;
   comboId?: string | null;
   parentId?: string | null;
   /** Child dishes when this is a combo row */
   children?: OrderItem[];
+  /** Grouped IDs for batch status update */
+  ids?: string[];
 }
 
 interface OrderStatus {
@@ -62,6 +65,24 @@ interface CardOrderProps {
   t: (key: string) => string;
 }
 
+/** Gộp combo cùng tên + cùng status, chỉ cộng quantity combo, giữ nguyên children của combo đầu tiên */
+function aggregateCombos(items: OrderItem[]): OrderItem[] {
+  const aggregated = new Map<string, OrderItem>();
+  items.forEach((item) => {
+    const key = `${(item.name || "").toLowerCase().trim()}||${(item.status || "").toLowerCase()}`;
+    const existing = aggregated.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+      if (!existing.ids) existing.ids = [existing.id];
+      existing.ids.push(item.id);
+      // Không cộng dồn children — giữ nguyên children của combo đầu tiên
+    } else {
+      aggregated.set(key, { ...item, ids: [item.id], children: item.children ? [...item.children] : [] });
+    }
+  });
+  return Array.from(aggregated.values());
+}
+
 export default function CardOrder({
   order,
   isMobile,
@@ -98,6 +119,11 @@ export default function CardOrder({
     bg: mode === "dark" ? bgDark : bgLight,
     border: mode === "dark" ? borderDark : borderLight,
   };
+
+  // Gộp combo cùng tên+status, giữ standalone items
+  const comboItems = order.detailItems.filter((i) => !!i.comboId && !i.parentId);
+  const standaloneItems = order.detailItems.filter((i) => !i.comboId && !i.parentId);
+  const displayItems = [...aggregateCombos(comboItems), ...standaloneItems];
 
   return (
     <Card
@@ -201,7 +227,7 @@ export default function CardOrder({
           </div>
 
           <div style={{ marginBottom: isMobile ? 12 : 16 }}>
-            {order.detailItems.length > 0 ? (
+            {displayItems.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <div
                   onClick={(event) => {
@@ -238,7 +264,7 @@ export default function CardOrder({
                 </div>
 
                 {isExpanded &&
-                  order.detailItems.map((item) => {
+                  displayItems.map((item) => {
                     const isCombo = !!item.comboId && !item.parentId;
 
                     if (isCombo) {
@@ -264,9 +290,7 @@ export default function CardOrder({
                               justifyContent: "space-between",
                               gap: 8,
                               padding: isMobile ? "6px 10px" : "8px 12px",
-                              background: mode === "dark"
-                                ? "rgba(255,255,255,0.06)"
-                                : "rgba(0,0,0,0.03)",
+                              background: "transparent",
                             }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <Text
