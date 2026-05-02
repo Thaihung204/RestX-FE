@@ -2,13 +2,14 @@
 
 import { useCart } from "@/lib/contexts/CartContext";
 import notificationService from "@/lib/services/notificationService";
+import paymentService from "@/lib/services/paymentService";
 import { formatVND } from "@/lib/utils/currency";
 import {
-    CloseOutlined,
-    EditOutlined,
-    MinusOutlined,
-    PlusOutlined,
-    ShoppingCartOutlined,
+  CloseOutlined,
+  EditOutlined,
+  MinusOutlined,
+  PlusOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { message as antMessage, Button, Card, Input, Modal, Tabs, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
@@ -39,6 +40,7 @@ export default function CartModal() {
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [isRequestingPayment, setIsRequestingPayment] = useState(false);
+  const [isSelfPaying, setIsSelfPaying] = useState(false);
   const [messageApi, contextHolder] = antMessage.useMessage();
 
   const handleRequestPayment = async () => {
@@ -55,9 +57,40 @@ export default function CartModal() {
       closeCartModal();
       setFeedbackOpen(true);
     } catch {
-      messageApi.error(t("customer_page.cart_modal.payment_request_failed", "Yêu cầu thanh toán thất bại"));
+      messageApi.error(t("customer_page.cart_modal.payment_request_failed"));
     } finally {
       setIsRequestingPayment(false);
+    }
+  };
+
+  const handleSelfPayment = async () => {
+    if (!activeOrderId) {
+      messageApi.error(t("customer_page.cart_modal.no_order_to_pay"));
+      return;
+    }
+    setIsSelfPaying(true);
+    try {
+      const response = await paymentService.createPaymentLink(activeOrderId, { isCustomer: true });
+      if (response.checkoutUrl) {
+        window.location.assign(response.checkoutUrl);
+        return;
+      }
+      messageApi.error(t("customer_page.cart_modal.self_pay_failed"));
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.message || err?.response?.data?.title || err?.message || "";
+      console.error("[SelfPayment] error", status, detail, err?.response?.data);
+      if (status === 403) {
+        messageApi.error(t("customer_page.cart_modal.self_pay_not_available"));
+      } else if (status === 401) {
+        messageApi.error(t("customer_page.cart_modal.self_pay_unauthorized"));
+      } else if (status === 400) {
+        messageApi.error(detail || t("customer_page.cart_modal.self_pay_failed"));
+      } else {
+        messageApi.error(t("customer_page.cart_modal.self_pay_failed"));
+      }
+    } finally {
+      setIsSelfPaying(false);
     }
   };
 
@@ -750,23 +783,44 @@ export default function CartModal() {
                             {formatVND(totalOrderAmount)}
                           </div>
                         </div>
-                        <Button
-                          block
-                          type="primary"
-                          size="large"
-                          onClick={handleRequestPayment}
-                          loading={isRequestingPayment}
-                          disabled={isRequestingPayment}
-                          style={{
-                            background: "var(--primary)",
-                            border: "none",
-                            height: 48,
-                            fontWeight: 700,
-                            fontSize: 16,
-                            boxShadow: "0 10px 25px var(--primary-glow)",
-                          }}>
-                          {t("customer_page.cart_modal.request_payment")}
-                        </Button>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {/* Tự thanh toán PayOS — nổi bật, ở trên */}
+                          <Button
+                            block
+                            type="primary"
+                            size="large"
+                            onClick={handleSelfPayment}
+                            loading={isSelfPaying}
+                            disabled={isRequestingPayment || isSelfPaying}
+                            style={{
+                              background: "var(--primary)",
+                              border: "none",
+                              height: 52,
+                              fontWeight: 700,
+                              fontSize: 15,
+                              boxShadow: "0 10px 25px var(--primary-glow)",
+                            }}>
+                            {t("customer_page.cart_modal.self_payment")}
+                          </Button>
+                          {/* Nhân viên thanh toán — phụ, ở dưới */}
+                          <Button
+                            block
+                            type="default"
+                            size="middle"
+                            onClick={handleRequestPayment}
+                            loading={isRequestingPayment}
+                            disabled={isRequestingPayment || isSelfPaying}
+                            style={{
+                              height: 40,
+                              fontWeight: 600,
+                              fontSize: 13,
+                              border: "1px solid var(--border)",
+                              color: "var(--text-muted)",
+                              background: "transparent",
+                            }}>
+                            {t("customer_page.cart_modal.request_payment")}
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </>
