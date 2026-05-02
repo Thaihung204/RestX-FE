@@ -3281,7 +3281,7 @@
       "status_preparing": "Preparing",
       "total": "Total:",
       "items_count": "{{count}} items",
-      "confirm_order": "Send Order Request",
+      "confirm_order": "Order",
       "request_payment": "Request Payment",
       "payment_request_sent": "Payment request sent",
       "note_placeholder": "Note for this dish"

@@ -106,9 +106,14 @@ class PaymentService {
     return response.data;
   }
 
-  async createPaymentLink(orderId: string): Promise<CreatePaymentLinkResponse> {
+  async createPaymentLink(
+    orderId: string,
+    options?: { isCustomer?: boolean },
+  ): Promise<CreatePaymentLinkResponse> {
+    const body = options?.isCustomer ? { isCustomer: true } : undefined;
     const response = await axiosInstance.post<CreatePaymentLinkResponse>(
       `/payments/orders/${orderId}`,
+      body,
     );
     return response.data;
   }

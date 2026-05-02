@@ -3328,8 +3328,8 @@
       "status_preparing": "Đang làm",
       "total": "Tổng cộng:",
       "items_count": "{{count}} món",
-      "confirm_order": "Gửi yêu cầu gọi món",
-      "request_payment": "Xác nhận thanh toán",
+      "confirm_order": "Gọi món",
+      "request_payment": "Nhân viên thanh toán",
       "payment_request_sent": "Đã gửi yêu cầu thanh toán",
       "note_placeholder": "Ghi chú cho món này"
     },

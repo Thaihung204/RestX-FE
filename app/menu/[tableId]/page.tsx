@@ -6,41 +6,41 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-  CustomerResponseDto,
+    CustomerResponseDto,
 } from "@/lib/services/customerService";
 import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import type {
-  CartItem,
-  Category,
-  CategoryWithDishes,
-  MenuItem,
+    CartItem,
+    Category,
+    CategoryWithDishes,
+    MenuItem,
 } from "@/lib/types/menu";
 import { formatVND } from "@/lib/utils/currency";
 import {
-  ArrowLeftOutlined,
-  CloseOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  StarFilled,
+    ArrowLeftOutlined,
+    CloseOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    SearchOutlined,
+    StarFilled,
 } from "@ant-design/icons";
 import {
-  Affix,
-  Button,
-  Card,
-  Col,
-  ConfigProvider,
-  Grid,
-  Input,
-  message,
-  Modal,
-  Row,
-  Spin,
-  theme,
-  Typography
+    Affix,
+    Button,
+    Card,
+    Col,
+    ConfigProvider,
+    Grid,
+    Input,
+    message,
+    Modal,
+    Row,
+    Spin,
+    theme,
+    Typography
 } from "antd";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -54,6 +54,8 @@ export default function MenuPage() {
   const pageHorizontalPadding = isSmallPhone ? 12 : 16;
   const sectionGap = isSmallPhone ? 24 : 32;
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const params = useParams();
   
   const rawTableId = params?.tableId;
@@ -68,6 +70,26 @@ export default function MenuPage() {
       router.replace("/404");
     }
   }, [tableId]);
+
+  // Handle PayOS return after customer self-payment
+  const [messageApi] = message.useMessage();
+  useEffect(() => {
+    const payosStatus = searchParams.get("payos");
+    if (!payosStatus) return;
+
+    if (payosStatus === "success") {
+      messageApi.success(t("customer_page.cart_modal.self_pay_success", "Thanh toán thành công!"));
+    } else if (payosStatus === "cancel") {
+      messageApi.warning(t("customer_page.cart_modal.self_pay_cancelled", "Thanh toán đã bị huỷ"));
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("payos");
+    const nextUrl = nextParams.toString()
+      ? `${pathname}?${nextParams.toString()}`
+      : pathname;
+    router.replace(nextUrl);
+  }, [searchParams, pathname, router, messageApi, t]);
   const { mode: themeMode } = useTheme();
   const { user } = useAuth();
   const {
