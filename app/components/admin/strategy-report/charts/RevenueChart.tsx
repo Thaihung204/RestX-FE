@@ -9,7 +9,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 import { BreakdownEntry } from '@/app/lib/types/snapshot.types';
@@ -31,13 +30,13 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
-          <p className="text-sm text-gray-700">{payload[0].payload.date}</p>
-          <p className="text-sm font-semibold text-[var(--primary)]">
+        <div className="ts-chart-tooltip">
+          <p className="ts-chart-tooltip-date">{payload[0].payload.date}</p>
+          <p className="ts-chart-tooltip-row" style={{ color: 'var(--primary)' }}>
             {t('strategyReport.chart.revenue')}: {formatVND(payload[0].value)}
           </p>
           {payload[1] && (
-            <p className="text-sm font-semibold text-orange-500">
+            <p className="ts-chart-tooltip-row" style={{ color: '#f97316' }}>
               {t('strategyReport.chart.discount')}: {formatVND(payload[1].value)}
             </p>
           )}
@@ -48,50 +47,45 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {t('strategyReport.chart.revenueTitle')}
-      </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12 }}
-            stroke="#9ca3af"
-          />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            stroke="#9ca3af"
-            tickFormatter={(value) => formatVND(value)}
-          />
+    <div className="ts-chart-card">
+      <h4 className="ts-chart-title">{t('strategyReport.chart.revenueTitle')}</h4>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+          <defs>
+            <linearGradient id="revGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.8} />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity={1} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
+          <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" tickFormatter={(v) => formatVND(v)} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
           <Line
             type="monotone"
             dataKey="revenue"
-            stroke="var(--primary)"
-            strokeWidth={2}
-            dot={{ fill: 'var(--primary)', r: 4 }}
-            activeDot={{ r: 6 }}
+            stroke="url(#revGrad)"
+            strokeWidth={2.5}
+            dot={{ fill: 'var(--primary)', r: 3, strokeWidth: 0 }}
+            activeDot={{ r: 5, stroke: 'var(--primary)', strokeWidth: 2, fill: 'var(--card)' }}
             name={t('strategyReport.chart.revenue')}
-            isAnimationActive={false}
           />
           <Line
             type="monotone"
             dataKey="discountAmount"
             stroke="#f97316"
             strokeWidth={2}
-            dot={{ fill: '#f97316', r: 4 }}
-            activeDot={{ r: 6 }}
+            strokeDasharray="6 3"
+            dot={{ fill: '#f97316', r: 3, strokeWidth: 0 }}
+            activeDot={{ r: 5, stroke: '#f97316', strokeWidth: 2, fill: 'var(--card)' }}
             name={t('strategyReport.chart.discount')}
-            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>
+      <div className="ts-chart-legend">
+        <span className="ts-chart-legend-item"><span className="ts-chart-legend-dot" style={{ background: 'var(--primary)' }} />{t('strategyReport.chart.revenue')}</span>
+        <span className="ts-chart-legend-item"><span className="ts-chart-legend-dot ts-chart-legend-dot-dashed" style={{ background: '#f97316' }} />{t('strategyReport.chart.discount')}</span>
+      </div>
     </div>
   );
 };

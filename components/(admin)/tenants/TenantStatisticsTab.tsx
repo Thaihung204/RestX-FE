@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Table, Spin } from "antd";
+import { Button, Table, Spin, Modal } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   BarChartOutlined,
-  CloseOutlined,
   EyeOutlined,
   RiseOutlined,
   ShopOutlined,
@@ -58,6 +57,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
   } = useSnapshotData();
 
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Fetch snapshot data on mount
   useEffect(() => {
@@ -80,14 +80,21 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
     );
   };
 
+  const selectedTenant = useMemo(
+    () => tenants.find((t) => t.id === selectedTenantId),
+    [tenants, selectedTenantId]
+  );
+
   const handleViewRevenue = (tenantId: string) => {
-    if (selectedTenantId === tenantId) {
-      setSelectedTenantId(null);
-      resetToAllTenants();
-    } else {
-      setSelectedTenantId(tenantId);
-      fetchTenantDetail(tenantId, snapshotState.periodType);
-    }
+    setSelectedTenantId(tenantId);
+    setModalOpen(true);
+    fetchTenantDetail(tenantId, snapshotState.periodType);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedTenantId(null);
+    resetToAllTenants();
   };
 
   const handlePeriodChange = (period: PeriodType) => {
@@ -181,7 +188,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
           <Button
             type="text"
             icon={<BarChartOutlined />}
-            className={`ts-revenue-btn ${selectedTenantId === record.id ? "ts-revenue-btn-active" : ""}`}
+            className="ts-revenue-btn"
             onClick={(e) => {
               e.stopPropagation();
               handleViewRevenue(record.id);
@@ -339,27 +346,32 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
         />
       </div>
 
-      {/* Breakdown Charts — shown when a tenant is selected */}
-      {selectedTenantId && (
-        <div className="ts-breakdown-section">
-          <div className="ts-breakdown-header">
-            <h3 className="ts-breakdown-title">
-              {tenants.find((t) => t.id === selectedTenantId)?.name ?? selectedTenantId}
-              {" \u2014 "}
-              {t("strategyReport.revenueBreakdown")}
-            </h3>
-            <button
-              className="ts-breakdown-close"
-              onClick={() => {
-                setSelectedTenantId(null);
-                resetToAllTenants();
-              }}
-            >
-              <CloseOutlined />
-              <span>{t("strategyReport.closeChart")}</span>
-            </button>
+      {/* Revenue Breakdown Modal */}
+      <Modal
+        open={modalOpen}
+        onCancel={handleCloseModal}
+        footer={null}
+        width={960}
+        centered
+        destroyOnClose
+        className="ts-breakdown-modal"
+        title={
+          <div className="ts-modal-header">
+            <div className="ts-modal-avatar">
+              {selectedTenant?.name?.charAt(0).toUpperCase() ?? "?"}
+            </div>
+            <div>
+              <h3 className="ts-modal-title">
+                {selectedTenant?.name ?? selectedTenantId}
+              </h3>
+              <p className="ts-modal-subtitle">
+                {t("strategyReport.revenueBreakdown")}
+              </p>
+            </div>
           </div>
-
+        }
+      >
+        <div className="ts-modal-body">
           {snapshotState.loading && (
             <div className="ts-loading-container">
               <Spin size="large" />
@@ -376,7 +388,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
             </div>
           )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

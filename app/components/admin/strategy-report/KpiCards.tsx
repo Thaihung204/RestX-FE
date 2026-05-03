@@ -30,65 +30,52 @@ export const KpiCards: React.FC<KpiCardsProps> = ({
     totalOrders > 0 ? ((cancelledOrders / totalOrders) * 100).toFixed(1) : '0';
   const cancellationSeverity = getCancellationSeverity(cancelledOrders, totalOrders);
 
-  const getSeverityColors = (severity: string) => {
-    switch (severity) {
-      case 'danger':
-        return 'bg-red-50 border-red-200 text-red-700';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-700';
-      default:
-        return 'bg-blue-50 border-blue-200 text-blue-700';
-    }
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="ts-kpi-grid">
       {/* Revenue Card */}
-      <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-        <div className="text-sm font-medium text-gray-600 mb-2">
-          {t('strategyReport.kpi.totalRevenue')}
-        </div>
-        <div className="text-2xl font-bold text-[var(--primary)]">{formatVND(totalRevenue)}</div>
-        <div className="text-xs text-gray-500 mt-2">
-          {t('strategyReport.kpi.revenueSubtext')}
-        </div>
+      <div className="ts-kpi-card">
+        <div className="ts-kpi-card-accent" style={{ background: 'var(--primary)' }} />
+        <p className="ts-kpi-label">{t('strategyReport.kpi.totalRevenue')}</p>
+        <p className="ts-kpi-value ts-kpi-value-primary">{formatVND(totalRevenue)}</p>
+        <p className="ts-kpi-sub">{t('strategyReport.kpi.revenueSubtext')}</p>
       </div>
 
       {/* Completion Rate Card */}
-      <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-        <div className="text-sm font-medium text-gray-600 mb-2">
-          {t('strategyReport.kpi.completionRate')}
-        </div>
-        <div className="text-2xl font-bold text-[var(--primary)]">{completionRate}</div>
-        <div className="text-xs text-gray-500 mt-2">
-          {t('strategyReport.kpi.completionSubtext')}
-        </div>
+      <div className="ts-kpi-card">
+        <div className="ts-kpi-card-accent" style={{ background: '#22c55e' }} />
+        <p className="ts-kpi-label">{t('strategyReport.kpi.completionRate')}</p>
+        <p className="ts-kpi-value ts-kpi-value-primary">{completionRate}</p>
+        <p className="ts-kpi-sub">{t('strategyReport.kpi.completionSubtext')}</p>
       </div>
 
       {/* Cancellation Rate Card */}
-      <div
-        className={`p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${getSeverityColors(cancellationSeverity)}`}
-      >
-        <div className="text-sm font-medium mb-2">
-          {t('strategyReport.kpi.cancellationRate')}
-        </div>
-        <div className="text-2xl font-bold">{cancellationRate}%</div>
-        <div className="text-xs mt-2">
+      <div className={`ts-kpi-card ts-kpi-card-severity-${cancellationSeverity}`}>
+        <div
+          className="ts-kpi-card-accent"
+          style={{
+            background:
+              cancellationSeverity === 'danger'
+                ? '#ef4444'
+                : cancellationSeverity === 'warning'
+                  ? '#f59e0b'
+                  : '#3b82f6',
+          }}
+        />
+        <p className="ts-kpi-label">{t('strategyReport.kpi.cancellationRate')}</p>
+        <p className="ts-kpi-value">{cancellationRate}%</p>
+        <p className="ts-kpi-sub">
           {cancellationSeverity === 'danger' && t('strategyReport.kpi.cancellationDanger')}
           {cancellationSeverity === 'warning' && t('strategyReport.kpi.cancellationWarning')}
           {cancellationSeverity === 'normal' && t('strategyReport.kpi.cancellationNormal')}
-        </div>
+        </p>
       </div>
 
       {/* New Customers Card */}
-      <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-        <div className="text-sm font-medium text-gray-600 mb-2">
-          {t('strategyReport.kpi.newCustomers')}
-        </div>
-        <div className="text-2xl font-bold text-[var(--primary)]">{newCustomers}</div>
-        <div className="text-xs text-gray-500 mt-2">
-          {t('strategyReport.kpi.newCustomersSubtext')}
-        </div>
+      <div className="ts-kpi-card">
+        <div className="ts-kpi-card-accent" style={{ background: '#8b5cf6' }} />
+        <p className="ts-kpi-label">{t('strategyReport.kpi.newCustomers')}</p>
+        <p className="ts-kpi-value ts-kpi-value-primary">{newCustomers}</p>
+        <p className="ts-kpi-sub">{t('strategyReport.kpi.newCustomersSubtext')}</p>
       </div>
     </div>
   );

@@ -5481,6 +5481,91 @@ html.reservation-overlay-open header {
   box-shadow: 0 2px 8px color-mix(in srgb, var(--primary), transparent 70%);
 }
 
+/* --- KPI Cards Grid --- */
+.ts-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.ts-kpi-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.ts-kpi-card:hover {
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--text), transparent 90%);
+  transform: translateY(-2px);
+}
+
+.ts-kpi-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.ts-kpi-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ts-kpi-value {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.ts-kpi-value-primary {
+  color: var(--primary);
+}
+
+.ts-kpi-sub {
+  margin: 0.5rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.ts-kpi-card-severity-danger {
+  border-color: color-mix(in srgb, #ef4444, transparent 70%);
+  background: color-mix(in srgb, #ef4444, transparent 94%);
+}
+
+.ts-kpi-card-severity-danger .ts-kpi-value {
+  color: #ef4444;
+}
+
+.ts-kpi-card-severity-warning {
+  border-color: color-mix(in srgb, #f59e0b, transparent 70%);
+  background: color-mix(in srgb, #f59e0b, transparent 94%);
+}
+
+.ts-kpi-card-severity-warning .ts-kpi-value {
+  color: #f59e0b;
+}
+
+.ts-kpi-card-severity-normal {
+  border-color: color-mix(in srgb, #3b82f6, transparent 70%);
+  background: color-mix(in srgb, #3b82f6, transparent 94%);
+}
+
+.ts-kpi-card-severity-normal .ts-kpi-value {
+  color: #3b82f6;
+}
+
 /* --- Revenue Value in Table --- */
 .ts-revenue-value {
   font-weight: 700;
@@ -5518,65 +5603,149 @@ html.reservation-overlay-open header {
   background: color-mix(in srgb, var(--primary), transparent 92%) !important;
 }
 
-.ts-revenue-btn-active {
-  color: var(--primary) !important;
-  background: color-mix(in srgb, var(--primary), transparent 88%) !important;
-}
-
-/* --- Breakdown Charts Section --- */
-.ts-breakdown-section {
-  padding: 1.5rem;
-  border-radius: 1.25rem;
+/* --- Chart Cards --- */
+.ts-chart-card {
+  padding: 1.25rem;
+  border-radius: 1rem;
   border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--card), transparent 8%);
-  animation: ts-slide-down 0.3s ease;
+  background: var(--card);
 }
 
-@keyframes ts-slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.ts-breakdown-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.ts-breakdown-title {
-  margin: 0;
-  font-size: 0.9375rem;
+.ts-chart-title {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text);
 }
 
-.ts-breakdown-close {
+/* --- Chart Tooltip --- */
+.ts-chart-tooltip {
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text), transparent 88%);
+}
+
+.ts-chart-tooltip-date {
+  margin: 0 0 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ts-chart-tooltip-row {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* --- Chart Legend --- */
+.ts-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.75rem;
+}
+
+.ts-chart-legend-item {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--text), transparent 88%);
-  background: transparent;
+  font-size: 0.6875rem;
+  font-weight: 600;
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.ts-breakdown-close:hover {
+.ts-chart-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ts-chart-legend-dot-dashed {
+  border-radius: 2px;
+  width: 12px;
+  height: 3px;
+}
+
+/* --- Breakdown Modal --- */
+.ts-breakdown-modal .ant-modal-content {
+  border-radius: 1.25rem !important;
+  background: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.ts-breakdown-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 1.25rem 1.5rem !important;
+  margin: 0 !important;
+}
+
+.ts-breakdown-modal .ant-modal-body {
+  padding: 1.5rem !important;
+}
+
+.ts-breakdown-modal .ant-modal-close {
+  top: 1.25rem !important;
+  right: 1.5rem !important;
+  color: var(--text-muted) !important;
+}
+
+.ts-breakdown-modal .ant-modal-close:hover {
+  color: var(--text) !important;
+}
+
+/* --- Modal Header --- */
+.ts-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.ts-modal-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #fff;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.ts-modal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text);
-  border-color: color-mix(in srgb, var(--text), transparent 70%);
-  background: color-mix(in srgb, var(--text), transparent 94%);
+}
+
+.ts-modal-subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* --- Modal Body --- */
+.ts-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ts-modal-body .space-y-6 > * + * {
+  margin-top: 1.25rem;
 }
 
 /* --- Loading & Error --- */
@@ -5597,63 +5766,6 @@ html.reservation-overlay-open header {
   font-weight: 500;
 }
 
-/* --- KpiCards theme override for tenant tab --- */
-.ts-revenue-section .grid {
-  gap: 1rem;
-}
-
-.ts-revenue-section .grid > div {
-  background: var(--card) !important;
-  border-color: var(--border) !important;
-  border-radius: 1rem !important;
-}
-
-.ts-revenue-section .grid > div .text-gray-600 {
-  color: var(--text-muted) !important;
-}
-
-.ts-revenue-section .grid > div .text-gray-500 {
-  color: var(--text-muted) !important;
-}
-
-.ts-revenue-section .grid > div .text-2xl {
-  color: var(--primary) !important;
-}
-
-/* Severity cards override */
-.ts-revenue-section .grid > div.bg-red-50 {
-  background: color-mix(in srgb, #ef4444, transparent 92%) !important;
-  border-color: color-mix(in srgb, #ef4444, transparent 80%) !important;
-}
-
-.ts-revenue-section .grid > div.bg-yellow-50 {
-  background: color-mix(in srgb, #f59e0b, transparent 92%) !important;
-  border-color: color-mix(in srgb, #f59e0b, transparent 80%) !important;
-}
-
-.ts-revenue-section .grid > div.bg-blue-50 {
-  background: color-mix(in srgb, #3b82f6, transparent 92%) !important;
-  border-color: color-mix(in srgb, #3b82f6, transparent 80%) !important;
-}
-
-/* --- Breakdown Charts theme override --- */
-.ts-breakdown-section .bg-white {
-  background: var(--card) !important;
-}
-
-.ts-breakdown-section .border-gray-200 {
-  border-color: var(--border) !important;
-}
-
-.ts-breakdown-section .text-gray-800,
-.ts-breakdown-section .text-gray-700 {
-  color: var(--text) !important;
-}
-
-.ts-breakdown-section .text-gray-600 {
-  color: var(--text-muted) !important;
-}
-
 @media (max-width: 768px) {
   .ts-revenue-header {
     flex-direction: column;
@@ -5664,16 +5776,27 @@ html.reservation-overlay-open header {
     width: fit-content;
   }
 
-  .ts-breakdown-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .ts-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .ts-actions-cell {
     flex-direction: column;
     gap: 0.125rem;
   }
+
+  .ts-breakdown-modal .ant-modal-content {
+    border-radius: 1rem !important;
+  }
 }
+
+@media (max-width: 480px) {
+  .ts-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 /* =========================================================
  * Tenant Detail Page — Stitch Obsidian Crimson Design

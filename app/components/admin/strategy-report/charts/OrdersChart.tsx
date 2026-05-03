@@ -9,10 +9,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { BreakdownEntry } from '@/app/lib/types/snapshot.types';
 import { formatDate } from '@/app/lib/utils/snapshot-formatters';
 
@@ -33,10 +31,10 @@ export const OrdersChart: React.FC<OrdersChartProps> = ({ data }) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
-          <p className="text-sm text-gray-700">{payload[0].payload.date}</p>
+        <div className="ts-chart-tooltip">
+          <p className="ts-chart-tooltip-date">{payload[0].payload.date}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm font-semibold" style={{ color: entry.color }}>
+            <p key={index} className="ts-chart-tooltip-row" style={{ color: entry.color }}>
               {entry.name}: {entry.value}
             </p>
           ))}
@@ -47,47 +45,24 @@ export const OrdersChart: React.FC<OrdersChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {t('strategyReport.chart.ordersTitle')}
-      </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12 }}
-            stroke="#9ca3af"
-          />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            stroke="#9ca3af"
-          />
+    <div className="ts-chart-card">
+      <h4 className="ts-chart-title">{t('strategyReport.chart.ordersTitle')}</h4>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
+          <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          <Bar
-            dataKey="totalOrders"
-            fill="#94a3b8"
-            name={t('strategyReport.chart.totalOrders')}
-            radius={[8, 8, 0, 0]}
-          />
-          <Bar
-            dataKey="completedOrders"
-            fill="var(--primary)"
-            name={t('strategyReport.chart.completedOrders')}
-            radius={[8, 8, 0, 0]}
-          />
-          <Bar
-            dataKey="cancelledOrders"
-            fill="#ef4444"
-            name={t('strategyReport.chart.cancelledOrders')}
-            radius={[8, 8, 0, 0]}
-          />
+          <Bar dataKey="completedOrders" fill="var(--primary)" name={t('strategyReport.chart.completedOrders')} radius={[6, 6, 0, 0]} barSize={16} />
+          <Bar dataKey="cancelledOrders" fill="#ef4444" name={t('strategyReport.chart.cancelledOrders')} radius={[6, 6, 0, 0]} barSize={16} />
+          <Bar dataKey="totalOrders" fill="color-mix(in srgb, var(--text-muted), transparent 50%)" name={t('strategyReport.chart.totalOrders')} radius={[6, 6, 0, 0]} barSize={16} />
         </BarChart>
       </ResponsiveContainer>
+      <div className="ts-chart-legend">
+        <span className="ts-chart-legend-item"><span className="ts-chart-legend-dot" style={{ background: 'var(--primary)' }} />{t('strategyReport.chart.completedOrders')}</span>
+        <span className="ts-chart-legend-item"><span className="ts-chart-legend-dot" style={{ background: '#ef4444' }} />{t('strategyReport.chart.cancelledOrders')}</span>
+        <span className="ts-chart-legend-item"><span className="ts-chart-legend-dot" style={{ background: '#94a3b8' }} />{t('strategyReport.chart.totalOrders')}</span>
+      </div>
     </div>
   );
 };

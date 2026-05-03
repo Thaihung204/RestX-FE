@@ -9,7 +9,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 import { BreakdownEntry } from '@/app/lib/types/snapshot.types';
@@ -30,9 +29,9 @@ export const ReservationsChart: React.FC<ReservationsChartProps> = ({ data }) =>
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
-          <p className="text-sm text-gray-700">{payload[0].payload.date}</p>
-          <p className="text-sm font-semibold text-[var(--primary)]">
+        <div className="ts-chart-tooltip">
+          <p className="ts-chart-tooltip-date">{payload[0].payload.date}</p>
+          <p className="ts-chart-tooltip-row" style={{ color: '#8b5cf6' }}>
             {t('strategyReport.chart.reservations')}: {payload[0].value}
           </p>
         </div>
@@ -42,39 +41,28 @@ export const ReservationsChart: React.FC<ReservationsChartProps> = ({ data }) =>
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {t('strategyReport.chart.reservationsTitle')}
-      </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12 }}
-            stroke="#9ca3af"
-          />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            stroke="#9ca3af"
-          />
+    <div className="ts-chart-card">
+      <h4 className="ts-chart-title">{t('strategyReport.chart.reservationsTitle')}</h4>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
+          <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
           <Line
             type="monotone"
             dataKey="newReservations"
             stroke="#8b5cf6"
-            strokeWidth={2}
-            dot={{ fill: '#8b5cf6', r: 4 }}
-            activeDot={{ r: 6 }}
+            strokeWidth={2.5}
+            dot={{ fill: '#8b5cf6', r: 3, strokeWidth: 0 }}
+            activeDot={{ r: 5, stroke: '#8b5cf6', strokeWidth: 2, fill: 'var(--card)' }}
             name={t('strategyReport.chart.reservations')}
-            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>
+      <div className="ts-chart-legend">
+        <span className="ts-chart-legend-item"><span className="ts-chart-legend-dot" style={{ background: '#8b5cf6' }} />{t('strategyReport.chart.reservations')}</span>
+      </div>
     </div>
   );
 };
