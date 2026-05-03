@@ -355,9 +355,11 @@ export const tableService = {
         return normalized;
     },
 
-    /** PUT /api/tables/{tableId}/sessions/close — Close active session */
-    closeTableSession: async (tableId: string): Promise<void> => {
-        await axiosInstance.put(`/tables/${tableId}/sessions/close`);
+    /** PUT /api/tables/sessions/close — Close active sessions by table id */
+    closeTableSession: async (tableIds: string[]): Promise<void> => {
+        await axiosInstance.put('/tables/sessions/close', tableIds, {
+            headers: { 'Content-Type': 'application/json' },
+        });
     },
 
     /** POST /api/tables/merge — Merge multiple tables */
