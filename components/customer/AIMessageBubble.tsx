@@ -1,8 +1,8 @@
 import {
-  AIMessage,
-  AIOrderDraft,
-  AIOrderDraftItem,
-  AISuggestionItem,
+    AIMessage,
+    AIOrderDraft,
+    AIOrderDraftItem,
+    AISuggestionItem,
 } from "@/lib/types/ai";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Typography } from "antd";
@@ -177,6 +177,9 @@ export default function AIMessageBubble({
                         background: "var(--surface-subtle)",
                         flexShrink: 0,
                         overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}>
                       {item.imageUrl ? (
                         <img
@@ -188,7 +191,18 @@ export default function AIMessageBubble({
                             objectFit: "cover",
                           }}
                         />
-                      ) : null}
+                      ) : (
+                        <img
+                          src="/images/dishStatus/spicy.png"
+                          alt=""
+                          style={{
+                            width: 32,
+                            height: 32,
+                            objectFit: "contain",
+                            opacity: 0.25,
+                          }}
+                        />
+                      )}
                     </div>
 
                     {/* Body */}

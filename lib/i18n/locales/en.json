@@ -15,6 +15,7 @@
         "all_status": "All statuses",
         "from_date": "From date",
         "to_date": "To date",
+        "date_placeholder": "Select date",
         "clear": "Clear filters"
       },
       "status": {
@@ -160,7 +161,13 @@
     "orders": {
       "messages": {
         "statuses_load_failed": "Failed to load order statuses",
-        "load_failed": "Failed to load orders"
+        "load_failed": "Failed to load orders",
+        "delete_success": "Order deleted successfully",
+        "delete_failed": "Failed to delete order"
+      },
+      "delete": {
+        "title": "Confirm order deletion",
+        "description_with_info": "Are you sure you want to delete order {{reference}} of customer {{customerName}}? This action cannot be undone."
       }
     },
     "order_detail": {
@@ -1281,7 +1288,8 @@
         "unpaid": "Unpaid"
       },
       "actions": {
-        "view_details": "View Details"
+        "view_details": "View Details",
+        "delete": "Delete Order"
       },
       "empty": "No orders found"
     },
@@ -2775,6 +2783,7 @@
       "no": "No",
       "exporting_report": "Exporting report...",
       "delete": "Delete",
+      "cancel": "Cancel",
       "edit": "Edit",
       "exporting": "Exporting...",
       "exporting_report": "Exporting..."

@@ -1,12 +1,14 @@
 "use client";
 
 import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import orderDetailStatusService, { OrderDetailStatus } from "@/lib/services/orderDetailStatusService";
 import orderService from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { DeleteOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -166,6 +168,8 @@ export default function AdminOrderDetailPage() {
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState<{ detailIds: string[]; dishName: string; newStatusId: number } | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const inFlightRef = useRef(false);
   const lastFetchRef = useRef<number | null>(null);
 
@@ -303,6 +307,26 @@ export default function AdminOrderDetailPage() {
     loadOrderDetails().catch(console.error);
   }, [loadOrderDetails]);
 
+  const handleDeleteOrder = async () => {
+    if (!orderId) return;
+    setIsDeleting(true);
+    try {
+      await orderService.deleteOrder(orderId);
+      message.success(t("admin.orders.messages.delete_success"));
+      router.push("/admin/orders");
+    } catch (err: unknown) {
+      console.error("Failed to delete order", err);
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("admin.orders.messages.delete_failed")
+      );
+      message.error(errorMsg);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   useEffect(() => {
     if (!tenant?.id || !orderId) return;
 
@@ -358,23 +382,35 @@ export default function AdminOrderDetailPage() {
     <>
     <main className="flex-1 p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
-            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
-            ← {t("admin.order_detail.actions.back")}
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold" style={{ color: "var(--text)" }}>
-              {t("admin.order_detail.title")}
-            </h1>
-            {/* <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-              {order?.reference
-                ? t("admin.order_detail.reference", { reference: order.reference })
-                : t("admin.order_detail.id", { id: orderId })}
-            </p> */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+              ← {t("admin.order_detail.actions.back")}
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold" style={{ color: "var(--text)" }}>
+                {t("admin.order_detail.title")}
+              </h1>
+            </div>
           </div>
+          {order && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                color: "#ef4444",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
+              }}
+              title={t("dashboard.orders.actions.delete")}
+            >
+              <DeleteOutlined />
+              {t("common.actions.delete")}
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -677,6 +713,20 @@ export default function AdminOrderDetailPage() {
         loading={isCancelling}
         onConfirm={handleConfirmCancel}
         onCancel={() => setCancelConfirm(null)}
+      />
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title={t("admin.orders.delete.title")}
+        description={order ? t("admin.orders.delete.description_with_info", { 
+          reference: order.reference || `#${orderId.slice(0, 8)}`, 
+          customerName: order.customer?.fullName || "Guest"
+        }) : undefined}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.actions.cancel")}
+        variant="danger"
+        loading={isDeleting}
+        onConfirm={handleDeleteOrder}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
     </>
   );

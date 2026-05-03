@@ -117,13 +117,14 @@ class PaymentService {
     orderId: string,
     options?: { isCustomer?: boolean; promotionCode?: string | null; applyMembership?: boolean },
   ): Promise<CreatePaymentLinkResponse> {
-    const body: Record<string, unknown> = {};
+    const body: Record<string, unknown> = {
+      promotionCode: options?.promotionCode ?? null,
+      applyMembership: options?.applyMembership ?? false,
+    };
     if (options?.isCustomer) body.isCustomer = true;
-    if (options?.promotionCode) body.promotionCode = options.promotionCode;
-    if (options?.applyMembership) body.applyMembership = options.applyMembership;
     const response = await axiosInstance.post<CreatePaymentLinkResponse>(
       `/payments/orders/${orderId}`,
-      Object.keys(body).length > 0 ? body : undefined,
+      body,
     );
     return response.data;
   }
