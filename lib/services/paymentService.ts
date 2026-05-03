@@ -2,6 +2,8 @@ import axiosInstance from "./axiosInstance";
 
 export interface CashPaymentRequest {
   cashReceive: number;
+  promotionCode?: string | null;
+  applyMembership?: boolean;
 }
 
 export interface CashPaymentResponse {
@@ -98,22 +100,30 @@ class PaymentService {
   async payByCash(
     orderId: string,
     cashReceive: number,
+    options?: { promotionCode?: string | null; applyMembership?: boolean },
   ): Promise<CashPaymentResponse> {
     const response = await axiosInstance.post<CashPaymentResponse>(
       `/payments/orders/${orderId}/cash`,
-      { cashReceive },
+      {
+        cashReceive,
+        promotionCode: options?.promotionCode ?? null,
+        applyMembership: options?.applyMembership ?? false,
+      },
     );
     return response.data;
   }
 
   async createPaymentLink(
     orderId: string,
-    options?: { isCustomer?: boolean },
+    options?: { isCustomer?: boolean; promotionCode?: string | null; applyMembership?: boolean },
   ): Promise<CreatePaymentLinkResponse> {
-    const body = options?.isCustomer ? { isCustomer: true } : undefined;
+    const body: Record<string, unknown> = {};
+    if (options?.isCustomer) body.isCustomer = true;
+    if (options?.promotionCode) body.promotionCode = options.promotionCode;
+    if (options?.applyMembership) body.applyMembership = options.applyMembership;
     const response = await axiosInstance.post<CreatePaymentLinkResponse>(
       `/payments/orders/${orderId}`,
-      body,
+      Object.keys(body).length > 0 ? body : undefined,
     );
     return response.data;
   }

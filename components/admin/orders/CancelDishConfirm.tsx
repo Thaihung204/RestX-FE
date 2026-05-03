@@ -30,7 +30,8 @@ export default function CancelDishConfirm({
       onOk={onConfirm}
       onCancel={onCancel}
       centered
-      width={400}>
+      width={400}
+      zIndex={1100}>
       <p style={{ margin: 0 }}>
         {t("admin.order_detail.cancel_dish.message", { name: dishName ?? "" })}
       </p>
