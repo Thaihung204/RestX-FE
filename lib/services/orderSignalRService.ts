@@ -15,6 +15,18 @@ const getHubUrl = () => {
   return base ? `${base}/hubs/orders` : "/hubs/orders";
 };
 
+const getStoredAccessToken = () => {
+  if (typeof window === "undefined") return "";
+
+  return (
+    localStorage.getItem("adminAccessToken") ||
+    sessionStorage.getItem("adminAccessToken") ||
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken") ||
+    ""
+  );
+};
+
 let connection: HubConnection | null = null;
 const tenantGroupRefCounts = new Map<string, number>();
 let lifecycleEventsBound = false;
@@ -92,9 +104,7 @@ const getConnection = () => {
     connection = new HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () =>
-          typeof window !== "undefined"
-            ? localStorage.getItem("accessToken") || ""
-            : "",
+          getStoredAccessToken(),
       })
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Information)

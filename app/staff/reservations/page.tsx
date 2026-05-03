@@ -697,20 +697,17 @@ export default function ReservationsPage() {
     const events = [
       "reservations.created",
       "reservations.updated",
-      "reservations.cancelled",
-      "reservations.status_updated",
+      "reservations.deleted",
+      "deposits.confirmed",
     ];
 
     const setupSignalR = async () => {
       try {
+        events.forEach((event) =>
+          orderSignalRService.on(event, handleReservationChanged),
+        );
         await orderSignalRService.start();
-        const conn = orderSignalRService.getConnection();
-        if (conn.state === HubConnectionState.Connected) {
-          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
-          events.forEach((event) =>
-            orderSignalRService.on(event, handleReservationChanged),
-          );
-        }
+        await orderSignalRService.joinTenantGroup(tenantId);
       } catch (error) {
         console.error("SignalR: setup reservations failed", error);
       }
@@ -724,7 +721,7 @@ export default function ReservationsPage() {
       events.forEach((event) =>
         orderSignalRService.off(event, handleReservationChanged),
       );
-      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => { });
+      orderSignalRService.leaveTenantGroup(tenantId).catch(() => { });
     };
   }, [tenantId, fetchData]);
 

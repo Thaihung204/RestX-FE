@@ -243,6 +243,10 @@ class OrderService {
     await axiosInstance.put(`/orders/${id}/status`, statusId);
   }
 
+  async deleteOrder(id: string): Promise<void> {
+    await axiosInstance.delete(`/orders/${id}`);
+  }
+
   async updateOrderDetailStatus(
     orderId: string,
     detailId: string,

@@ -407,16 +407,13 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       }, 500);
     };
 
-    const events = ['orders.created', 'orders.updated', 'orders.deleted', 'reservations.created', 'reservations.updated', 'reservations.deleted', 'reservations.checkedin', 'tables.updated', 'tables.session_created', 'tables.session_closed'];
+    const events = ['orders.created', 'orders.updated', 'orders.deleted', 'reservations.created', 'reservations.updated', 'reservations.deleted', 'deposits.confirmed', 'tables.status_changed', 'tables.layout_updated', 'tables.session_created', 'tables.session_closed'];
 
     const setup = async () => {
       try {
+        events.forEach((e) => orderSignalRService.on(e, handleChange));
         await orderSignalRService.start();
-        const conn = orderSignalRService.getConnection();
-        if (conn.state === HubConnectionState.Connected) {
-          await orderSignalRService.invoke('JoinTenantGroup', tenantId);
-          events.forEach((e) => orderSignalRService.on(e, handleChange));
-        }
+        await orderSignalRService.joinTenantGroup(tenantId);
       } catch (e) {
         console.error('SignalR tables page:', e);
       }
@@ -428,7 +425,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       mounted = false;
       clearTimeout(debounceTimer);
       events.forEach((e) => orderSignalRService.off(e, handleChange));
-      orderSignalRService.invoke('LeaveTenantGroup', tenantId).catch(() => { });
+      orderSignalRService.leaveTenantGroup(tenantId).catch(() => { });
     };
   }, [tenant?.id, fetchData]);
 

@@ -8,13 +8,13 @@ import type { CartItem } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { useTenant } from "./TenantContext";
 
@@ -371,11 +371,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setActiveOrderId(null);
       }
 
-      const responseSubTotal = orders.reduce(
-        (sum, order) => sum + (order.subTotal ?? 0),
-        0,
-      );
-      setOrderedSubTotal(responseSubTotal);
+      // Tính subTotal FE: chỉ tính item không bị cancelled, không tính combo-child
+      // result đã là flat list (combo parent + standalone), không có combo-child
+      const subTotalFE = result
+        .filter((item) => {
+          const status = (item.status ?? "").trim().toLowerCase();
+          return status !== "cancelled";
+        })
+        .reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
+      setOrderedSubTotal(subTotalFE);
     } catch (error) {
       console.error("Fetch ordered items failed:", error);
     }
