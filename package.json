@@ -27,6 +27,7 @@
     "react-dom": "^19.0.0",
     "react-i18next": "^16.5.2",
     "react-time-picker": "^8.0.3",
+    "recharts": "^3.8.1",
     "three": "^0.169.0",
     "timepicker-ui": "^4.3.0"
   },

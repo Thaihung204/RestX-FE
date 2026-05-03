@@ -17,9 +17,10 @@ import { App, Input, Select, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantsSystemRevenue from "../../../components/(admin)/tenants/SystemRevenueTab";
+import TenantStatisticsTab from "../../../components/(admin)/tenants/TenantStatisticsTab";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 
 import { tenantService } from "../../../lib/services/tenantService";
@@ -58,9 +59,12 @@ const STAT_CONFIGS = [
   },
 ] as const;
 
+const TENANTS_CACHE_KEY = "tenants_admin_cache";
+const TENANTS_CACHE_TTL_MS = 5 * 60 * 1000;
+
 const TenantPage: React.FC = () => {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { message } = App.useApp();
 
   const [search, setSearch] = useState("");
@@ -71,6 +75,7 @@ const TenantPage: React.FC = () => {
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [deactivateModal, setDeactivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
   const [activateModal, setActivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
+  const hydratedFromCacheRef = useRef(false);
 
   const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
 
@@ -95,43 +100,82 @@ const TenantPage: React.FC = () => {
 
   // Update tab labels when language changes (without resetting active tab)
   useEffect(() => {
-    setTabItems([
+    const nextTabItems = [
       {
         key: "tenants",
-        label: t("tenants.tabs.restaurant_list"),
+        label: i18n.t("tenants.tabs.restaurant_list"),
         icon: <ShopOutlined />,
       },
       {
         key: "requests",
-        label: t("tenants.tabs.tenant_requests"),
+        label: i18n.t("tenants.tabs.tenant_requests"),
         icon: <CheckCircleOutlined />,
       },
       {
         key: "revenue",
-        label: t("tenants.tabs.system_revenue"),
+        label: i18n.t("tenants.tabs.system_revenue"),
         icon: <RiseOutlined />,
       },
-    ]);
-  }, [setTabItems, t]);
+      {
+        key: "statistics",
+        label: i18n.t("tenants.tabs.statistics"),
+        icon: <WarningOutlined />,
+      },
+    ];
 
-  useEffect(() => {
-    if (!mounted) return;
-    fetchTenants();
-  }, [mounted]);
+    setTabItems((current) => {
+      const isSameLength = current.length === nextTabItems.length;
+      const isSameItems = isSameLength && current.every((item, index) => (
+        item.key === nextTabItems[index].key &&
+        item.label === nextTabItems[index].label
+      ));
 
-  const fetchTenants = async () => {
+      return isSameItems ? current : nextTabItems;
+    });
+  }, [i18n.language, setTabItems, i18n]);
+
+  const fetchTenants = useCallback(async (force = false) => {
     try {
       setLoading(true);
+
+      if (!force && typeof window !== "undefined") {
+        const cached = sessionStorage.getItem(TENANTS_CACHE_KEY);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached) as { cachedAt?: number; data?: ITenant[] };
+            if (parsed.data && Array.isArray(parsed.data) && parsed.cachedAt && Date.now() - parsed.cachedAt < TENANTS_CACHE_TTL_MS) {
+              setTenants(parsed.data);
+              hydratedFromCacheRef.current = true;
+              return;
+            }
+          } catch {
+            // Ignore invalid cache and fall through to network fetch.
+          }
+        }
+      }
+
       const data = await tenantService.getAllTenantsForAdmin();
       setTenants(data);
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          TENANTS_CACHE_KEY,
+          JSON.stringify({ data, cachedAt: Date.now() }),
+        );
+      }
     } catch (error) {
       console.error("Failed to fetch tenants:", error);
-      message.error(t("tenants.toasts.fetch_error_message"));
+      message.error(i18n.t("tenants.toasts.fetch_error_message"));
       setTenants([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [i18n, message]);
+
+  useEffect(() => {
+    if (!mounted || hydratedFromCacheRef.current) return;
+    void fetchTenants(false);
+  }, [fetchTenants, mounted]);
 
   const filteredData = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -151,7 +195,8 @@ const TenantPage: React.FC = () => {
   }, [search, status, tenants]);
 
   const handleRefresh = async () => {
-    await fetchTenants();
+    hydratedFromCacheRef.current = false;
+    await fetchTenants(true);
   };
 
   const handleToggleStatus = (record: ITenant) => {
@@ -443,6 +488,9 @@ const TenantPage: React.FC = () => {
             <div className="dashboard-animate-in">
               <TenantsSystemRevenue />
             </div>
+          )}
+          {activeTab === "statistics" && (
+            <TenantStatisticsTab tenants={tenants} onViewDetails={handleViewDetails} />
           )}
         </div>
 

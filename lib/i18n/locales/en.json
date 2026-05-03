@@ -2776,8 +2776,7 @@
       "exporting_report": "Exporting report...",
       "delete": "Delete",
       "edit": "Edit",
-      "exporting": "Exporting...",
-      "exporting_report": "Exporting..."
+      "exporting": "Exporting..."
     },
     "messages": {
       "export_success": "Report exported successfully",
@@ -2789,10 +2788,6 @@
     "theme": {
       "switch_to_light": "Switch to Light Mode",
       "switch_to_dark": "Switch to Dark Mode"
-    },
-    "messages": {
-      "export_success": "Report exported successfully",
-      "export_failed": "Failed to export report"
     }
   },
   "deposit": {
@@ -3883,7 +3878,34 @@
       "restaurant_list": "Tenants",
       "tenant_requests": "Partnership Requests",
       "system_revenue": "System Revenue",
+      "statistics": "Restaurant Statistics",
       "business_tools": "Business Tools"
+    },
+    "statistics": {
+      "kicker": "Restaurant-level overview",
+      "title": "Restaurant Statistics",
+      "subtitle": "Review each tenant's status, plan, and recent activity in one place.",
+      "total_restaurants": "{{count}} restaurants",
+      "active_restaurants": "{{count}} active",
+      "cards": {
+        "total": "Total restaurants",
+        "active": "Active restaurants",
+        "maintenance": "In maintenance",
+        "recent": "Active this week"
+      },
+      "activity": {
+        "fresh": "Active within 7 days",
+        "stale": "Active within 30 days",
+        "idle": "Inactive for 30+ days"
+      },
+      "table": {
+        "restaurant": "Restaurant",
+        "plan": "Plan",
+        "status": "Status",
+        "last_active": "Last active",
+        "domain": "Domain",
+        "total": "{{count}} restaurants"
+      }
     },
     "business_tools": {
       "title": "Business Tools",
@@ -5228,6 +5250,60 @@
           "success": "[OK] Payment succeeded — 19:58"
         }
       }
+    }
+  },
+  "strategyReport": {
+    "title": "AI Strategy Report",
+    "subtitle": "Monitor platform performance and tenant analytics",
+    "period": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "custom": "Custom"
+    },
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "apply": "Apply",
+    "backToOverview": "← Back to Overview",
+    "noTenantData": "No tenant data available",
+    "kpi": {
+      "totalRevenue": "Total Revenue",
+      "revenueSubtext": "All transactions",
+      "completionRate": "Order Completion Rate",
+      "completionSubtext": "Completed / Total orders",
+      "cancellationRate": "Cancellation Rate",
+      "cancellationDanger": "High cancellation rate - Needs review",
+      "cancellationWarning": "Elevated cancellation rate",
+      "cancellationNormal": "Cancellation rate stable",
+      "newCustomers": "New Customers",
+      "newCustomersSubtext": "This period"
+    },
+    "tenantRankingTitle": "Tenant Performance Ranking",
+    "table": {
+      "rank": "#",
+      "tenantId": "Tenant ID",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "completionRate": "Completion Rate",
+      "newCustomers": "New Customers",
+      "reservations": "New Reservations"
+    },
+    "detailChartsTitle": "Breakdown Analytics",
+    "revenueOverview": "Revenue Overview",
+    "revenueBreakdown": "Revenue Breakdown",
+    "viewRevenue": "View Revenue",
+    "closeChart": "Close",
+    "chart": {
+      "revenueTitle": "Revenue & Discounts Trend",
+      "revenue": "Revenue",
+      "discount": "Discount Amount",
+      "ordersTitle": "Orders by Status",
+      "totalOrders": "Total Orders",
+      "completedOrders": "Completed Orders",
+      "cancelledOrders": "Cancelled Orders",
+      "customersTitle": "New Customers Over Time",
+      "newCustomers": "New Customers",
+      "reservationsTitle": "Reservations Trend",
+      "reservations": "New Reservations"
     }
   }
 }

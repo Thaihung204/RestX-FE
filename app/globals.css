@@ -5285,6 +5285,396 @@ html.reservation-overlay-open header {
   z-index: 9999;
 }
 
+.tenant-statistics-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card), transparent 8%);
+}
+
+.tenant-statistics-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tenant-statistics-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tenant-statistics-subtitle {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  max-width: 56rem;
+}
+
+.tenant-statistics-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: center;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tenant-statistics-meta > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  background: var(--primary-soft);
+}
+
+.tenant-statistics-table-wrap {
+  overflow: hidden;
+}
+
+.tenant-stat-restaurant {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.tenant-stat-restaurant-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), #000 18%));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary), transparent 78%);
+}
+
+.tenant-stat-restaurant-name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tenant-stat-restaurant-business {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.tenant-stat-plan {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tenant-stat-plan-basic { background: rgba(148, 163, 184, 0.14); color: #94a3b8; }
+.tenant-stat-plan-pro { background: rgba(34, 197, 94, 0.14); color: #22c55e; }
+.tenant-stat-plan-enterprise { background: rgba(14, 165, 233, 0.14); color: #0ea5e9; }
+
+.tenant-stat-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.tenant-stat-activity span {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tenant-stat-activity small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tenant-stat-activity-fresh small { color: #22c55e; }
+.tenant-stat-activity-stale small { color: #f97316; }
+.tenant-stat-activity-idle small { color: #ef4444; }
+
+.tenant-stat-view-btn {
+  color: var(--primary) !important;
+}
+
+@media (max-width: 768px) {
+  .tenant-statistics-hero {
+    flex-direction: column;
+  }
+
+  .tenant-statistics-meta {
+    width: 100%;
+  }
+
+  .tenant-statistics-meta > div {
+    width: fit-content;
+  }
+}
+
+/* =========================================================
+ * Tenant Statistics — Revenue Integration
+ * ========================================================= */
+
+/* --- Revenue Section --- */
+.ts-revenue-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ts-revenue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ts-revenue-section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* --- Period Selector --- */
+.ts-period-selector {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.25rem;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--text), transparent 94%);
+}
+
+.ts-period-btn {
+  padding: 0.375rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.ts-period-btn:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text), transparent 88%);
+}
+
+.ts-period-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ts-period-btn-active {
+  background: var(--primary) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+/* --- Revenue Value in Table --- */
+.ts-revenue-value {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.8125rem;
+}
+
+.ts-completion-value {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.8125rem;
+}
+
+.ts-no-data {
+  color: var(--text-muted);
+}
+
+/* --- Actions Cell --- */
+.ts-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.ts-revenue-btn {
+  font-size: 0.75rem !important;
+  color: var(--text-muted) !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s !important;
+}
+
+.ts-revenue-btn:hover {
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary), transparent 92%) !important;
+}
+
+.ts-revenue-btn-active {
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary), transparent 88%) !important;
+}
+
+/* --- Breakdown Charts Section --- */
+.ts-breakdown-section {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card), transparent 8%);
+  animation: ts-slide-down 0.3s ease;
+}
+
+@keyframes ts-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ts-breakdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.ts-breakdown-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ts-breakdown-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--text), transparent 88%);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ts-breakdown-close:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--text), transparent 70%);
+  background: color-mix(in srgb, var(--text), transparent 94%);
+}
+
+/* --- Loading & Error --- */
+.ts-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+}
+
+.ts-error-message {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, #ef4444, transparent 92%);
+  border: 1px solid color-mix(in srgb, #ef4444, transparent 80%);
+  color: #ef4444;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* --- KpiCards theme override for tenant tab --- */
+.ts-revenue-section .grid {
+  gap: 1rem;
+}
+
+.ts-revenue-section .grid > div {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  border-radius: 1rem !important;
+}
+
+.ts-revenue-section .grid > div .text-gray-600 {
+  color: var(--text-muted) !important;
+}
+
+.ts-revenue-section .grid > div .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.ts-revenue-section .grid > div .text-2xl {
+  color: var(--primary) !important;
+}
+
+/* Severity cards override */
+.ts-revenue-section .grid > div.bg-red-50 {
+  background: color-mix(in srgb, #ef4444, transparent 92%) !important;
+  border-color: color-mix(in srgb, #ef4444, transparent 80%) !important;
+}
+
+.ts-revenue-section .grid > div.bg-yellow-50 {
+  background: color-mix(in srgb, #f59e0b, transparent 92%) !important;
+  border-color: color-mix(in srgb, #f59e0b, transparent 80%) !important;
+}
+
+.ts-revenue-section .grid > div.bg-blue-50 {
+  background: color-mix(in srgb, #3b82f6, transparent 92%) !important;
+  border-color: color-mix(in srgb, #3b82f6, transparent 80%) !important;
+}
+
+/* --- Breakdown Charts theme override --- */
+.ts-breakdown-section .bg-white {
+  background: var(--card) !important;
+}
+
+.ts-breakdown-section .border-gray-200 {
+  border-color: var(--border) !important;
+}
+
+.ts-breakdown-section .text-gray-800,
+.ts-breakdown-section .text-gray-700 {
+  color: var(--text) !important;
+}
+
+.ts-breakdown-section .text-gray-600 {
+  color: var(--text-muted) !important;
+}
+
+@media (max-width: 768px) {
+  .ts-revenue-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ts-period-selector {
+    width: fit-content;
+  }
+
+  .ts-breakdown-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ts-actions-cell {
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+}
+
 /* =========================================================
  * Tenant Detail Page — Stitch Obsidian Crimson Design
  * ========================================================= */
@@ -7785,4 +8175,219 @@ html.reservation-overlay-open .ant-select-dropdown {
   border: none !important;
   box-shadow: none !important;
   background: transparent !important;
+}
+ 
+ 
+/* Strategy Report Styles */
+.strategy-report-page {
+  background-color: var(--bg-surface, #f9fafb);
+  min-height: 100vh;
+}
+
+.strategy-report-header {
+  margin-bottom: 2rem;
+}
+
+.strategy-report-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.strategy-report-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Controls Bar */
+.strategy-report-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--light-card);
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.strategy-report-period-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-right: 1px solid var(--border-light);
+  padding-right: 1rem;
+}
+
+.strategy-report-period-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.strategy-report-period-btn.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+.strategy-report-period-btn.inactive {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.strategy-report-period-btn:hover:not(.active) {
+  background-color: #e5e7eb;
+}
+
+/* KPI Cards */
+.strategy-report-kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.strategy-report-kpi-card {
+  padding: 1rem;
+  background-color: var(--light-card);
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.strategy-report-kpi-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.strategy-report-kpi-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.strategy-report-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.strategy-report-kpi-subtext {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Tenant Table */
+.strategy-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--light-card);
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.strategy-report-table thead {
+  background-color: #f9fafb;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.strategy-report-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.strategy-report-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.strategy-report-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.strategy-report-table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.strategy-report-table tbody tr.selected {
+  background-color: color-mix(in srgb, var(--primary-soft) 100%, transparent);
+}
+
+/* Charts */
+.strategy-report-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.strategy-report-chart-container {
+  padding: 1rem;
+  background-color: var(--light-card);
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.strategy-report-chart-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .strategy-report-page {
+    background-color: var(--dark-surface);
+  }
+
+  .strategy-report-controls,
+  .strategy-report-kpi-card,
+  .strategy-report-table {
+    background-color: var(--dark-card);
+    border-color: #2d3748;
+  }
+
+  .strategy-report-period-btn.inactive {
+    background-color: #2d3748;
+    color: #a0aec0;
+  }
+
+  .strategy-report-period-btn.inactive:hover {
+    background-color: #374151;
+  }
+
+  .strategy-report-table thead {
+    background-color: #1a1f2e;
+    border-bottom-color: #2d3748;
+  }
+
+  .strategy-report-table th {
+    color: #a0aec0;
+  }
+
+  .strategy-report-table tbody tr:hover {
+    background-color: #2d3748;
+  }
+
+  .strategy-report-chart-container {
+    background-color: var(--dark-card);
+    border-color: #2d3748;
+  }
 }
