@@ -119,7 +119,7 @@ export default function KPISection({
             completed: summary?.orders.completed ?? 0,
             processing: summary?.orders.liveProcessing ?? 0,
           })}
-          iconBg="rgba(255, 56, 11, 0.1)"
+          iconBg="var(--primary-soft)"
           iconColor="var(--primary)"
           accentClass="dashboard-kpi-card-primary"
           icon={

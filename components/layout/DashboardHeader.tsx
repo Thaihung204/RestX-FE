@@ -145,7 +145,7 @@ export default function DashboardHeader() {
                 color: "var(--text-muted)",
               }}>
               <svg
-                className="w-6 h-6 group-hover:text-orange-500"
+                className="w-6 h-6 group-hover:text-[var(--primary)]"
                 style={{ color: "var(--text-muted)" }}
                 fill="none"
                 stroke="currentColor"
@@ -219,7 +219,7 @@ export default function DashboardHeader() {
                     </g>
                   </svg>
                 )}
-                <span className="text-sm font-medium uppercase group-hover:text-orange-500 leading-none pt-[1px]">
+                <span className="text-sm font-medium uppercase group-hover:text-[var(--primary)] leading-none pt-[1px]">
                   {language}
                 </span>
                 <svg
@@ -255,7 +255,7 @@ export default function DashboardHeader() {
                       }}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${
                         language === "en"
-                          ? "bg-orange-500/10 text-orange-500"
+                          ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                           : "hover:bg-[var(--bg-base)]"
                       }`}
                       style={{
@@ -319,7 +319,7 @@ export default function DashboardHeader() {
                       }}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${
                         language === "vi"
-                          ? "bg-orange-500/10 text-orange-500"
+                          ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                           : "hover:bg-[var(--bg-base)]"
                       }`}
                       style={{
@@ -367,7 +367,7 @@ export default function DashboardHeader() {
                 color: "var(--text-muted)",
               }}>
               <svg
-                className="w-6 h-6 group-hover:text-orange-500"
+                className="w-6 h-6 group-hover:text-[var(--primary)]"
                 style={{ color: "var(--text-muted)" }}
                 fill="none"
                 stroke="currentColor"
