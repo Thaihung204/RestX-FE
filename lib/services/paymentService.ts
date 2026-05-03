@@ -124,7 +124,7 @@ class PaymentService {
     if (options?.isCustomer) body.isCustomer = true;
     const response = await axiosInstance.post<CreatePaymentLinkResponse>(
       `/payments/orders/${orderId}`,
-      body,
+      Object.keys(body).length > 0 ? body : undefined,
     );
     return response.data;
   }
