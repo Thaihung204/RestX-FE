@@ -32,7 +32,7 @@ export const useSnapshotData = () => {
       try {
         setState((prev) => ({ ...prev, loading: true, error: null }));
 
-        let url = `/snapshots?periodType=${periodType}`;
+        let url = `/admin/snapshots?periodType=${periodType}`;
 
         if (periodType === 'custom' && customRange) {
           url += `&startDate=${customRange.start}&endDate=${customRange.end}`;
@@ -67,7 +67,7 @@ export const useSnapshotData = () => {
       try {
         setState((prev) => ({ ...prev, loading: true, error: null }));
 
-        let url = `/snapshots?periodType=${periodType}&tenantId=${tenantId}`;
+        let url = `/admin/snapshots?periodType=${periodType}&tenantId=${tenantId}`;
 
         if (periodType === 'custom' && customRange) {
           url += `&startDate=${customRange.start}&endDate=${customRange.end}`;
