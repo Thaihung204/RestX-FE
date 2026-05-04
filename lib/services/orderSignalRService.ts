@@ -1,9 +1,8 @@
 import {
-  HubConnection,
-  HubConnectionBuilder,
-  HubConnectionState,
-  HttpTransportType,
-  LogLevel,
+    HubConnection,
+    HubConnectionBuilder,
+    HubConnectionState,
+    LogLevel
 } from "@microsoft/signalr";
 
 const getHubUrl = () => {
@@ -31,7 +30,7 @@ let connection: HubConnection | null = null;
 const tenantGroupRefCounts = new Map<string, number>();
 let lifecycleEventsBound = false;
 
-const normalizeTenantId = (tenantId: string) => tenantId.trim();
+const normalizeTenantId = (tenantId: string) => tenantId.trim().toLowerCase();
 
 const syncTenantGroups = async (conn: HubConnection) => {
   const tenantIds = Array.from(tenantGroupRefCounts.keys());

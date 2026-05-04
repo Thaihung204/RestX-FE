@@ -1,8 +1,10 @@
+import { useCart } from "@/lib/contexts/CartContext";
 import {
-    AIMessage,
-    AIOrderDraft,
-    AIOrderDraftItem,
-    AISuggestionItem,
+  AIComboSuggestion,
+  AIMessage,
+  AIOrderDraft,
+  AIOrderDraftItem,
+  AISuggestionItem,
 } from "@/lib/types/ai";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Typography } from "antd";
@@ -21,6 +23,7 @@ interface AIMessageBubbleProps {
   onDraftItemsChange: (messageId: string, items: AIOrderDraftItem[]) => void;
   onConfirmOrder: (messageId: string, draft: AIOrderDraft) => void;
   onAddSuggestionToCart: (item: AISuggestionItem) => void;
+  onAddComboToCart: (combo: AIComboSuggestion) => void;
   isLoading: boolean;
   isConfirming: boolean;
 }
@@ -62,10 +65,12 @@ export default function AIMessageBubble({
   onDraftItemsChange,
   onConfirmOrder,
   onAddSuggestionToCart,
+  onAddComboToCart,
   isLoading,
   isConfirming,
 }: AIMessageBubbleProps) {
   const { t } = useTranslation("common");
+  const { cartItems, updateQuantity } = useCart();
   const draftItems = editedDraftItems ?? msg.orderDraft?.items ?? [];
   const shouldShowSuggestionScrollbar = (msg.suggestions?.length ?? 0) > 2;
   const [selectedSuggestion, setSelectedSuggestion] =
@@ -273,22 +278,72 @@ export default function AIMessageBubble({
                         </Text>
                       )}
 
-                      <Button
-                        type="primary"
-                        size="small"
-                        block
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddSuggestionToCart(item);
-                        }}
-                        disabled={isLoading || isConfirming}
-                        style={{
-                          marginTop: "auto",
-                          paddingTop: 8,
-                          fontSize: 11,
-                        }}>
-                        {t("menu_page.detail_modal.add_to_cart")}
-                      </Button>
+                      {/* Add / Qty controls */}
+                      {(() => {
+                        const cartItem = cartItems.find((c) => c.id === item.dishId);
+                        if (cartItem) {
+                          return (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 4,
+                                marginTop: "auto",
+                                paddingTop: 8,
+                              }}
+                            >
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<MinusOutlined style={{ fontSize: 10 }} />}
+                                onClick={() => updateQuantity(item.dishId, cartItem.quantity - 1)}
+                                disabled={isLoading || isConfirming}
+                                style={{
+                                  color: "var(--text)",
+                                  border: "1px solid var(--border)",
+                                  width: 28, height: 28,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  padding: 0,
+                                }}
+                              />
+                              <Text style={{ color: "var(--text)", fontSize: 13, fontWeight: 700, width: 20, textAlign: "center" }}>
+                                {cartItem.quantity}
+                              </Text>
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<PlusOutlined style={{ fontSize: 10 }} />}
+                                onClick={(e) => { e.stopPropagation(); onAddSuggestionToCart(item); }}
+                                disabled={isLoading || isConfirming}
+                                style={{
+                                  color: "var(--text)",
+                                  border: "1px solid var(--border)",
+                                  width: 28, height: 28,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  padding: 0,
+                                }}
+                              />
+                            </div>
+                          );
+                        }
+                        return (
+                          <Button
+                            type="primary"
+                            size="small"
+                            block
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddSuggestionToCart(item);
+                            }}
+                            disabled={isLoading || isConfirming}
+                            style={{ marginTop: "auto", paddingTop: 8, fontSize: 11 }}
+                          >
+                            {t("menu_page.detail_modal.add_to_cart")}
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -303,6 +358,227 @@ export default function AIMessageBubble({
               isLoading={isLoading || isConfirming}
             />
           </>
+        )}
+
+        {/* ── Combo suggestions ── */}
+        {!!msg.combos?.length && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
+            {msg.combos.map((combo, comboIdx) => {
+              // Normalize: API may return comboName or name, totalPrice or price
+              const raw = combo as any;
+              const name: string = raw.comboName || raw.name || "";
+              const imageUrl: string | null = raw.imageUrl || raw.image || null;
+              const totalPrice: number = Number(raw.totalPrice ?? raw.price ?? 0);
+              const reason: string = raw.reason || "";
+              const items: any[] = raw.items || [];
+
+              return (
+              <div
+                key={raw.comboId || comboIdx}
+                style={{
+                  background: popupBg,
+                  border: "1px solid var(--border)",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                }}
+              >
+                {/* Combo header */}
+                <div style={{ display: "flex", gap: 10, padding: "10px 12px 8px" }}>
+                  {/* Combo image */}
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      flexShrink: 0,
+                      background: "var(--surface)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <img
+                        src="/images/dishStatus/spicy.png"
+                        alt=""
+                        style={{ width: 28, height: 28, objectFit: "contain", opacity: 0.2 }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Combo info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6 }}>
+                      <Text
+                        strong
+                        style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.3, display: "block" }}
+                      >
+                        {name}
+                      </Text>
+                      <Text
+                        style={{
+                          color: "var(--danger, #ff4d4f)",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {formatVND(totalPrice)}
+                      </Text>
+                    </div>
+
+                    {reason && (
+                      <Text
+                        style={
+                          {
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            color: "var(--text-muted)",
+                            fontSize: 11,
+                            lineHeight: 1.4,
+                            marginTop: 3,
+                          } as React.CSSProperties
+                        }
+                      >
+                        {reason}
+                      </Text>
+                    )}
+                  </div>
+                </div>
+
+                {/* Combo items list */}
+                {items.length > 0 && (
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--border)",
+                      padding: "6px 12px 8px",
+                      background: "var(--surface)",
+                    }}
+                  >
+                    <Text
+                      style={{ color: "var(--text-muted)", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 4 }}
+                    >
+                      {t("customer_page.ai_popup.combo.includes", { defaultValue: "Bao gồm:" })}
+                    </Text>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      {items.map((item: any, idx: number) => {
+                        const dishName: string = item.dishName || item.name || "";
+                        const qty: number = Number(item.quantity ?? 1);
+                        const itemTotal: number = Number(item.price ?? item.totalPrice ?? 0);
+                        return (
+                          <div
+                            key={`${item.dishId || idx}`}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                              <span
+                                style={{
+                                  width: 20,
+                                  height: 20,
+                                  borderRadius: 4,
+                                  background: "var(--primary-soft)",
+                                  color: "var(--primary)",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {qty}x
+                              </span>
+                              <Text
+                                style={{
+                                  color: "var(--text)",
+                                  fontSize: 12,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {dishName}
+                              </Text>
+                            </div>
+                            <Text style={{ color: "var(--text-muted)", fontSize: 11, flexShrink: 0 }}>
+                              {formatVND(itemTotal)}
+                            </Text>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add combo to cart button */}
+                <div style={{ padding: "8px 12px" }}>
+                  {(() => {
+                    const raw = combo as any;
+                    const comboId: string = raw.comboId || raw.id || "";
+                    const cartItem = cartItems.find((c) => c.id === comboId);
+                    if (cartItem) {
+                      return (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<MinusOutlined style={{ fontSize: 11 }} />}
+                            onClick={() => updateQuantity(comboId, cartItem.quantity - 1)}
+                            disabled={isLoading || isConfirming}
+                            style={{
+                              color: "var(--text)",
+                              border: "1px solid var(--border)",
+                              width: 32, height: 32,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                            }}
+                          />
+                          <Text style={{ color: "var(--text)", fontSize: 14, fontWeight: 700, width: 24, textAlign: "center" }}>
+                            {cartItem.quantity}
+                          </Text>
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<PlusOutlined style={{ fontSize: 11 }} />}
+                            onClick={() => onAddComboToCart(combo)}
+                            disabled={isLoading || isConfirming}
+                            style={{
+                              color: "var(--text)",
+                              border: "1px solid var(--border)",
+                              width: 32, height: 32,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <Button
+                        type="primary"
+                        size="small"
+                        block
+                        onClick={() => onAddComboToCart(combo)}
+                        disabled={isLoading || isConfirming}
+                        style={{ fontSize: 12 }}
+                      >
+                        {t("customer_page.ai_popup.combo.add_to_cart", { defaultValue: "Thêm combo vào giỏ" })}
+                      </Button>
+                    );
+                  })()}
+                </div>
+              </div>
+              );
+            })}
+          </div>
         )}
 
         {!!msg.orderDraft?.items?.length && (

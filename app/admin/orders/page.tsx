@@ -817,7 +817,7 @@ export default function OrdersPage() {
                         <div className="flex gap-2 justify-center">
                           <Link
                             href={`/admin/orders/${order.id}`}
-                            className="p-2 rounded-lg transition-all"
+                            className="w-8 h-8 rounded-lg transition-all flex items-center justify-center"
                             style={{
                               backgroundColor: "var(--primary-soft)",
                               color: "var(--primary)",
@@ -846,7 +846,7 @@ export default function OrdersPage() {
                           </Link>
                           <button
                             onClick={() => setOrderToDelete({ id: order.id, reference: order.orderNumber, customerName: order.customerName })}
-                            className="p-2 rounded-lg transition-all"
+                            className="w-8 h-8 rounded-lg transition-all flex items-center justify-center"
                             style={{
                               backgroundColor: "rgba(239, 68, 68, 0.1)",
                               color: "#ef4444",

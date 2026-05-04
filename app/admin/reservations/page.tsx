@@ -1,25 +1,25 @@
 "use client";
 
+import { DayPicker } from "@/components/ui/DayPicker";
 import { DropDown } from "@/components/ui/DropDown";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, {
-  PaginatedReservations,
-  ReservationDetail,
-  ReservationListItem,
-  ReservationStatus,
+    PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
+import { tenantService } from "@/lib/services/tenantService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
-import { message } from "antd";
-import { useCallback, useEffect, useState } from "react";
-import { DayPicker } from "@/components/ui/DayPicker";
-import dayjs from "dayjs";
-import { useTranslation } from "react-i18next";
-import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
-import { ReservationRowActions } from "../../../components/admin/reservations/ReservationRowActions";
-import { tenantService } from "@/lib/services/tenantService";
-import orderSignalRService from "@/lib/services/orderSignalRService";
 import { HubConnectionState } from "@microsoft/signalr";
+import { message } from "antd";
+import dayjs from "dayjs";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ReservationRowActions } from "../../../components/admin/reservations/ReservationRowActions";
+import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -90,8 +90,6 @@ export default function ReservationsPage() {
         search: search || undefined,
         statusId: statusId !== "" ? statusId : undefined,
         date: date || undefined,
-        sortBy: "reservationDateTime",
-        sortDescending: false,
       });
       setData(result);
     } catch (e) {
@@ -211,6 +209,20 @@ export default function ReservationsPage() {
     }
   }, [date, search, statuses]);
 
+  // Keep refs in sync so SignalR handlers always use latest callbacks/values
+  // without needing to re-register (which would cause reconnect on filter change)
+  const fetchDataRef = useRef(fetchData);
+  const fetchStatsRef = useRef(fetchStats);
+  const matchesListFiltersRef = useRef(matchesListFilters);
+  const matchesStatsFiltersRef = useRef(matchesStatsFilters);
+  const pageRef = useRef(page);
+
+  useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
+  useEffect(() => { fetchStatsRef.current = fetchStats; }, [fetchStats]);
+  useEffect(() => { matchesListFiltersRef.current = matchesListFilters; }, [matchesListFilters]);
+  useEffect(() => { matchesStatsFiltersRef.current = matchesStatsFilters; }, [matchesStatsFilters]);
+  useEffect(() => { pageRef.current = page; }, [page]);
+
   useEffect(() => {
     fetchStats();
   }, [fetchStats, data]);
@@ -289,7 +301,7 @@ export default function ReservationsPage() {
     if (!tenantId) return;
 
     let isMounted = true;
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    const debounceTimerRef = { current: undefined as ReturnType<typeof setTimeout> | undefined };
 
     const handleReservationCreated = async (payload: any) => {
       if (!isMounted) return;
@@ -304,7 +316,8 @@ export default function ReservationsPage() {
         const reservation = await reservationService.getReservationById(String(reservationId));
         if (!isMounted) return;
 
-        if (matchesStatsFilters(reservation)) {
+        // Update stats counter without full reload
+        if (matchesStatsFiltersRef.current(reservation)) {
           setGlobalStats((prev) => ({
             total: prev.total + 1,
             byStatus: {
@@ -314,7 +327,8 @@ export default function ReservationsPage() {
           }));
         }
 
-        if (!matchesListFilters(reservation)) return;
+        // Insert into list without reload if it matches current filters
+        if (!matchesListFiltersRef.current(reservation)) return;
 
         const nextItem = mapReservationDetailToListItem(reservation);
         setData((prev) => {
@@ -323,26 +337,28 @@ export default function ReservationsPage() {
 
           const nextItems = [...prev.items, nextItem].sort(
             (left, right) =>
-              new Date(left.reservationDateTime).getTime() -
-              new Date(right.reservationDateTime).getTime(),
+              new Date(right.createdAt).getTime() -
+              new Date(left.createdAt).getTime(),
           );
 
           const nextTotalCount = prev.totalCount + 1;
           const nextTotalPages = Math.max(1, Math.ceil(nextTotalCount / prev.pageSize));
+          const currentPage = pageRef.current;
 
           return {
             ...prev,
-            items: page === 1 ? nextItems.slice(0, prev.pageSize) : prev.items,
+            items: currentPage === 1 ? nextItems.slice(0, prev.pageSize) : prev.items,
             totalCount: nextTotalCount,
             totalPages: nextTotalPages,
-            hasNextPage: page < nextTotalPages,
-            hasPreviousPage: page > 1,
+            hasNextPage: currentPage < nextTotalPages,
+            hasPreviousPage: currentPage > 1,
           };
         });
       } catch (error) {
         console.error("Failed to sync created reservation:", error);
-        fetchData();
-        fetchStats();
+        // Fallback to full reload on error
+        fetchDataRef.current();
+        fetchStatsRef.current();
       }
     };
 
@@ -351,22 +367,29 @@ export default function ReservationsPage() {
       const changedTenantId = payload?.tenantId || payload?.reservation?.tenantId;
       if (changedTenantId && changedTenantId !== tenantId) return;
 
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
         if (!isMounted) return;
-        fetchData();
-        fetchStats();
+        fetchDataRef.current();
+        fetchStatsRef.current();
       }, 300);
     };
 
     const setupSignalR = async () => {
       try {
-        orderSignalRService.on("reservations.created", handleReservationCreated);
-        ["reservations.updated", "reservations.deleted", "deposits.confirmed"].forEach((event) =>
-          orderSignalRService.on(event, handleReservationChanged),
-        );
         await orderSignalRService.start();
-        await orderSignalRService.joinTenantGroup(tenantId);
+        if (!isMounted) return;
+
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.joinTenantGroup(tenantId);
+          if (!isMounted) return;
+
+          orderSignalRService.on("reservations.created", handleReservationCreated);
+          ["reservations.updated", "tables.status_changed", "deposits.confirmed"].forEach((event) =>
+            orderSignalRService.on(event, handleReservationChanged),
+          );
+        }
       } catch (error) {
         console.error("SignalR: setup reservations failed", error);
       }
@@ -376,14 +399,14 @@ export default function ReservationsPage() {
 
     return () => {
       isMounted = false;
-      if (debounceTimer) clearTimeout(debounceTimer);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       orderSignalRService.off("reservations.created", handleReservationCreated);
-      ["reservations.updated", "reservations.deleted", "deposits.confirmed"].forEach((event) =>
+      ["reservations.updated", "tables.status_changed", "deposits.confirmed"].forEach((event) =>
         orderSignalRService.off(event, handleReservationChanged),
       );
       orderSignalRService.leaveTenantGroup(tenantId).catch(() => { });
     };
-  }, [tenantId, fetchData, fetchStats, matchesListFilters, matchesStatsFilters, page]);
+  }, [tenantId]);
 
   useEffect(() => {
     const timer = setInterval(
@@ -408,8 +431,6 @@ export default function ReservationsPage() {
         search: search || undefined,
         statusId: statusId !== "" ? statusId : undefined,
         date: date || undefined,
-        sortBy: "reservationDateTime",
-        sortDescending: false,
       });
 
       triggerBrowserDownload(file.blob, file.fileName);

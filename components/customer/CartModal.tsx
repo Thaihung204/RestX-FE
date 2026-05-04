@@ -404,20 +404,6 @@ export default function CartModal() {
                                 }}>
                                   {(item.children ?? []).map((child) => (
                                     <div key={child.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                      {child.image && (
-                                        <img
-                                          src={child.image}
-                                          alt={child.name}
-                                          style={{
-                                            width: 28,
-                                            height: 28,
-                                            objectFit: "cover",
-                                            borderRadius: 6,
-                                            border: "1px solid var(--stroke-subtle)",
-                                            flexShrink: 0,
-                                          }}
-                                        />
-                                      )}
                                       <Text style={{ fontSize: 12, color: "var(--text-muted)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {child.name}
                                       </Text>
@@ -671,20 +657,6 @@ export default function CartModal() {
                                                 alignItems: "center",
                                                 gap: 8,
                                               }}>
-                                              {child.image && (
-                                                <img
-                                                  src={child.image}
-                                                  alt={child.name}
-                                                  style={{
-                                                    width: 32,
-                                                    height: 32,
-                                                    objectFit: "cover",
-                                                    borderRadius: 6,
-                                                    border: "1px solid var(--stroke-subtle)",
-                                                    flexShrink: 0,
-                                                  }}
-                                                />
-                                              )}
                                               <Text
                                                 style={{
                                                   fontSize: 13,

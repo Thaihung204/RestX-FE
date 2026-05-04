@@ -1,6 +1,12 @@
 "use client";
 
 
+import { usePageLoading } from "@/components/PageTransitionLoader";
+import orderSignalRService from "@/lib/services/orderSignalRService";
+import { floorService, FloorSummary, PanoramaImage, tableService, TableStatus } from "@/lib/services/tableService";
+import { tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { App, Spin } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAreaModal } from "./components/AddAreaModal";
@@ -8,14 +14,7 @@ import { AddTableModal } from "./components/AddTableModal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
-import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, floorService, FloorSummary, PanoramaImage } from "@/lib/services/tableService";
-import { usePageLoading } from "@/components/PageTransitionLoader";
-import { App, Spin } from "antd";
-import orderSignalRService from "@/lib/services/orderSignalRService";
-import { HubConnectionState } from "@microsoft/signalr";
-import { tenantService } from "@/lib/services/tenantService";
-import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { Floor, Layout, TableMap2D } from "./components/TableMap2D";
 
 interface Table {
   id: string;
@@ -222,7 +221,6 @@ export default function TablesPage() {
       "tables.session_closed",
       "reservations.created",
       "reservations.updated",
-      "reservations.deleted",
       "deposits.confirmed",
     ];
 

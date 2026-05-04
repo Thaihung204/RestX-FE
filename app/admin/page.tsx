@@ -1,8 +1,8 @@
 "use client";
 
 import AIPanelDashboard, {
-  AIReportFilterOption,
-  AIStrategyReport,
+    AIReportFilterOption,
+    AIStrategyReport,
 } from "@/components/admin/AIPanelDashboard";
 import BestSellingDishesCard from "@/components/admin/BestSellingDishesCard";
 import KPISection from "@/components/admin/KPISection";
@@ -12,15 +12,15 @@ import RevenueChart from "@/components/admin/charts/RevenueChart";
 import ReservationList from "@/components/admin/reservations/ReservationList";
 import aiService from "@/lib/services/aiService";
 import dashboardService, {
-  DashboardFilterType,
-  DashboardOverview,
-  DashboardSummary,
-  OrderTrendPoint,
-  RevenueTrendPoint,
+    DashboardFilterType,
+    DashboardOverview,
+    DashboardSummary,
+    OrderTrendPoint,
+    RevenueTrendPoint,
 } from "@/lib/services/dashboardService";
 import reportService, { ReportType } from "@/lib/services/reportService";
 import reservationService, {
-  PaginatedReservations,
+    PaginatedReservations,
 } from "@/lib/services/reservationService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
@@ -660,7 +660,11 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <LatestFeedbacksCard loading={dashboardLoading && !summaryData} />          <BestSellingDishesCard 
+          <LatestFeedbacksCard
+            data={overviewData?.recentFeedbacks}
+            loading={dashboardLoading && !overviewData}
+          />
+          <BestSellingDishesCard 
             dishes={overviewData?.topDishes?.dishes}
             loading={dashboardLoading && !overviewData}
           />

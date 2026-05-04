@@ -261,6 +261,36 @@
         "confirm": "Yes, cancel",
         "message": "Are you sure you want to cancel \"{{name}}\"? This action cannot be undone."
       }
+    },
+    "feedbacks": {
+      "title": "Feedback Management",
+      "subtitle": "{{total}} feedbacks",
+      "anonymous": "Anonymous",
+      "unknown": "Unknown",
+      "no_comment": "No comment",
+      "published": "Published",
+      "unpublished": "Hidden",
+      "load_failed": "Failed to load feedbacks",
+      "empty": "No feedbacks yet",
+      "headers": {
+        "customer": "Customer",
+        "rating": "Rating",
+        "comment": "Comment",
+        "images": "Images",
+        "status": "Status",
+        "date": "Created Date"
+      },
+      "stats": {
+        "total": "Total",
+        "published": "Published",
+        "hidden": "Hidden"
+      },
+      "filter": {
+        "search": "Search by customer name...",
+        "all_ratings": "All ratings",
+        "rating_option": "{{count}} stars",
+        "all_status": "All statuses"
+      }
     }
   },
   "staff": {
@@ -355,7 +385,11 @@
       "search": {
         "label": "Search",
         "placeholder": "Search orders...",
-        "placeholder_full": "Search by order ID or table name..."
+        "placeholder_full": "Search by order ID or table name...",
+        "customer": "Customer Name",
+        "customer_placeholder": "Enter customer name...",
+        "reference": "Order Code",
+        "reference_placeholder": "Enter order code..."
       },
       "filter": {
         "all_tables": "All tables"
@@ -482,6 +516,24 @@
           "discount_label": "Discount",
           "deposit_label": "Deposit"
         }
+      },
+      "subtitle": "Manage and track all orders",
+      "table": {
+        "order": "Order",
+        "customer": "Customer",
+        "items": "Items",
+        "total": "Total",
+        "status": "Status",
+        "payment": "Payment",
+        "time": "Time",
+        "actions": "Actions"
+      },
+      "labels": {
+        "items_count": "{{count}} items"
+      },
+      "payment_status": {
+        "paid": "Paid",
+        "unpaid": "Unpaid"
       }
     },
     "kitchen": {
@@ -1261,38 +1313,6 @@
       "export_success": "Report exported successfully",
       "export_failed": "Failed to export report"
     },
-    "orders": {
-      "title": "Orders",
-      "subtitle": "Manage and track all orders",
-      "search": {
-        "customer": "Customer Name",
-        "customer_placeholder": "Enter customer name...",
-        "reference": "Order Code",
-        "reference_placeholder": "Enter order code..."
-      },
-      "table": {
-        "order": "Order",
-        "customer": "Customer",
-        "items": "Items",
-        "total": "Total",
-        "status": "Status",
-        "payment": "Payment",
-        "time": "Time",
-        "actions": "Actions"
-      },
-      "labels": {
-        "items_count": "{{count}} items"
-      },
-      "payment_status": {
-        "paid": "Paid",
-        "unpaid": "Unpaid"
-      },
-      "actions": {
-        "view_details": "View Details",
-        "delete": "Delete Order"
-      },
-      "empty": "No orders found"
-    },
     "best_selling_dishes": {
       "title": "Best Selling Dishes",
       "subtitle": "Top {{count}}",
@@ -1373,6 +1393,7 @@
       "sections": {
         "overview": "Overview",
         "operations": "Operations",
+        "management": "Management",
         "catalog": "Catalog",
         "team": "Team",
         "system": "System"
@@ -1387,6 +1408,7 @@
         "ingredients": "Ingredients",
         "orders": "Orders",
         "payments": "Payments",
+        "feedbacks": "Feedback",
         "customers": "Customers",
         "staff": "Staff",
         "schedules": "Schedules",
@@ -2013,7 +2035,9 @@
       "subtitle": "Track and manage all restaurant orders",
       "search": {
         "label": "Search",
+        "customer": "Customer Name",
         "customer_placeholder": "Enter customer name...",
+        "reference": "Order Code",
         "reference_placeholder": "Enter order reference..."
       },
       "new_order": "New Order",
@@ -2841,7 +2865,32 @@
       "title": "Orders Overview",
       "subtitle": "Daily order volume",
       "total_orders": "Total Orders",
-      "orders_suffix": "orders"
+      "orders_suffix": "orders",
+      "search": {
+        "label": "Search",
+        "customer": "Customer Name",
+        "customer_placeholder": "Enter customer name...",
+        "reference": "Order Code",
+        "reference_placeholder": "Enter order reference..."
+      },
+      "table": {
+        "order": "Order",
+        "customer": "Customer",
+        "table": "Table",
+        "items": "Items",
+        "total": "Total",
+        "status": "Status",
+        "payment": "Payment",
+        "time": "Time",
+        "actions": "Actions"
+      },
+      "labels": {
+        "items_count": "{{count}} items"
+      },
+      "payment_status": {
+        "paid": "Paid",
+        "unpaid": "Unpaid"
+      }
     },
     "staff_overview": {
       "title": "Staff Overview",
