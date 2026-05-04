@@ -15,11 +15,14 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  CopyOutlined,
   DollarOutlined,
   FireOutlined,
   LoginOutlined,
+  DownloadOutlined,
   PhoneOutlined,
   PoweroffOutlined,
+  QrcodeOutlined,
   ShoppingCartOutlined,
   TableOutlined,
   UserOutlined,
@@ -176,6 +179,7 @@ interface TableActivityData {
   floorName?: string;
   capacity: number;
   status: TableStatus;
+  qrCodeUrl?: string;
   startAt?: string;
   orderId?: string;
   orderReference?: string;
@@ -264,6 +268,112 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     () => resolveSessionBufferMinutes(tenant),
     [tenant],
   );
+
+  const QRCodeSection = ({ table }: { table: TableActivityData }) => {
+    const [copied, setCopied] = useState(false);
+    const [imgError, setImgError] = useState(false);
+
+    const handleCopy = async () => {
+      const tableLink = typeof window !== 'undefined'
+        ? `${window.location.origin}/customer/${table.id}`
+        : `/customer/${table.id}`;
+
+      await navigator.clipboard.writeText(tableLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleDownload = () => {
+      if (!table.qrCodeUrl) return;
+      const link = document.createElement('a');
+      link.href = table.qrCodeUrl;
+      link.download = `table-${table.name}-qr.png`;
+      link.target = '_blank';
+      link.click();
+    };
+
+    return (
+      <div className="table-modal-section">
+        <div className="table-modal-section-header">
+          <div className="table-modal-section-icon" style={{ background: 'rgba(24,144,255,0.12)', color: '#1890ff' }}>
+            <QrcodeOutlined />
+          </div>
+          <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>
+            {t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
+          </Text>
+          <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }}>
+            {t('tables.details.qr_scan', { ns: 'dashboard' })}
+          </Tag>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          {imgError || !table.qrCodeUrl ? (
+            <div
+              style={{
+                width: 160,
+                height: 160,
+                borderRadius: 12,
+                border: '1px dashed var(--border)',
+                background: 'var(--card)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                color: 'var(--text-muted)',
+                textAlign: 'center',
+                padding: 12,
+              }}
+            >
+              <QrcodeOutlined style={{ fontSize: 28 }} />
+              <Text style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                {t('tables.details.qr_load_failed', { ns: 'dashboard' })}
+              </Text>
+            </div>
+          ) : (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                background: '#fff',
+                boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
+              }}
+            >
+              <img
+                src={table.qrCodeUrl}
+                alt={t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
+                width={160}
+                height={160}
+                style={{ display: 'block', borderRadius: 6 }}
+                onError={() => setImgError(true)}
+              />
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+            <Button
+              block
+              icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}
+              onClick={handleCopy}
+              style={{ borderRadius: 10, fontWeight: 600 }}
+            >
+              {copied ? t('tables.details.copied', { ns: 'dashboard' }) : t('tables.details.copy_link', { ns: 'dashboard' })}
+            </Button>
+            <Button
+              block
+              type="primary"
+              icon={<DownloadOutlined />}
+              onClick={handleDownload}
+              disabled={!table.qrCodeUrl}
+              style={{ borderRadius: 10, fontWeight: 700 }}
+            >
+              {t('tables.details.download_qr', { ns: 'dashboard' })}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -357,6 +467,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           positionX: Number(item.positionX) || 0,
           positionY: Number(item.positionY) || 0,
           status,
+          qrCodeUrl: item.qrCodeUrl,
           startAt: session?.startedAt,
           orderId: session?.orderId ?? undefined,
           orderReference: session?.orderReference ?? undefined,
@@ -1120,6 +1231,11 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       {selectedTable.reservationContactName || selectedTable.customerName}
                     </div>
                   )}
+                  {selectedTable.reservationContactPhone && (
+                    <div style={{ marginTop: 6, fontSize: 13, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                      {selectedTable.reservationContactPhone}
+                    </div>
+                  )}
                   {isSelectedTableMerged && (
                     <span className="table-modal-merge-chip">
                       <LinkOutlined />
@@ -1305,6 +1421,8 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     )}
                   </div>
                 )}
+
+                {selectedTable.qrCodeUrl && <QRCodeSection table={selectedTable} />}
 
                 {hasOrder && (
                   <div className="table-modal-section">

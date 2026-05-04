@@ -956,7 +956,7 @@ export default function ReservationsPage() {
                       </td>
 
                       <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <ReservationRowActions item={item} onActionComplete={fetchData} />
+                        <ReservationRowActions item={item} onActionComplete={fetchData} restrictToToday={false} />
                       </td>
                     </tr>
                   ))

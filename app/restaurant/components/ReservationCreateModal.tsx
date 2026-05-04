@@ -212,8 +212,8 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                       width: 64,
                       height: 64,
                       borderRadius: '50%',
-                      background: 'var(--success-soft)',
-                      color: 'var(--success)',
+                      background: depositCheckoutUrl ? 'rgba(245, 158, 11, 0.12)' : 'var(--success-soft)',
+                      color: depositCheckoutUrl ? 'var(--warning)' : 'var(--success)',
                       margin: '0 auto 16px',
                       display: 'flex',
                       alignItems: 'center',
@@ -221,14 +221,23 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                       fontSize: 32,
                     }}
                   >
-                    ✓
+                    {depositCheckoutUrl ? '!' : '✓'}
                   </div>
                   <p style={{ fontWeight: 700, fontSize: 18, marginBottom: 6 }}>
-                    {t('landing.booking.success.title')}
+                    {depositCheckoutUrl
+                      ? t('landing.booking.deposit.title', { defaultValue: 'Cần thanh toán cọc' })
+                      : t('landing.booking.success.title')}
                   </p>
                   <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
                     {t('landing.booking.success.booking_ref')}: <strong>{confirmationCode}</strong>
                   </p>
+                  {depositCheckoutUrl && (
+                    <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 12, border: '1px solid var(--warning-border)', background: 'var(--warning-soft)', color: 'var(--warning)', fontSize: 13, lineHeight: 1.5 }}>
+                      {t('landing.booking.deposit.required_notice', {
+                        defaultValue: 'Đặt bàn này cần thanh toán cọc để hoàn tất. Bấm nút thanh toán cọc bên dưới để xác nhận giữ chỗ.',
+                      })}
+                    </div>
+                  )}
                   {depositCheckoutUrl && (
                     <div style={{ marginBottom: 16 }}>
                       <button

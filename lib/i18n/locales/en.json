@@ -2515,6 +2515,8 @@
         "inputs": {
           "open": "Opening time",
           "close": "Closing time",
+          "session_buffer_minutes": "Table hold duration after check-in (minutes)",
+          "session_buffer_hint": "Applied to automatic table closing and the session duration calculation.",
           "apply_all": "Apply to All",
           "apply_all_title": "Apply Monday's hours to all other days"
         },
@@ -4566,6 +4568,7 @@
         "booking_ref": "Booking Ref",
         "confirmation_sent": "Confirmation email sent to:",
         "phone_label": "Phone",
+        "deposit_required": "This reservation requires a deposit to be completed. Use the deposit button below to confirm your booking.",
         "pay_deposit_now": "Pay deposit now",
         "deposit_deadline": "Deposit payment deadline",
         "view_details": "View Details",

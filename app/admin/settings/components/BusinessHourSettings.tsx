@@ -25,9 +25,13 @@ export default function BusinessHourSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [hours, setHours] = useState<BusinessHour[]>([]);
+    const [sessionBufferMinutes, setSessionBufferMinutes] = useState(120);
 
     useEffect(() => {
-        if (!tenant?.id) return;
+        if (!tenant?.id) {
+            setLoading(false);
+            return;
+        }
         const days = getDaysOfWeek(t);
 
         const fetchHours = async () => {
@@ -45,6 +49,14 @@ export default function BusinessHourSettings() {
                     };
                 });
                 setHours(initializedHours);
+                const configuration = tenant.configuration as
+                    | { sessionBufferMinutes?: number; SessionBufferMinutes?: number }
+                    | undefined;
+                setSessionBufferMinutes(
+                    configuration?.sessionBufferMinutes ??
+                    configuration?.SessionBufferMinutes ??
+                    120,
+                );
             } catch (error) {
                 console.error("Failed to fetch business hours:", error);
                 message.error(t("dashboard.settings.business.toasts.fetch_error", { defaultValue: "Lỗi tải giờ hoạt động" }));
@@ -62,6 +74,13 @@ export default function BusinessHourSettings() {
         setSaving(true);
         try {
             await tenantService.updateBusinessHours(tenant.id, hours);
+            await tenantService.upsertTenant({
+                ...tenant,
+                id: tenant.id,
+                configuration: {
+                    sessionBufferMinutes,
+                },
+            });
             message.success(t("dashboard.settings.business.toasts.update_success", { defaultValue: "Đã cập nhật giờ hoạt động. Các thay đổi sẽ mất vài phút để hiển thị ngoài trang khách." }));
         } catch (error) {
             console.error("Failed to update business hours:", error);
@@ -121,6 +140,33 @@ export default function BusinessHourSettings() {
                 </div>
             </div>
 
+            <div className="rounded-lg p-4 mb-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.settings.business.inputs.session_buffer_minutes", { defaultValue: "Thời gian giữ bàn sau check-in (phút)" })}
+                </label>
+                <input
+                    type="number"
+                    min={30}
+                    step={5}
+                    value={sessionBufferMinutes}
+                    onChange={(e) => setSessionBufferMinutes(Math.max(30, Number(e.target.value) || 0))}
+                    className="w-full sm:w-48 px-4 py-2 rounded-lg focus:outline-none"
+                    style={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                    suppressHydrationWarning
+                />
+                <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.settings.business.inputs.session_buffer_hint", { defaultValue: "Áp dụng cho thời điểm tự đóng bàn và tính thời lượng phiên bàn." })}
+                </p>
+            </div>
+
             <div className="space-y-4">
                 {getDaysOfWeek(t).map((day: any) => {
                     const currentHour = hours.find(h => h.dayOfWeek === day.value);
@@ -135,7 +181,6 @@ export default function BusinessHourSettings() {
                                 border: `1px solid ${currentHour.isClosed ? 'transparent' : 'var(--border)'}`,
                                 opacity: currentHour.isClosed ? 0.7 : 1
                             }}>
-
                             {/* Day Label */}
                             <div className="w-full sm:w-32 flex items-center gap-3 shrink-0">
                                 <div
