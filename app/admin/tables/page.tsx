@@ -1104,11 +1104,11 @@ export default function TablesPage() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor =
-                        "rgba(255, 56, 11, 0.2)";
+                        "color-mix(in srgb, var(--primary), transparent 82%)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor =
-                        "rgba(255, 56, 11, 0.1)";
+                        "var(--primary-soft)";
                     }}
                     suppressHydrationWarning>
                     {tDashboard("tables.card.view_details")}

@@ -417,8 +417,8 @@ export default function StaffNotificationDrawer() {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: "rgba(255, 56, 11, 0.1)",
-                border: "1px solid rgba(255, 56, 11, 0.2)",
+                  background: "var(--primary-soft)",
+                  border: "1px solid var(--primary-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -522,8 +522,8 @@ export default function StaffNotificationDrawer() {
                   background: notif.read
                     ? "transparent"
                     : mode === "dark"
-                      ? "rgba(255, 56, 11, 0.06)"
-                      : "rgba(255, 56, 11, 0.04)",
+                      ? "var(--primary-faint)"
+                      : "var(--primary-faint)",
                   cursor: "pointer",
                   transition: "background 0.2s",
                   position: "relative",

@@ -134,7 +134,7 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
                       <button
                         key={lang}
                         onClick={() => { changeLanguage(lang); setIsLangMenuOpen(false); }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === lang ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === lang ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "hover:bg-[var(--bg-base)]"
                           }`}
                         style={{ color: language === lang ? undefined : "var(--text)" }}>
                         {lang === "vi" ? (

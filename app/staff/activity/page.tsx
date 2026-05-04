@@ -456,7 +456,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     
     setIsClosingSession(true);
     try {
-      await tableService.closeTableSession(confirmCloseSessionTable.id);
+      await tableService.closeTableSession([confirmCloseSessionTable.id]);
       messageApi.success(t('staff.floor_activity.modal.close_session_success', { defaultValue: 'Đóng phiên bàn thành công!' }));
       setSelectedTable(null);
       setConfirmCloseSessionTable(null);
