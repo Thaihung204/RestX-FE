@@ -4707,7 +4707,9 @@
       "badge_paid": "Deposit Confirmed",
       "badge_unpaid": "Unpaid",
       "status_paid": "Deposit Confirmed",
-      "status_unpaid": "Unpaid"
+      "status_unpaid": "Unpaid",
+      "payos_success": "Deposit payment successful!",
+      "payos_cancelled": "Payment cancelled. Generating a new link..."
     },
     "order": {
       "title": "Order Information",

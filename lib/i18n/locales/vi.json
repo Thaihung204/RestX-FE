@@ -4766,7 +4766,9 @@
       "badge_paid": "Đã xác nhận đặt cọc",
       "badge_unpaid": "Chưa thanh toán",
       "status_paid": "Đã xác nhận đặt cọc",
-      "status_unpaid": "Chưa thanh toán"
+      "status_unpaid": "Chưa thanh toán",
+      "payos_success": "Thanh toán đặt cọc thành công!",
+      "payos_cancelled": "Bạn đã huỷ thanh toán. Đang tạo link mới..."
     },
     "order": {
       "title": "Thông tin order",
