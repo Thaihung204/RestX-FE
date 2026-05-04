@@ -1,23 +1,22 @@
 "use client";
 
+import { ReservationRowActions } from "@/components/admin/reservations/ReservationRowActions";
+import { DayPicker } from '@/components/ui/DayPicker';
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, {
-  PaginatedReservations,
-  ReservationDetail,
-  ReservationListItem,
-  ReservationStatus,
+    PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
 import { tenantService } from "@/lib/services/tenantService";
+import { formatVND } from "@/lib/utils/currency";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { HubConnectionState } from "@microsoft/signalr";
 import { Select, message } from "antd";
-import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { DayPicker } from '@/components/ui/DayPicker';
 import dayjs from "dayjs";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
-import { ReservationRowActions } from "@/components/admin/reservations/ReservationRowActions";
 
 
 const STATUS_FLOW_ORDER: Record<string, number> = {
@@ -565,8 +564,6 @@ export default function ReservationsPage() {
         search: search || undefined,
         statusId: statusId !== "" ? statusId : undefined,
         date: todayDate,
-        sortBy: "reservationDateTime",
-        sortDescending: false,
       });
       const todayItems = result.items.filter((item) =>
         isSameLocalDate(
@@ -649,6 +646,24 @@ export default function ReservationsPage() {
     }
   }, [search, todayDate, statuses]);
 
+  // Keep refs in sync so SignalR handlers always use latest callbacks/values
+  // without needing to re-register (which would cause reconnect on filter change)
+  const fetchDataRef = useRef(fetchData);
+  const fetchStatsRef = useRef(fetchStats);
+  const searchRef = useRef(search);
+  const statusIdRef = useRef(statusId);
+  const todayYearRef = useRef(todayYear);
+  const todayMonthRef = useRef(todayMonth);
+  const todayDayRef = useRef(todayDay);
+
+  useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
+  useEffect(() => { fetchStatsRef.current = fetchStats; }, [fetchStats]);
+  useEffect(() => { searchRef.current = search; }, [search]);
+  useEffect(() => { statusIdRef.current = statusId; }, [statusId]);
+  useEffect(() => { todayYearRef.current = todayYear; }, [todayYear]);
+  useEffect(() => { todayMonthRef.current = todayMonth; }, [todayMonth]);
+  useEffect(() => { todayDayRef.current = todayDay; }, [todayDay]);
+
   useEffect(() => {
     fetchStats();
   }, [fetchStats, data]);
@@ -667,19 +682,140 @@ export default function ReservationsPage() {
   }, []);
 
   useEffect(() => {
-    tenantService
-      .getTenantConfig(window.location.hostname)
-      .then((tenant) => {
-        if (tenant?.id) setTenantId(tenant.id);
-      })
-      .catch(() => { });
+    let isMounted = true;
+
+    const fetchTenant = async () => {
+      try {
+        const host = window.location.host;
+        const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+
+        if (
+          hostWithoutPort === "localhost" ||
+          hostWithoutPort === "127.0.0.1" ||
+          hostWithoutPort === "staff.localhost"
+        ) {
+          const data = await tenantService.getTenantConfig("demo.restx.food");
+          if (isMounted) setTenantId(data?.id || "");
+          return;
+        }
+
+        if (hostWithoutPort.endsWith(".localhost")) {
+          const subdomain = hostWithoutPort.replace(".localhost", "");
+          const tenantHost =
+            subdomain && subdomain !== "staff"
+              ? `${subdomain}.restx.food`
+              : "demo.restx.food";
+          const data = await tenantService.getTenantConfig(tenantHost);
+          if (isMounted) setTenantId(data?.id || "");
+          return;
+        }
+
+        const data = await tenantService.getTenantConfig(hostWithoutPort);
+        if (isMounted) setTenantId(data?.id || "");
+      } catch (error) {
+        console.error("Failed to resolve tenant for staff reservations:", error);
+      }
+    };
+
+    fetchTenant();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!tenantId) return;
 
     let isMounted = true;
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    const debounceTimerRef = { current: undefined as ReturnType<typeof setTimeout> | undefined };
+
+    const handleReservationCreated = async (payload: any) => {
+      if (!isMounted) return;
+      const changedTenantId = payload?.tenantId || payload?.reservation?.tenantId;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+
+      const reservationId =
+        payload?.reservationId || payload?.id || payload?.reservation?.id;
+      if (!reservationId) return;
+
+      try {
+        const reservation = await reservationService.getReservationById(String(reservationId));
+        if (!isMounted) return;
+
+        // Staff page only shows today's reservations — skip if not today
+        if (
+          !isSameLocalDate(
+            reservation.reservationDateTime,
+            todayYearRef.current,
+            todayMonthRef.current,
+            todayDayRef.current,
+          )
+        ) return;
+
+        // Update stats counter without full reload
+        setGlobalStats((prev) => ({
+          total: prev.total + 1,
+          byStatus: {
+            ...prev.byStatus,
+            [reservation.status.id]: (prev.byStatus[reservation.status.id] || 0) + 1,
+          },
+        }));
+
+        // Apply search/status filters before inserting
+        if (searchRef.current) {
+          const q = searchRef.current.trim().toLowerCase();
+          const matches =
+            reservation.confirmationCode.toLowerCase().includes(q) ||
+            reservation.contact.name.toLowerCase().includes(q) ||
+            reservation.contact.phone.toLowerCase().includes(q);
+          if (!matches) return;
+        }
+        if (statusIdRef.current !== "" && reservation.status.id !== statusIdRef.current) return;
+
+        const nextItem: ReservationListItem = {
+          id: reservation.id,
+          confirmationCode: reservation.confirmationCode,
+          tables: reservation.tables,
+          reservationDateTime: reservation.reservationDateTime,
+          checkedInAt: reservation.checkedInAt,
+          numberOfGuests: reservation.numberOfGuests,
+          contactName: reservation.contact.name,
+          contactPhone: reservation.contact.phone,
+          customer: reservation.contact.customerId
+            ? { customerId: reservation.contact.customerId }
+            : undefined,
+          isGuest: reservation.contact.isGuest,
+          status: reservation.status,
+          depositAmount: reservation.depositAmount,
+          depositPaid: reservation.depositPaid,
+          paymentDeadline: reservation.paymentDeadline,
+          checkoutUrl: reservation.checkoutUrl,
+          createdAt: reservation.createdAt,
+        };
+
+        setData((prev) => {
+          if (!prev) return prev;
+          if (prev.items.some((item) => item.id === nextItem.id)) return prev;
+
+          const nextItems = [...prev.items, nextItem].sort(
+            (left, right) =>
+              new Date(right.createdAt).getTime() -
+              new Date(left.createdAt).getTime(),
+          );
+
+          return {
+            ...prev,
+            items: nextItems,
+            totalCount: prev.totalCount + 1,
+          };
+        });
+      } catch (error) {
+        console.error("Failed to sync created reservation:", error);
+        fetchDataRef.current();
+        fetchStatsRef.current();
+      }
+    };
 
     const handleReservationChanged = (payload: any) => {
       if (!isMounted) return;
@@ -687,27 +823,29 @@ export default function ReservationsPage() {
         payload?.tenantId || payload?.reservation?.tenantId;
       if (changedTenantId && changedTenantId !== tenantId) return;
 
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
         if (!isMounted) return;
-        fetchData();
+        fetchDataRef.current();
+        fetchStatsRef.current();
       }, 300);
     };
 
-    const events = [
-      "reservations.created",
-      "reservations.updated",
-      "reservations.deleted",
-      "deposits.confirmed",
-    ];
-
     const setupSignalR = async () => {
       try {
-        events.forEach((event) =>
-          orderSignalRService.on(event, handleReservationChanged),
-        );
         await orderSignalRService.start();
-        await orderSignalRService.joinTenantGroup(tenantId);
+        if (!isMounted) return;
+
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.joinTenantGroup(tenantId);
+          if (!isMounted) return;
+
+          orderSignalRService.on("reservations.created", handleReservationCreated);
+          ["reservations.updated", "tables.status_changed", "deposits.confirmed"].forEach((event) =>
+            orderSignalRService.on(event, handleReservationChanged),
+          );
+        }
       } catch (error) {
         console.error("SignalR: setup reservations failed", error);
       }
@@ -717,13 +855,14 @@ export default function ReservationsPage() {
 
     return () => {
       isMounted = false;
-      if (debounceTimer) clearTimeout(debounceTimer);
-      events.forEach((event) =>
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      orderSignalRService.off("reservations.created", handleReservationCreated);
+      ["reservations.updated", "tables.status_changed", "deposits.confirmed"].forEach((event) =>
         orderSignalRService.off(event, handleReservationChanged),
       );
       orderSignalRService.leaveTenantGroup(tenantId).catch(() => { });
     };
-  }, [tenantId, fetchData]);
+  }, [tenantId]);
 
   useEffect(() => {
     const timer = setInterval(

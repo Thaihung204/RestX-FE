@@ -8,10 +8,11 @@ import {
   AIChatHistoryResponse,
   AIChatRequest,
   AIChatResponse,
+  AIComboSuggestion,
   AIMessage,
   AIOrderDraft,
   AIOrderDraftItem,
-  AISuggestionItem,
+  AISuggestionItem
 } from "@/lib/types/ai";
 import type { CartItem } from "@/lib/types/menu";
 import { formatVND } from "@/lib/utils/currency";
@@ -44,7 +45,7 @@ export default function AIFullScreenChat({
   customerId,
 }: AISuggestionPopupProps) {
   const { t } = useTranslation("common");
-  const { addToCart, openCartModal, cartItemCount, totalCartAmount } =
+  const { addToCart, openCartModal, cartItemCount, totalCartAmount, addComboToCart } =
     useCart();
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<AIMessage[]>([]);
@@ -63,6 +64,7 @@ export default function AIFullScreenChat({
     content: response.message,
     timestamp: new Date(),
     suggestions: response.suggestions ?? [],
+    combos: response.combos ?? [],
     quickReplies: response.quickReplies ?? [],
     orderDraft: response.orderDraft
       ? {
@@ -94,6 +96,7 @@ export default function AIFullScreenChat({
           content,
           timestamp: new Date(item.createdDate),
           suggestions: parsed?.suggestions ?? [],
+          combos: parsed?.combos ?? [],
           quickReplies: parsed?.quickReplies ?? [],
           orderDraft: parsed?.orderDraft
             ? {
@@ -264,6 +267,31 @@ export default function AIFullScreenChat({
     addToCart(cartItem);
   };
 
+  const handleAddComboToCart = (combo: AIComboSuggestion) => {
+    const raw = combo as any;
+    const comboName: string = raw.comboName || raw.name || "Combo";
+    const comboId: string = raw.comboId || raw.id || "";
+    const comboPrice: number = Number(raw.price ?? raw.totalPrice ?? 0);
+    const comboImage: string | undefined = raw.imageUrl || raw.image || undefined;
+    const items: any[] = raw.items || [];
+
+    // Build a ComboSummaryDto-compatible object for addComboToCart
+    const comboDto = {
+      id: comboId,
+      name: comboName,
+      price: comboPrice,
+      imageUrl: comboImage ?? null,
+      details: items.map((item: any) => ({
+        dishId: item.dishId || item.id || "",
+        dishName: item.dishName || item.name || "",
+        dishPrice: Number(item.price ?? 0),
+        quantity: Number(item.quantity ?? 1),
+      })),
+    };
+
+    addComboToCart(comboDto as any, `Đã thêm ${comboName} vào giỏ hàng`);
+  };
+
   const handleOpenCartPopup = () => {
     openCartModal();
   };
@@ -408,6 +436,7 @@ export default function AIFullScreenChat({
                 onDraftItemsChange={handleDraftItemsChange}
                 onConfirmOrder={handleConfirmOrder}
                 onAddSuggestionToCart={handleAddSuggestionToCart}
+                onAddComboToCart={handleAddComboToCart}
                 isLoading={isLoading}
                 isConfirming={isConfirming}
               />

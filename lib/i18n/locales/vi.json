@@ -261,6 +261,36 @@
         "confirm": "Xác nhận hủy",
         "message": "Bạn có chắc muốn hủy món \"{{name}}\"? Hành động này không thể hoàn tác."
       }
+    },
+    "feedbacks": {
+      "title": "Quản lý Đánh giá",
+      "subtitle": "{{total}} đánh giá",
+      "anonymous": "Ẩn danh",
+      "unknown": "Không rõ",
+      "no_comment": "Không có nhận xét",
+      "published": "Hiển thị",
+      "unpublished": "Ẩn",
+      "load_failed": "Không thể tải danh sách feedback",
+      "empty": "Chưa có feedback nào",
+      "headers": {
+        "customer": "Khách hàng",
+        "rating": "Đánh giá",
+        "comment": "Nhận xét",
+        "images": "Hình ảnh",
+        "status": "Trạng thái",
+        "date": "Ngày tạo"
+      },
+      "stats": {
+        "total": "Tổng cộng",
+        "published": "Đang hiển thị",
+        "hidden": "Đang ẩn"
+      },
+      "filter": {
+        "search": "Tìm theo tên khách hàng...",
+        "all_ratings": "Tất cả sao",
+        "rating_option": "{{count}} sao",
+        "all_status": "Tất cả trạng thái"
+      }
     }
   },
   "staff": {
@@ -357,7 +387,11 @@
       "search": {
         "label": "Tìm kiếm",
         "placeholder": "Tìm order...",
-        "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
+        "placeholder_full": "Tìm theo mã order hoặc tên bàn...",
+        "customer": "Tên khách hàng",
+        "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
+        "reference_placeholder": "Nhập mã đơn hàng..."
       },
       "filter": {
         "all_tables": "Tất cả bàn"
@@ -484,6 +518,24 @@
           "discount_label": "Giảm giá",
           "deposit_label": "Tiền đặt cọc"
         }
+      },
+      "subtitle": "Quản lý và theo dõi tất cả đơn hàng",
+      "table": {
+        "order": "Đơn hàng",
+        "customer": "Khách hàng",
+        "items": "Món",
+        "total": "Tổng tiền",
+        "status": "Trạng thái",
+        "payment": "Thanh toán",
+        "time": "Thời gian",
+        "actions": "Thao tác"
+      },
+      "labels": {
+        "items_count": "{{count}} món"
+      },
+      "payment_status": {
+        "paid": "Đã thanh toán",
+        "unpaid": "Chưa thanh toán"
       }
     },
     "kitchen": {
@@ -1158,38 +1210,6 @@
       "export_success": "Xuất báo cáo thành công",
       "export_failed": "Xuất báo cáo thất bại"
     },
-    "orders": {
-      "title": "Đơn hàng",
-      "subtitle": "Quản lý và theo dõi tất cả đơn hàng",
-      "search": {
-        "customer": "Tên khách hàng",
-        "customer_placeholder": "Nhập tên khách hàng...",
-        "reference": "Mã đơn hàng",
-        "reference_placeholder": "Nhập mã đơn hàng..."
-      },
-      "table": {
-        "order": "Đơn hàng",
-        "customer": "Khách hàng",
-        "items": "Món",
-        "total": "Tổng tiền",
-        "status": "Trạng thái",
-        "payment": "Thanh toán",
-        "time": "Thời gian",
-        "actions": "Thao tác"
-      },
-      "labels": {
-        "items_count": "{{count}} món"
-      },
-      "payment_status": {
-        "paid": "Đã thanh toán",
-        "unpaid": "Chưa thanh toán"
-      },
-      "actions": {
-        "view_details": "Xem chi tiết",
-        "delete": "Xóa đơn hàng"
-      },
-      "empty": "Không có đơn hàng nào"
-    },
     "best_selling_dishes": {
       "title": "Món Bán Chạy",
       "subtitle": "Top {{count}}",
@@ -1265,11 +1285,12 @@
     "sidebar": {
       "management": "Qu\u1EA3n l\u00FD",
       "sections": {
-        "overview": "T\u1ED5ng quan",
-        "operations": "V\u1EADn h\u00E0nh",
-        "catalog": "Danh m\u1EE5c",
-        "team": "Nh\u00E2n s\u1EF1",
-        "system": "H\u1EC7 th\u1ED1ng"
+        "overview": "Tổng quan",
+        "operations": "Vận hành",
+        "management": "Quản lý",
+        "catalog": "Danh mục",
+        "team": "Nhân sự",
+        "system": "Hệ thống"
       },
       "items": {
         "dashboard": "Tổng quan",
@@ -1281,6 +1302,7 @@
         "ingredients": "Nguyên liệu",
         "orders": "Đơn hàng",
         "payments": "Thanh toán",
+        "feedbacks": "Đánh giá",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
@@ -1907,7 +1929,9 @@
       "subtitle": "Theo dõi và quản lý đơn hàng",
       "search": {
         "label": "Tìm kiếm",
+        "customer": "Tên khách hàng",
         "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
         "reference_placeholder": "Nhập mã đơn hàng..."
       },
       "new_order": "Đơn mới",
@@ -2888,7 +2912,32 @@
       "title": "Tổng quan đơn hàng",
       "subtitle": "Số lượng đơn hàng theo ngày",
       "total_orders": "Tổng đơn hàng",
-      "orders_suffix": "đơn"
+      "orders_suffix": "đơn",
+      "search": {
+        "label": "Tìm kiếm",
+        "customer": "Tên khách hàng",
+        "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
+        "reference_placeholder": "Nhập mã đơn hàng..."
+      },
+      "table": {
+        "order": "Đơn hàng",
+        "customer": "Khách hàng",
+        "table": "Bàn",
+        "items": "Món",
+        "total": "Tổng",
+        "status": "Trạng thái",
+        "payment": "Thanh toán",
+        "time": "Thời gian",
+        "actions": "Hành động"
+      },
+      "labels": {
+        "items_count": "{{count}} món"
+      },
+      "payment_status": {
+        "paid": "Đã thanh toán",
+        "unpaid": "Chưa thanh toán"
+      }
     },
     "staff_overview": {
       "title": "Tổng quan nhân viên",
