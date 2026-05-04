@@ -17,14 +17,14 @@ interface BreakdownChartsProps {
 }
 
 export const BreakdownCharts: React.FC<BreakdownChartsProps> = ({ breakdown, periodType = 'monthly', isFallback = false }) => {
-  if (!breakdown || breakdown.length === 0) {
-    return null;
-  }
-
   const { t } = useTranslation();
 
   // Group daily data by month for yearly views
   const processedData = useMemo(() => {
+    if (!breakdown || breakdown.length === 0) {
+      return [];
+    }
+
     if (periodType === 'yearly' && breakdown.length > 0) {
       // Check if data is daily (has many entries) - if so, group by month
       if (breakdown.length > 12) {
@@ -33,6 +33,10 @@ export const BreakdownCharts: React.FC<BreakdownChartsProps> = ({ breakdown, per
     }
     return breakdown;
   }, [breakdown, periodType]);
+
+  if (!breakdown || breakdown.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
