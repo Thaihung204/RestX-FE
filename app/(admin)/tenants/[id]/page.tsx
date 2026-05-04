@@ -8,24 +8,24 @@ import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { BusinessHour, TenantUpdateInput } from "@/lib/types/tenant";
 import {
-    ArrowLeftOutlined,
-    DeleteOutlined,
-    ExclamationCircleOutlined,
-    MailOutlined,
-    PhoneOutlined,
-    ShopOutlined,
+  ArrowLeftOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import type { FormProps, UploadFile } from "antd";
 import {
-    Alert,
-    App,
-    Button,
-    ColorPicker,
-    Form,
-    Input,
-    Modal,
-    Spin,
-    Upload,
+  Alert,
+  App,
+  Button,
+  ColorPicker,
+  Form,
+  Input,
+  Modal,
+  Spin,
+  Upload,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -103,6 +103,7 @@ const TenantEditPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DetailTab>("general");
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [hoursLoading, setHoursLoading] = useState(false);
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
   const tenantId = params.id as string;
 
   const getRawFile = (fileList: UploadFile[]): File | null => {
@@ -159,7 +160,15 @@ const TenantEditPage: React.FC = () => {
         router.push("/tenants");
         return;
       }
-      const cleanHostname = data.hostname?.replace(/\.restx\.food$/i, "") || "";
+      const rawHostname = data.hostname || "";
+      // Only strip .restx.food suffix for standard subdomains (e.g. "demo.restx.food" → "demo").
+      // Custom domains (e.g. "lebon.io.vn") are stored and displayed as-is.
+      const isRestxSubdomain = /^[^.]+\.restx\.food$/i.test(rawHostname);
+      const cleanHostname = isRestxSubdomain
+        ? rawHostname.replace(/\.restx\.food$/i, "")
+        : rawHostname;
+      const isCustomDomain = !isRestxSubdomain && rawHostname !== "";
+      setIsCustomDomain(isCustomDomain);
       const formValues: Partial<TenantUpdateInput> = {
         name: data.name,
         hostname: cleanHostname,
@@ -260,8 +269,11 @@ const TenantEditPage: React.FC = () => {
     if (loading) return;
     setLoading(true);
     try {
+      // Custom domains are sent as-is; restx subdomains get .restx.food appended.
       const hostname = values.hostname
-        ? `${values.hostname}.restx.food`
+        ? isCustomDomain
+          ? values.hostname
+          : `${values.hostname}.restx.food`
         : undefined;
       const colorValues = COLOR_FIELD_NAMES.reduce((acc, field) => {
         const rawValue = form.getFieldValue(field);
@@ -484,7 +496,9 @@ const TenantEditPage: React.FC = () => {
               <div className="td-url-bar">
                 <span className="td-url-segment">https://</span>
                 <Input disabled value={formData.hostname || ""} />
-                <span className="td-url-segment">.restx.food</span>
+                {!isCustomDomain && (
+                  <span className="td-url-segment">.restx.food</span>
+                )}
               </div>
               <Alert
                 message={t("tenants.edit.custom_domain_notice.title")}
