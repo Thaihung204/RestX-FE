@@ -556,7 +556,7 @@ export default function TenantBrandingSettings() {
       {/* No tenant loaded yet (super admin hasn't picked one) */}
       {!tenant && needsTenantPicker && (
         <Alert
-          message={t("dashboard.settings.appearance.select_tenant_warning", {
+          title={t("dashboard.settings.appearance.select_tenant_warning", {
             defaultValue: "Please select a tenant above to edit its branding.",
           })}
           type="warning"

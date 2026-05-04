@@ -170,7 +170,7 @@ const TenantCreatePage: React.FC = () => {
                     )}
                     {isCustomDomain && (
                       <Alert
-                        message={t("tenants.edit.custom_domain_notice.title")}
+                        title={t("tenants.edit.custom_domain_notice.title")}
                         description={t("tenants.edit.custom_domain_notice.description")}
                         type="info"
                         showIcon

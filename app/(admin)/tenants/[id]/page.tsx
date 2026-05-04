@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import BusinessHoursEditor from "@/components/ui/BusinessHoursEditor";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -501,7 +501,7 @@ const TenantEditPage: React.FC = () => {
                 )}
               </div>
               <Alert
-                message={t("tenants.edit.custom_domain_notice.title")}
+                title={t("tenants.edit.custom_domain_notice.title")}
                 description={t("tenants.edit.custom_domain_notice.description")}
                 type="info"
                 showIcon
