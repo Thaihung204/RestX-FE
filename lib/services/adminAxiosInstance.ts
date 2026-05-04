@@ -15,16 +15,19 @@ const getAdminBaseUrl = (): string => {
     }
 
     const parts = hostWithoutPort.split('.');
-    if (parts.length >= 3) {
+    // Only build dynamic admin subdomain for *.restx.food domains.
+    // For custom domains (e.g. lebon.io.vn), always use the fixed admin backend.
+    const isRestxDomain =
+        parts.length >= 2 && parts.slice(-2).join('.') === 'restx.food';
+
+    if (isRestxDomain) {
         parts[0] = 'admin';
         const adminHost = parts.join('.');
         return `${window.location.protocol}//${adminHost}/api`;
-    } else if (parts.length === 2) {
-        const adminHost = `admin.${hostWithoutPort}`;
-        return `${window.location.protocol}//${adminHost}/api`;
+    } else {
+        // Custom domain — route to the fixed admin backend
+        return 'https://admin.restx.food/api';
     }
-
-    return '/api';
 };
 
 const adminAxiosInstance = axios.create({

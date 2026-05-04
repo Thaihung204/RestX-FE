@@ -23,6 +23,8 @@ export interface DashboardOverview {
   topDishes: TopDishes;
   tableStatus: TableStatus;
   customerStats: CustomerStats;
+  recentFeedbacks?: RecentFeedbacks;
+  promotionStats?: PromotionStats;
 }
 
 export interface DashboardSummary {
@@ -114,6 +116,33 @@ export interface CustomerStats {
     loyaltyPoints: number;
     membershipLevel: string;
     totalSpent: number;
+  }[];
+}
+
+export interface RecentFeedbackItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  isAnonymous: boolean;
+  customerName: string | null;
+  avatarUrl: string | null;
+  createdDate: string;
+}
+
+export interface RecentFeedbacks {
+  items: RecentFeedbackItem[];
+  averageRating: number;
+  totalCount: number;
+}
+
+export interface PromotionStats {
+  totalDiscountAmount: number;
+  totalUsageCount: number;
+  topPromotions: {
+    promotionCode: string;
+    promotionName: string;
+    usageCount: number;
+    totalDiscount: number;
   }[];
 }
 

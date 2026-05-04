@@ -9,6 +9,28 @@ export interface AISuggestionItem {
   imageUrl?: string;
 }
 
+export interface AIComboItem {
+  dishId: string;
+  dishName: string;
+  price: number;
+  quantity: number;
+  totalPrice: number;
+  imageUrl?: string | null;
+  reason?: string;
+  category?: string;
+}
+
+export interface AIComboSuggestion {
+  comboId: string;
+  comboName: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  price: number;
+  reason?: string;
+  items: AIComboItem[];
+  totalPrice: number;
+}
+
 export interface AIOrderDraftItem {
   dishId: string;
   dishName: string;
@@ -27,6 +49,7 @@ export interface AIMessage {
   content: string;
   timestamp: Date;
   suggestions?: AISuggestionItem[];
+  combos?: AIComboSuggestion[];
   quickReplies?: string[];
   orderDraft?: AIOrderDraft | null;
 }
@@ -40,6 +63,7 @@ export interface AIChatResponse {
   sessionId: string;
   message: string;
   suggestions?: AISuggestionItem[];
+  combos?: AIComboSuggestion[];
   quickReplies?: string[];
   orderDraft?: AIOrderDraft | null;
 }

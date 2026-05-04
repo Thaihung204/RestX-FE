@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DayPicker } from "@/components/ui/DayPicker";
 import { DropDown } from "@/components/ui/DropDown";
 import orderService, { OrderDto } from "@/lib/services/orderService";
@@ -11,7 +12,7 @@ import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { formatVND } from "@/lib/utils/currency";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
-import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
+import { DeleteOutlined, DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import dayjs from "dayjs";
@@ -51,6 +52,8 @@ export default function OrdersPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [exporting, setExporting] = useState<boolean>(false);
+  const [orderToDelete, setOrderToDelete] = useState<{ id: string; reference: string; customerName: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
@@ -92,9 +95,7 @@ export default function OrdersPage() {
         message.error(
           extractApiErrorMessage(
             error,
-            t("admin.orders.messages.statuses_load_failed", {
-              defaultValue: "Khong the tai trang thai don hang",
-            }),
+            t("admin.orders.messages.statuses_load_failed"),
           ),
         );
       });
@@ -216,9 +217,7 @@ export default function OrdersPage() {
           message.error(
             extractApiErrorMessage(
               error,
-              t("admin.orders.messages.load_failed", {
-                defaultValue: "Khong the tai danh sach don hang",
-              }),
+              t("admin.orders.messages.load_failed"),
             ),
           );
         }
@@ -317,6 +316,27 @@ export default function OrdersPage() {
 
   const currentPage = Math.min(page, Math.max(1, totalPages));
 
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    try {
+      await orderService.deleteOrder(orderToDelete.id);
+      message.success(t("admin.orders.messages.delete_success"));
+      setOrderToDelete(null);
+      refreshOrders(false);
+    } catch (error) {
+      console.error("Failed to delete order:", error);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("admin.orders.messages.delete_failed")
+        )
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
@@ -360,7 +380,7 @@ export default function OrdersPage() {
               }}
             >
               <ReloadOutlined />
-              {t("admin.reservations.refresh", { defaultValue: "Lam moi" })}
+              {t("admin.reservations.refresh")}
             </button>
           </div>
         </div>
@@ -379,15 +399,13 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}
               >
-                {t("dashboard.orders.search.customer", {
-                  defaultValue: "Tên khách hàng",
-                })}
+                {t("dashboard.orders.search.customer")}
               </label>
               <input
                 id="orders-filter-customer"
                 type="text"
                 value={customerNameSearch}
-                placeholder={t("dashboard.orders.search.customer_placeholder", { defaultValue: "Nhập tên khách hàng..." })}
+                placeholder={t("dashboard.orders.search.customer_placeholder")}
                 onChange={(e) => setCustomerNameSearch(e.target.value)}
                 className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
@@ -406,15 +424,13 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}
               >
-                {t("dashboard.orders.search.reference", {
-                  defaultValue: "Mã đơn hàng",
-                })}
+                {t("dashboard.orders.search.reference")}
               </label>
               <input
                 id="orders-filter-reference"
                 type="text"
                 value={referenceSearch}
-                placeholder={t("dashboard.orders.search.reference_placeholder", { defaultValue: "Nhập mã đơn hàng..." })}
+                placeholder={t("dashboard.orders.search.reference_placeholder")}
                 onChange={(e) => setReferenceSearch(e.target.value)}
                 className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
@@ -433,17 +449,13 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}
               >
-                {t("admin.reservations.filter.from_date", {
-                  defaultValue: "Tu ngay",
-                })}
+                {t("admin.reservations.filter.from_date")}
               </label>
               <div>
                 <DayPicker
                   value={fromDate ? dayjs(fromDate) : null}
                   onChange={(d) => setFromDate(d ? d.format("YYYY-MM-DD") : "")}
-                  placeholder={t("admin.reservations.filter.date_placeholder", {
-                    defaultValue: "Chọn ngày",
-                  })}
+                  placeholder={t("admin.reservations.filter.date_placeholder")}
                 />
               </div>
             </div>
@@ -454,17 +466,13 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}
               >
-                {t("admin.reservations.filter.to_date", {
-                  defaultValue: "Den ngay",
-                })}
+                {t("admin.reservations.filter.to_date")}
               </label>
               <div>
                 <DayPicker
                   value={toDate ? dayjs(toDate) : null}
                   onChange={(d) => setToDate(d ? d.format("YYYY-MM-DD") : "")}
-                  placeholder={t("admin.reservations.filter.date_placeholder", {
-                    defaultValue: "Chọn ngày",
-                  })}
+                  placeholder={t("admin.reservations.filter.date_placeholder")}
                 />
               </div>
             </div>
@@ -493,9 +501,7 @@ export default function OrdersPage() {
                     border: "1px solid rgba(239,68,68,0.2)",
                   }}
                 >
-                  {t("admin.reservations.filter.clear", {
-                    defaultValue: "Xoa loc",
-                  })}
+                  {t("admin.reservations.filter.clear")}
                 </button>
               </div>
             )}
@@ -613,9 +619,7 @@ export default function OrdersPage() {
                         }}
                         value="1"
                       >
-                        {t("dashboard.orders.payment_status.paid", {
-                          defaultValue: "Đã thanh toán",
-                        })}
+                        {t("dashboard.orders.payment_status.paid")}
                       </option>
                       <option
                         style={{
@@ -626,9 +630,7 @@ export default function OrdersPage() {
                         }}
                         value="0"
                       >
-                        {t("dashboard.orders.payment_status.unpaid", {
-                          defaultValue: "Chưa thanh toán",
-                        })}
+                        {t("dashboard.orders.payment_status.unpaid")}
                       </option>
                     </DropDown>
                   </th>
@@ -754,10 +756,6 @@ export default function OrdersPage() {
                                   message.success(
                                     t(
                                       "admin.order_detail.messages.update_success",
-                                      {
-                                        defaultValue:
-                                          "Cap nhat trang thai thanh cong",
-                                      },
                                     ),
                                   );
                                 } catch (err) {
@@ -767,9 +765,6 @@ export default function OrdersPage() {
                                       err,
                                       t(
                                         "admin.order_detail.messages.update_error",
-                                        {
-                                          defaultValue: "Cap nhat loi",
-                                        },
                                       ),
                                     ),
                                   );
@@ -822,7 +817,7 @@ export default function OrdersPage() {
                         <div className="flex gap-2 justify-center">
                           <Link
                             href={`/admin/orders/${order.id}`}
-                            className="p-2 rounded-lg transition-all"
+                            className="w-8 h-8 rounded-lg transition-all flex items-center justify-center"
                             style={{
                               backgroundColor: "var(--primary-soft)",
                               color: "var(--primary)",
@@ -849,6 +844,17 @@ export default function OrdersPage() {
                               />
                             </svg>
                           </Link>
+                          <button
+                            onClick={() => setOrderToDelete({ id: order.id, reference: order.orderNumber, customerName: order.customerName })}
+                            className="w-8 h-8 rounded-lg transition-all flex items-center justify-center"
+                            style={{
+                              backgroundColor: "rgba(239, 68, 68, 0.1)",
+                              color: "#ef4444",
+                            }}
+                            title={t("dashboard.orders.actions.delete")}
+                          >
+                            <DeleteOutlined />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -868,7 +874,6 @@ export default function OrdersPage() {
                   {t("admin.reservations.pagination.page_info_compact", {
                     page: currentPage,
                     total: totalPages,
-                    defaultValue: `Trang ${currentPage}/${totalPages} \u00B7`,
                   })}
                 </p>
                 <div className="flex items-center gap-2">
@@ -877,9 +882,7 @@ export default function OrdersPage() {
                     onChange={(e) => setPageSize(Number(e.target.value))}
                     containerClassName="w-[110px]"
                     className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
-                    aria-label={t("common.pagination.items_per_page", {
-                      defaultValue: "Items/page",
-                    })}
+                    aria-label={t("common.pagination.items_per_page")}
                   >
                     {PAGE_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
@@ -888,9 +891,7 @@ export default function OrdersPage() {
                     ))}
                   </DropDown>
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                    {t("admin.reservations.pagination.results_label", {
-                      defaultValue: "ket qua",
-                    })}
+                    {t("admin.reservations.pagination.results_label")}
                   </p>
                 </div>
               </div>
@@ -907,9 +908,7 @@ export default function OrdersPage() {
                       color: "var(--text)",
                     }}
                   >
-                    {t("admin.reservations.pagination.prev", {
-                      defaultValue: "Truoc",
-                    })}
+                    {t("admin.reservations.pagination.prev")}
                   </button>
 
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -948,9 +947,7 @@ export default function OrdersPage() {
                       color: "var(--text)",
                     }}
                   >
-                    {t("admin.reservations.pagination.next", {
-                      defaultValue: "Sau",
-                    })}
+                    {t("admin.reservations.pagination.next")}
                   </button>
                 </div>
               )}
@@ -958,6 +955,21 @@ export default function OrdersPage() {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!orderToDelete}
+        title={t("admin.orders.delete.title")}
+        description={orderToDelete ? t("admin.orders.delete.description_with_info", { 
+          reference: orderToDelete.reference, 
+          customerName: orderToDelete.customerName
+        }) : undefined}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.actions.cancel")}
+        variant="danger"
+        loading={isDeleting}
+        onConfirm={handleDeleteOrder}
+        onCancel={() => setOrderToDelete(null)}
+      />
     </main>
   );
 }

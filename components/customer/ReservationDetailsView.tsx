@@ -27,7 +27,7 @@ import {
 import { formatVND } from "@/lib/utils/currency";
 import { HubConnectionState } from "@microsoft/signalr";
 import { Drawer, message, Tag } from "antd";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -111,6 +111,8 @@ interface ReservationDepositStatus {
   isPaid: boolean;
   checkoutUrl: string | null;
   status?: string | null;
+  paymentStatus?: string | number | null;
+  paymentStatusName?: string | null;
   orderId?: string | null;
 }
 
@@ -128,6 +130,29 @@ const reservationServiceWithDeposit =
       id: string,
     ) => Promise<{ checkoutUrl: string | null }>;
   };
+
+/**
+ * Normalize the payment status from the deposit API response.
+ * Backend may return:
+ *   - status: string  ("CANCELLED", "PAID", "PENDING", ...)
+ *   - paymentStatus: number (0=PENDING, 1=PAID, 2=CANCELLED) or string
+ * Returns a normalized uppercase string or null.
+ */
+const normalizeDepositStatus = (ds: ReservationDepositStatus): string | null => {
+  // Prefer explicit string status field
+  if (ds.status && typeof ds.status === 'string' && ds.status.trim()) {
+    return ds.status.trim().toUpperCase();
+  }
+  // Fall back to paymentStatus
+  const ps = ds.paymentStatus;
+  if (ps === null || ps === undefined) return null;
+  if (typeof ps === 'string' && ps.trim()) return ps.trim().toUpperCase();
+  // Numeric mapping: 0=PENDING, 1=PAID, 2=CANCELLED
+  if (ps === 0 || ps === '0') return 'PENDING';
+  if (ps === 1 || ps === '1') return 'PAID';
+  if (ps === 2 || ps === '2') return 'CANCELLED';
+  return String(ps).toUpperCase();
+};
 
 const normalizeReservationDetail = (
   detail: ReservationDetail,
@@ -176,7 +201,7 @@ const mergeDepositStatusIntoDetail = (
     paymentDeadline:
       depositStatus.paymentDeadline ?? detail.paymentDeadline ?? null,
     checkoutUrl: depositStatus.checkoutUrl ?? detail.checkoutUrl ?? null,
-    depositStatus: depositStatus.status ?? detail.depositStatus ?? null,
+    depositStatus: normalizeDepositStatus(depositStatus) ?? detail.depositStatus ?? null,
     orderId: depositStatus.orderId ?? detail.orderId ?? null,
   };
 };
@@ -1454,6 +1479,7 @@ export default function ReservationDetailsView({
   mode: viewMode,
 }: ReservationDetailsViewProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { tenant } = useTenant();
   const { user } = useAuth();
@@ -1556,8 +1582,7 @@ export default function ReservationDetailsView({
         isCustomer &&
         !normalizedDetail.depositPaid &&
         normalizedDetail.depositAmount > 0 &&
-        !isDepositDeadlinePassed &&
-        (!normalizedDetail.checkoutUrl || normalizedDetail.depositStatus === 'CANCELLED');
+        !isDepositDeadlinePassed;
 
       if (
         shouldRegenerateDepositLink &&
@@ -1658,6 +1683,50 @@ export default function ReservationDetailsView({
   useEffect(() => {
     load();
   }, [load]);
+
+  // ── Handle PayOS return after deposit payment ──────────────────────────────
+  // PayOS redirects back with ?payos=success or ?payos=cancel.
+  // On cancel: show a warning, clean the URL, then always create a fresh
+  // payment link (same pattern as order pages — never reuse a cancelled link).
+  useEffect(() => {
+    const payosStatus = searchParams.get("payos");
+    if (!payosStatus) return;
+
+    // Clean the param from URL immediately
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("payos");
+    const nextUrl = nextParams.toString()
+      ? `${pathname}?${nextParams.toString()}`
+      : pathname;
+    router.replace(nextUrl);
+
+    if (payosStatus === "success") {
+      messageApi.success(t("reservation_detail.deposit.payos_success"));
+      // Reload to get updated deposit status
+      load();
+    } else if (payosStatus === "cancel") {
+      messageApi.warning(t("reservation_detail.deposit.payos_cancelled"));
+      // Always create a fresh payment link — never reuse the cancelled one
+      if (!reservationServiceWithDeposit.createDepositPaymentLink) return;
+      setDepositLoading(true);
+      reservationServiceWithDeposit
+        .createDepositPaymentLink(reservationSlug)
+        .then((res) => {
+          if (res.checkoutUrl) {
+            setDetail((prev) =>
+              prev
+                ? { ...prev, checkoutUrl: res.checkoutUrl, depositStatus: "PENDING" }
+                : prev,
+            );
+          }
+        })
+        .catch((err) => {
+          console.warn("Failed to regenerate deposit link after cancel:", err);
+        })
+        .finally(() => setDepositLoading(false));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const resolvedCustomerId =
     detail?.contact?.customerId || user?.customerId || undefined;
@@ -1766,29 +1835,20 @@ export default function ReservationDetailsView({
     try {
       setDepositLoading(true);
 
-      if (detail.checkoutUrl && detail.depositStatus !== 'CANCELLED') {
-        window.location.assign(detail.checkoutUrl);
-        return;
-      }
-
       if (!reservationServiceWithDeposit.createDepositPaymentLink) {
         messageApi.error(t("reservation_detail.deposit.create_failed"));
         return;
       }
 
+      // Always create a fresh payment link — never reuse a cached checkoutUrl.
+      // A cached link may be expired or cancelled on PayOS side.
       const res = await reservationServiceWithDeposit.createDepositPaymentLink(
         detail.id,
       );
       if (res.checkoutUrl) {
         setDetail((prev) =>
-          prev
-            ? {
-              ...prev,
-              checkoutUrl: res.checkoutUrl,
-            }
-            : prev,
+          prev ? { ...prev, checkoutUrl: res.checkoutUrl, depositStatus: "PENDING" } : prev,
         );
-
         window.location.assign(res.checkoutUrl);
       } else {
         messageApi.error(t("reservation_detail.deposit.link_error"));

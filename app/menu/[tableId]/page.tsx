@@ -1595,10 +1595,12 @@ export default function MenuPage() {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                gap: 6,
                                 minWidth: 118,
                               }}>
                               <Button
                                 type="text"
+                                shape="circle"
                                 icon={<MinusOutlined />}
                                 onClick={() =>
                                   updateQuantity(
@@ -1609,8 +1611,8 @@ export default function MenuPage() {
                                 style={{
                                   color: "var(--text)",
                                   border: "1px solid var(--border)",
-                                  width: 32,
-                                  height: 32,
+                                  width: 36,
+                                  height: 36,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -1620,15 +1622,16 @@ export default function MenuPage() {
                               <Text
                                 style={{
                                   color: "var(--text)",
-                                  fontSize: 14,
-                                  fontWeight: 600,
-                                  width: 20,
+                                  fontSize: 16,
+                                  fontWeight: 700,
+                                  width: 24,
                                   textAlign: "center",
                                 }}>
                                 {cartItem.quantity}
                               </Text>
                               <Button
-                                type="text"
+                                type="primary"
+                                shape="circle"
                                 icon={<PlusOutlined />}
                                 onClick={() =>
                                   updateQuantity(
@@ -1637,13 +1640,14 @@ export default function MenuPage() {
                                   )
                                 }
                                 style={{
-                                  color: "var(--text)",
-                                  border: "1px solid var(--border)",
-                                  width: 32,
-                                  height: 32,
+                                  background: "var(--primary)",
+                                  border: "none",
+                                  width: 36,
+                                  height: 36,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
+                                  boxShadow: "0 4px 12px var(--primary-glow)",
                                 }}
                                 size="small"
                               />

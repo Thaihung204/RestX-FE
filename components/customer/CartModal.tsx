@@ -5,11 +5,11 @@ import notificationService from "@/lib/services/notificationService";
 import paymentService from "@/lib/services/paymentService";
 import { formatVND } from "@/lib/utils/currency";
 import {
-  CloseOutlined,
-  EditOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  ShoppingCartOutlined,
+    CloseOutlined,
+    EditOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { message as antMessage, Button, Card, Input, Modal, Tabs, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
@@ -404,20 +404,6 @@ export default function CartModal() {
                                 }}>
                                   {(item.children ?? []).map((child) => (
                                     <div key={child.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                      {child.image && (
-                                        <img
-                                          src={child.image}
-                                          alt={child.name}
-                                          style={{
-                                            width: 28,
-                                            height: 28,
-                                            objectFit: "cover",
-                                            borderRadius: 6,
-                                            border: "1px solid var(--stroke-subtle)",
-                                            flexShrink: 0,
-                                          }}
-                                        />
-                                      )}
                                       <Text style={{ fontSize: 12, color: "var(--text-muted)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {child.name}
                                       </Text>
@@ -498,7 +484,7 @@ export default function CartModal() {
                         overflowY: "auto",
                         paddingRight: 2,
                         paddingBottom: 6,
-                        maxHeight: "calc(80vh - 320px)",
+                        maxHeight: "calc(80vh - 390px)",
                       }}>
                       {orderedItems.length === 0 ? (
                         <div
@@ -671,20 +657,6 @@ export default function CartModal() {
                                                 alignItems: "center",
                                                 gap: 8,
                                               }}>
-                                              {child.image && (
-                                                <img
-                                                  src={child.image}
-                                                  alt={child.name}
-                                                  style={{
-                                                    width: 32,
-                                                    height: 32,
-                                                    objectFit: "cover",
-                                                    borderRadius: 6,
-                                                    border: "1px solid var(--stroke-subtle)",
-                                                    flexShrink: 0,
-                                                  }}
-                                                />
-                                              )}
                                               <Text
                                                 style={{
                                                   fontSize: 13,
@@ -806,14 +778,14 @@ export default function CartModal() {
                           <Button
                             block
                             type="default"
-                            size="middle"
+                            size="large"
                             onClick={handleRequestPayment}
                             loading={isRequestingPayment}
                             disabled={isRequestingPayment || isSelfPaying}
                             style={{
-                              height: 40,
-                              fontWeight: 600,
-                              fontSize: 13,
+                              height: 52,
+                              fontWeight: 700,
+                              fontSize: 15,
                               border: "1px solid var(--border)",
                               color: "var(--text-muted)",
                               background: "transparent",

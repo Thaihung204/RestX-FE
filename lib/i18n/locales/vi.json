@@ -15,6 +15,7 @@
         "all_status": "Tất cả trạng thái",
         "from_date": "Từ ngày",
         "to_date": "Đến ngày",
+        "date_placeholder": "Chọn ngày",
         "clear": "Xóa lọc"
       },
       "status": {
@@ -160,7 +161,13 @@
     "orders": {
       "messages": {
         "statuses_load_failed": "Không thể tải trạng thái đơn hàng",
-        "load_failed": "Không thể tải danh sách đơn hàng"
+        "load_failed": "Không thể tải danh sách đơn hàng",
+        "delete_success": "Xóa đơn hàng thành công",
+        "delete_failed": "Xóa đơn hàng thất bại"
+      },
+      "delete": {
+        "title": "Xác nhận xóa đơn hàng",
+        "description_with_info": "Bạn có chắc chắn muốn xóa đơn hàng {{reference}} của khách hàng {{customerName}} không? Hành động này không thể hoàn tác."
       }
     },
     "order_detail": {
@@ -253,6 +260,36 @@
         "title": "Hủy món",
         "confirm": "Xác nhận hủy",
         "message": "Bạn có chắc muốn hủy món \"{{name}}\"? Hành động này không thể hoàn tác."
+      }
+    },
+    "feedbacks": {
+      "title": "Quản lý Đánh giá",
+      "subtitle": "{{total}} đánh giá",
+      "anonymous": "Ẩn danh",
+      "unknown": "Không rõ",
+      "no_comment": "Không có nhận xét",
+      "published": "Hiển thị",
+      "unpublished": "Ẩn",
+      "load_failed": "Không thể tải danh sách feedback",
+      "empty": "Chưa có feedback nào",
+      "headers": {
+        "customer": "Khách hàng",
+        "rating": "Đánh giá",
+        "comment": "Nhận xét",
+        "images": "Hình ảnh",
+        "status": "Trạng thái",
+        "date": "Ngày tạo"
+      },
+      "stats": {
+        "total": "Tổng cộng",
+        "published": "Đang hiển thị",
+        "hidden": "Đang ẩn"
+      },
+      "filter": {
+        "search": "Tìm theo tên khách hàng...",
+        "all_ratings": "Tất cả sao",
+        "rating_option": "{{count}} sao",
+        "all_status": "Tất cả trạng thái"
       }
     }
   },
@@ -350,7 +387,11 @@
       "search": {
         "label": "Tìm kiếm",
         "placeholder": "Tìm order...",
-        "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
+        "placeholder_full": "Tìm theo mã order hoặc tên bàn...",
+        "customer": "Tên khách hàng",
+        "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
+        "reference_placeholder": "Nhập mã đơn hàng..."
       },
       "filter": {
         "all_tables": "Tất cả bàn"
@@ -477,6 +518,24 @@
           "discount_label": "Giảm giá",
           "deposit_label": "Tiền đặt cọc"
         }
+      },
+      "subtitle": "Quản lý và theo dõi tất cả đơn hàng",
+      "table": {
+        "order": "Đơn hàng",
+        "customer": "Khách hàng",
+        "items": "Món",
+        "total": "Tổng tiền",
+        "status": "Trạng thái",
+        "payment": "Thanh toán",
+        "time": "Thời gian",
+        "actions": "Thao tác"
+      },
+      "labels": {
+        "items_count": "{{count}} món"
+      },
+      "payment_status": {
+        "paid": "Đã thanh toán",
+        "unpaid": "Chưa thanh toán"
       }
     },
     "kitchen": {
@@ -1151,37 +1210,6 @@
       "export_success": "Xuất báo cáo thành công",
       "export_failed": "Xuất báo cáo thất bại"
     },
-    "orders": {
-      "title": "Đơn hàng",
-      "subtitle": "Quản lý và theo dõi tất cả đơn hàng",
-      "search": {
-        "customer": "Tên khách hàng",
-        "customer_placeholder": "Nhập tên khách hàng...",
-        "reference": "Mã đơn hàng",
-        "reference_placeholder": "Nhập mã đơn hàng..."
-      },
-      "table": {
-        "order": "Đơn hàng",
-        "customer": "Khách hàng",
-        "items": "Món",
-        "total": "Tổng tiền",
-        "status": "Trạng thái",
-        "payment": "Thanh toán",
-        "time": "Thời gian",
-        "actions": "Thao tác"
-      },
-      "labels": {
-        "items_count": "{{count}} món"
-      },
-      "payment_status": {
-        "paid": "Đã thanh toán",
-        "unpaid": "Chưa thanh toán"
-      },
-      "actions": {
-        "view_details": "Xem chi tiết"
-      },
-      "empty": "Không có đơn hàng nào"
-    },
     "best_selling_dishes": {
       "title": "Món Bán Chạy",
       "subtitle": "Top {{count}}",
@@ -1257,11 +1285,12 @@
     "sidebar": {
       "management": "Qu\u1EA3n l\u00FD",
       "sections": {
-        "overview": "T\u1ED5ng quan",
-        "operations": "V\u1EADn h\u00E0nh",
-        "catalog": "Danh m\u1EE5c",
-        "team": "Nh\u00E2n s\u1EF1",
-        "system": "H\u1EC7 th\u1ED1ng"
+        "overview": "Tổng quan",
+        "operations": "Vận hành",
+        "management": "Quản lý",
+        "catalog": "Danh mục",
+        "team": "Nhân sự",
+        "system": "Hệ thống"
       },
       "items": {
         "dashboard": "Tổng quan",
@@ -1273,6 +1302,7 @@
         "ingredients": "Nguyên liệu",
         "orders": "Đơn hàng",
         "payments": "Thanh toán",
+        "feedbacks": "Đánh giá",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
@@ -1899,7 +1929,9 @@
       "subtitle": "Theo dõi và quản lý đơn hàng",
       "search": {
         "label": "Tìm kiếm",
+        "customer": "Tên khách hàng",
         "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
         "reference_placeholder": "Nhập mã đơn hàng..."
       },
       "new_order": "Đơn mới",
@@ -2822,6 +2854,7 @@
       "no": "Không",
       "exporting_report": "Đang xuất báo cáo...",
       "delete": "Xóa",
+      "cancel": "Hủy",
       "edit": "Chỉnh sửa",
       "exporting": "Đang xuất..."
     },
@@ -2874,7 +2907,32 @@
       "title": "Tổng quan đơn hàng",
       "subtitle": "Số lượng đơn hàng theo ngày",
       "total_orders": "Tổng đơn hàng",
-      "orders_suffix": "đơn"
+      "orders_suffix": "đơn",
+      "search": {
+        "label": "Tìm kiếm",
+        "customer": "Tên khách hàng",
+        "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
+        "reference_placeholder": "Nhập mã đơn hàng..."
+      },
+      "table": {
+        "order": "Đơn hàng",
+        "customer": "Khách hàng",
+        "table": "Bàn",
+        "items": "Món",
+        "total": "Tổng",
+        "status": "Trạng thái",
+        "payment": "Thanh toán",
+        "time": "Thời gian",
+        "actions": "Hành động"
+      },
+      "labels": {
+        "items_count": "{{count}} món"
+      },
+      "payment_status": {
+        "paid": "Đã thanh toán",
+        "unpaid": "Chưa thanh toán"
+      }
     },
     "staff_overview": {
       "title": "Tổng quan nhân viên",
@@ -4262,6 +4320,17 @@
         "secondary_phone_placeholder": "Nhập số điện thoại phụ",
         "opening_hours": "Giờ mở cửa",
         "opening_hours_placeholder": "VD: Thứ 2 - Thứ 6 9:00-18:00",
+        "opening_hours_col_day": "Ngày",
+        "opening_hours_col_open": "Mở cửa",
+        "opening_hours_col_hours": "Giờ hoạt động",
+        "opening_hours_closed": "Đóng cửa",
+        "opening_hours_sunday": "Chủ Nhật",
+        "opening_hours_monday": "Thứ Hai",
+        "opening_hours_tuesday": "Thứ Ba",
+        "opening_hours_wednesday": "Thứ Tư",
+        "opening_hours_thursday": "Thứ Năm",
+        "opening_hours_friday": "Thứ Sáu",
+        "opening_hours_saturday": "Thứ Bảy",
         "about_us": "Giới thiệu",
         "about_us_placeholder": "Nhập mô tả hoặc giới thiệu nhà hàng",
         "overview": "Tổng quan",
@@ -4775,7 +4844,9 @@
       "badge_paid": "Đã xác nhận đặt cọc",
       "badge_unpaid": "Chưa thanh toán",
       "status_paid": "Đã xác nhận đặt cọc",
-      "status_unpaid": "Chưa thanh toán"
+      "status_unpaid": "Chưa thanh toán",
+      "payos_success": "Thanh toán đặt cọc thành công!",
+      "payos_cancelled": "Bạn đã huỷ thanh toán. Đang tạo link mới..."
     },
     "order": {
       "title": "Thông tin order",

@@ -1,24 +1,25 @@
 "use client";
 
+import { DayPicker } from "@/components/ui/DayPicker";
 import { DropDown } from "@/components/ui/DropDown";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, {
-  PaginatedReservations,
-  ReservationListItem,
-  ReservationStatus,
+    PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
+import { tenantService } from "@/lib/services/tenantService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
-import { message } from "antd";
-import { useCallback, useEffect, useState } from "react";
-import { DayPicker } from "@/components/ui/DayPicker";
-import dayjs from "dayjs";
-import { useTranslation } from "react-i18next";
-import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
-import { ReservationRowActions } from "../../../components/admin/reservations/ReservationRowActions";
-import { tenantService } from "@/lib/services/tenantService";
-import orderSignalRService from "@/lib/services/orderSignalRService";
 import { HubConnectionState } from "@microsoft/signalr";
+import { message } from "antd";
+import dayjs from "dayjs";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ReservationRowActions } from "../../../components/admin/reservations/ReservationRowActions";
+import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -41,6 +42,29 @@ const STATUS_FLOW_ORDER: Record<string, number> = {
   NO_SHOW: 99,
   NOSHOW: 99,
 };
+
+const mapReservationDetailToListItem = (
+  detail: ReservationDetail,
+): ReservationListItem => ({
+  id: detail.id,
+  confirmationCode: detail.confirmationCode,
+  tables: detail.tables,
+  reservationDateTime: detail.reservationDateTime,
+  checkedInAt: detail.checkedInAt,
+  numberOfGuests: detail.numberOfGuests,
+  contactName: detail.contact.name,
+  contactPhone: detail.contact.phone,
+  customer: detail.contact.customerId
+    ? { customerId: detail.contact.customerId }
+    : undefined,
+  isGuest: detail.contact.isGuest,
+  status: detail.status,
+  depositAmount: detail.depositAmount,
+  depositPaid: detail.depositPaid,
+  paymentDeadline: detail.paymentDeadline,
+  checkoutUrl: detail.checkoutUrl,
+  createdAt: detail.createdAt,
+});
 
 export default function ReservationsPage() {
   const { t } = useTranslation();
@@ -66,8 +90,6 @@ export default function ReservationsPage() {
         search: search || undefined,
         statusId: statusId !== "" ? statusId : undefined,
         date: date || undefined,
-        sortBy: "reservationDateTime",
-        sortDescending: false,
       });
       setData(result);
     } catch (e) {
@@ -115,6 +137,52 @@ export default function ReservationsPage() {
     byStatus: Record<number, number>;
   }>({ total: 0, byStatus: {} });
 
+  const matchesListFilters = useCallback(
+    (reservation: ReservationDetail) => {
+      if (search) {
+        const normalizedSearch = search.trim().toLowerCase();
+        const matchesSearch =
+          reservation.confirmationCode.toLowerCase().includes(normalizedSearch) ||
+          reservation.contact.name.toLowerCase().includes(normalizedSearch) ||
+          reservation.contact.phone.toLowerCase().includes(normalizedSearch);
+        if (!matchesSearch) return false;
+      }
+
+      if (statusId !== "" && reservation.status.id !== statusId) {
+        return false;
+      }
+
+      if (date) {
+        const reservationDate = dayjs(reservation.reservationDateTime).format("YYYY-MM-DD");
+        if (reservationDate !== date) return false;
+      }
+
+      return true;
+    },
+    [date, search, statusId],
+  );
+
+  const matchesStatsFilters = useCallback(
+    (reservation: ReservationDetail) => {
+      if (search) {
+        const normalizedSearch = search.trim().toLowerCase();
+        const matchesSearch =
+          reservation.confirmationCode.toLowerCase().includes(normalizedSearch) ||
+          reservation.contact.name.toLowerCase().includes(normalizedSearch) ||
+          reservation.contact.phone.toLowerCase().includes(normalizedSearch);
+        if (!matchesSearch) return false;
+      }
+
+      if (date) {
+        const reservationDate = dayjs(reservation.reservationDateTime).format("YYYY-MM-DD");
+        if (reservationDate !== date) return false;
+      }
+
+      return true;
+    },
+    [date, search],
+  );
+
   const fetchStats = useCallback(async () => {
     if (statuses.length === 0) return;
     try {
@@ -140,6 +208,20 @@ export default function ReservationsPage() {
       console.error(e);
     }
   }, [date, search, statuses]);
+
+  // Keep refs in sync so SignalR handlers always use latest callbacks/values
+  // without needing to re-register (which would cause reconnect on filter change)
+  const fetchDataRef = useRef(fetchData);
+  const fetchStatsRef = useRef(fetchStats);
+  const matchesListFiltersRef = useRef(matchesListFilters);
+  const matchesStatsFiltersRef = useRef(matchesStatsFilters);
+  const pageRef = useRef(page);
+
+  useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
+  useEffect(() => { fetchStatsRef.current = fetchStats; }, [fetchStats]);
+  useEffect(() => { matchesListFiltersRef.current = matchesListFilters; }, [matchesListFilters]);
+  useEffect(() => { matchesStatsFiltersRef.current = matchesStatsFilters; }, [matchesStatsFilters]);
+  useEffect(() => { pageRef.current = page; }, [page]);
 
   useEffect(() => {
     fetchStats();
@@ -169,48 +251,142 @@ export default function ReservationsPage() {
   }, [t]);
 
   useEffect(() => {
-    tenantService
-      .getTenantConfig(window.location.hostname)
-      .then((tenant) => {
-        if (tenant?.id) setTenantId(tenant.id);
-      })
-      .catch(() => { });
+    let isMounted = true;
+
+    const fetchTenant = async () => {
+      try {
+        const host = window.location.host;
+        const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+
+        if (hostWithoutPort === "admin.restx.food") return;
+
+        if (
+          hostWithoutPort === "admin.localhost" ||
+          hostWithoutPort === "localhost" ||
+          hostWithoutPort === "127.0.0.1"
+        ) {
+          const data = await tenantService.getTenantConfig("demo.restx.food");
+          if (isMounted) setTenantId(data?.id || "");
+          return;
+        }
+
+        if (hostWithoutPort.endsWith(".localhost")) {
+          const subdomain = hostWithoutPort.replace(".localhost", "");
+          const tenantHost =
+            subdomain && subdomain !== "admin"
+              ? `${subdomain}.restx.food`
+              : "demo.restx.food";
+          const data = await tenantService.getTenantConfig(tenantHost);
+          if (isMounted) setTenantId(data?.id || "");
+          return;
+        }
+
+        if (!hostWithoutPort.startsWith("admin.")) {
+          const data = await tenantService.getTenantConfig(hostWithoutPort);
+          if (isMounted) setTenantId(data?.id || "");
+        }
+      } catch (error) {
+        console.error("Failed to resolve tenant for admin reservations:", error);
+      }
+    };
+
+    fetchTenant();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!tenantId) return;
 
     let isMounted = true;
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    const debounceTimerRef = { current: undefined as ReturnType<typeof setTimeout> | undefined };
+
+    const handleReservationCreated = async (payload: any) => {
+      if (!isMounted) return;
+      const changedTenantId = payload?.tenantId || payload?.reservation?.tenantId;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+
+      const reservationId =
+        payload?.reservationId || payload?.id || payload?.reservation?.id;
+      if (!reservationId) return;
+
+      try {
+        const reservation = await reservationService.getReservationById(String(reservationId));
+        if (!isMounted) return;
+
+        // Update stats counter without full reload
+        if (matchesStatsFiltersRef.current(reservation)) {
+          setGlobalStats((prev) => ({
+            total: prev.total + 1,
+            byStatus: {
+              ...prev.byStatus,
+              [reservation.status.id]: (prev.byStatus[reservation.status.id] || 0) + 1,
+            },
+          }));
+        }
+
+        // Insert into list without reload if it matches current filters
+        if (!matchesListFiltersRef.current(reservation)) return;
+
+        const nextItem = mapReservationDetailToListItem(reservation);
+        setData((prev) => {
+          if (!prev) return prev;
+          if (prev.items.some((item) => item.id === nextItem.id)) return prev;
+
+          const nextItems = [...prev.items, nextItem].sort(
+            (left, right) =>
+              new Date(right.createdAt).getTime() -
+              new Date(left.createdAt).getTime(),
+          );
+
+          const nextTotalCount = prev.totalCount + 1;
+          const nextTotalPages = Math.max(1, Math.ceil(nextTotalCount / prev.pageSize));
+          const currentPage = pageRef.current;
+
+          return {
+            ...prev,
+            items: currentPage === 1 ? nextItems.slice(0, prev.pageSize) : prev.items,
+            totalCount: nextTotalCount,
+            totalPages: nextTotalPages,
+            hasNextPage: currentPage < nextTotalPages,
+            hasPreviousPage: currentPage > 1,
+          };
+        });
+      } catch (error) {
+        console.error("Failed to sync created reservation:", error);
+        // Fallback to full reload on error
+        fetchDataRef.current();
+        fetchStatsRef.current();
+      }
+    };
 
     const handleReservationChanged = (payload: any) => {
       if (!isMounted) return;
-      const changedTenantId =
-        payload?.tenantId || payload?.reservation?.tenantId;
+      const changedTenantId = payload?.tenantId || payload?.reservation?.tenantId;
       if (changedTenantId && changedTenantId !== tenantId) return;
 
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
         if (!isMounted) return;
-        fetchData();
-        fetchStats();
+        fetchDataRef.current();
+        fetchStatsRef.current();
       }, 300);
     };
-
-    const events = [
-      "reservations.created",
-      "reservations.updated",
-      "reservations.cancelled",
-      "reservations.status_updated",
-    ];
 
     const setupSignalR = async () => {
       try {
         await orderSignalRService.start();
+        if (!isMounted) return;
+
         const conn = orderSignalRService.getConnection();
         if (conn.state === HubConnectionState.Connected) {
-          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
-          events.forEach((event) =>
+          await orderSignalRService.joinTenantGroup(tenantId);
+          if (!isMounted) return;
+
+          orderSignalRService.on("reservations.created", handleReservationCreated);
+          ["reservations.updated", "tables.status_changed", "deposits.confirmed"].forEach((event) =>
             orderSignalRService.on(event, handleReservationChanged),
           );
         }
@@ -223,13 +399,14 @@ export default function ReservationsPage() {
 
     return () => {
       isMounted = false;
-      if (debounceTimer) clearTimeout(debounceTimer);
-      events.forEach((event) =>
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      orderSignalRService.off("reservations.created", handleReservationCreated);
+      ["reservations.updated", "tables.status_changed", "deposits.confirmed"].forEach((event) =>
         orderSignalRService.off(event, handleReservationChanged),
       );
-      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => { });
+      orderSignalRService.leaveTenantGroup(tenantId).catch(() => { });
     };
-  }, [tenantId, fetchData, fetchStats]);
+  }, [tenantId]);
 
   useEffect(() => {
     const timer = setInterval(
@@ -254,8 +431,6 @@ export default function ReservationsPage() {
         search: search || undefined,
         statusId: statusId !== "" ? statusId : undefined,
         date: date || undefined,
-        sortBy: "reservationDateTime",
-        sortDescending: false,
       });
 
       triggerBrowserDownload(file.blob, file.fileName);

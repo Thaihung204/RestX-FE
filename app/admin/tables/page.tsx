@@ -1,6 +1,12 @@
 "use client";
 
 
+import { usePageLoading } from "@/components/PageTransitionLoader";
+import orderSignalRService from "@/lib/services/orderSignalRService";
+import { floorService, FloorSummary, PanoramaImage, tableService, TableStatus } from "@/lib/services/tableService";
+import { tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { App, Spin } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAreaModal } from "./components/AddAreaModal";
@@ -8,14 +14,7 @@ import { AddTableModal } from "./components/AddTableModal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
-import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, floorService, FloorSummary, PanoramaImage } from "@/lib/services/tableService";
-import { usePageLoading } from "@/components/PageTransitionLoader";
-import { App, Spin } from "antd";
-import orderSignalRService from "@/lib/services/orderSignalRService";
-import { HubConnectionState } from "@microsoft/signalr";
-import { tenantService } from "@/lib/services/tenantService";
-import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { Floor, Layout, TableMap2D } from "./components/TableMap2D";
 
 interface Table {
   id: string;
@@ -148,9 +147,50 @@ export default function TablesPage() {
 
   useEffect(() => {
     fetchTables();
-    tenantService.getTenantConfig(window.location.hostname).then((tenant) => {
-      if (tenant?.id) setTenantId(tenant.id);
-    }).catch(() => {});
+    let isMounted = true;
+
+    const fetchTenant = async () => {
+      try {
+        const host = window.location.host;
+        const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+
+        if (hostWithoutPort === "admin.restx.food") return;
+
+        if (
+          hostWithoutPort === "admin.localhost" ||
+          hostWithoutPort === "localhost" ||
+          hostWithoutPort === "127.0.0.1"
+        ) {
+          const tenant = await tenantService.getTenantConfig("demo.restx.food");
+          if (isMounted) setTenantId(tenant?.id || "");
+          return;
+        }
+
+        if (hostWithoutPort.endsWith(".localhost")) {
+          const subdomain = hostWithoutPort.replace(".localhost", "");
+          const tenantHost =
+            subdomain && subdomain !== "admin"
+              ? `${subdomain}.restx.food`
+              : "demo.restx.food";
+          const tenant = await tenantService.getTenantConfig(tenantHost);
+          if (isMounted) setTenantId(tenant?.id || "");
+          return;
+        }
+
+        if (!hostWithoutPort.startsWith("admin.")) {
+          const tenant = await tenantService.getTenantConfig(hostWithoutPort);
+          if (isMounted) setTenantId(tenant?.id || "");
+        }
+      } catch (error) {
+        console.error("Failed to resolve tenant for admin tables:", error);
+      }
+    };
+
+    fetchTenant();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Layout State for Map Mode
@@ -175,27 +215,20 @@ export default function TablesPage() {
     };
 
     const events = [
-      "tables.created",
-      "tables.updated",
-      "tables.deleted",
-      "tables.status_updated",
+      "tables.status_changed",
+      "tables.layout_updated",
+      "tables.session_created",
+      "tables.session_closed",
       "reservations.created",
       "reservations.updated",
-      "reservations.cancelled",
-      "floors.created",
-      "floors.updated",
-      "floors.deleted",
-      "floors.layout_updated",
+      "deposits.confirmed",
     ];
 
     const setupSignalR = async () => {
       try {
+        events.forEach((event) => orderSignalRService.on(event, handleRealtimeRefresh));
         await orderSignalRService.start();
-        const conn = orderSignalRService.getConnection();
-        if (conn.state === HubConnectionState.Connected) {
-          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
-          events.forEach((event) => orderSignalRService.on(event, handleRealtimeRefresh));
-        }
+        await orderSignalRService.joinTenantGroup(tenantId);
       } catch (error) {
         console.error("SignalR: setup tables/floors/reservations failed", error);
       }
@@ -207,7 +240,7 @@ export default function TablesPage() {
       isMounted = false;
       if (debounceTimer) clearTimeout(debounceTimer);
       events.forEach((event) => orderSignalRService.off(event, handleRealtimeRefresh));
-      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+      orderSignalRService.leaveTenantGroup(tenantId).catch(() => {});
     };
   }, [tenantId]);
 
