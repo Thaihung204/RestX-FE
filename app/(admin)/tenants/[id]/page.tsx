@@ -1,11 +1,12 @@
 ﻿"use client";
 
+import BusinessHoursEditor from "@/components/ui/BusinessHoursEditor";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import StatusToggle from "@/components/ui/StatusToggle";
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
-import { TenantUpdateInput } from "@/lib/types/tenant";
+import { BusinessHour, TenantUpdateInput } from "@/lib/types/tenant";
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
@@ -100,6 +101,9 @@ const TenantEditPage: React.FC = () => {
   const [hasExistingPaymentSettings, setHasExistingPaymentSettings] =
     useState(false);
   const [activeTab, setActiveTab] = useState<DetailTab>("general");
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+  const [hoursLoading, setHoursLoading] = useState(false);
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
   const tenantId = params.id as string;
 
   const getRawFile = (fileList: UploadFile[]): File | null => {
@@ -156,7 +160,15 @@ const TenantEditPage: React.FC = () => {
         router.push("/tenants");
         return;
       }
-      const cleanHostname = data.hostname?.replace(/\.restx\.food$/i, "") || "";
+      const rawHostname = data.hostname || "";
+      // Only strip .restx.food suffix for standard subdomains (e.g. "demo.restx.food" → "demo").
+      // Custom domains (e.g. "lebon.io.vn") are stored and displayed as-is.
+      const isRestxSubdomain = /^[^.]+\.restx\.food$/i.test(rawHostname);
+      const cleanHostname = isRestxSubdomain
+        ? rawHostname.replace(/\.restx\.food$/i, "")
+        : rawHostname;
+      const isCustomDomain = !isRestxSubdomain && rawHostname !== "";
+      setIsCustomDomain(isCustomDomain);
       const formValues: Partial<TenantUpdateInput> = {
         name: data.name,
         hostname: cleanHostname,
@@ -204,6 +216,16 @@ const TenantEditPage: React.FC = () => {
         typeof data.status === "boolean" ? data.status : data.status === true,
       );
       await fetchPaymentSettings();
+      // Fetch structured business hours from dedicated API
+      setHoursLoading(true);
+      try {
+        const hours = await tenantService.getBusinessHours(tenantId);
+        if (hours && hours.length > 0) setBusinessHours(hours);
+      } catch {
+        // silently ignore — editor will use defaults
+      } finally {
+        setHoursLoading(false);
+      }
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       message.error(t("tenants.toasts.detail_error_message"));
@@ -247,8 +269,11 @@ const TenantEditPage: React.FC = () => {
     if (loading) return;
     setLoading(true);
     try {
+      // Custom domains are sent as-is; restx subdomains get .restx.food appended.
       const hostname = values.hostname
-        ? `${values.hostname}.restx.food`
+        ? isCustomDomain
+          ? values.hostname
+          : `${values.hostname}.restx.food`
         : undefined;
       const colorValues = COLOR_FIELD_NAMES.reduce((acc, field) => {
         const rawValue = form.getFieldValue(field);
@@ -302,6 +327,15 @@ const TenantEditPage: React.FC = () => {
         favicon: getRawFile(faviconFileList),
         background: getRawFile(backgroundFileList),
       });
+
+      // Save structured business hours
+      if (businessHours.length > 0) {
+        try {
+          await tenantService.updateBusinessHours(tenantId, businessHours);
+        } catch (e) {
+          console.error("Failed to save business hours:", e);
+        }
+      }
 
       if (hasAllPaymentCredential) {
         try {
@@ -462,7 +496,9 @@ const TenantEditPage: React.FC = () => {
               <div className="td-url-bar">
                 <span className="td-url-segment">https://</span>
                 <Input disabled value={formData.hostname || ""} />
-                <span className="td-url-segment">.restx.food</span>
+                {!isCustomDomain && (
+                  <span className="td-url-segment">.restx.food</span>
+                )}
               </div>
               <Alert
                 message={t("tenants.edit.custom_domain_notice.title")}
@@ -535,9 +571,16 @@ const TenantEditPage: React.FC = () => {
           <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.company_number")}</span>} name="businessCompanyNumber">
             <Input size="large" />
           </Form.Item>
-          <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.opening_hours")}</span>} name="businessOpeningHours">
-            <Input size="large" />
-          </Form.Item>
+
+          <div className="td-col-span-2">
+            <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.opening_hours")}</span>}>
+              <BusinessHoursEditor
+                value={businessHours}
+                onChange={setBusinessHours}
+                disabled={hoursLoading}
+              />
+            </Form.Item>
+          </div>
 
           <div className="td-col-span-2">
             <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.about_us")}</span>} name="aboutUs">
