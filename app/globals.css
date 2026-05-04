@@ -7713,7 +7713,9 @@ html.reservation-overlay-open header {
 .stats-detail-panel-head {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   background: color-mix(in srgb, var(--primary), var(--card), 94%);
 }
 

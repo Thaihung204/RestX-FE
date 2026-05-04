@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Spin } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -50,6 +50,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
   } = useSnapshotData();
 
   const [openTenantId, setOpenTenantId] = useState<string | null>(null);
+  const detailPanelRef = useRef<HTMLDivElement | null>(null);
 
   // Define useMemos BEFORE useEffects that depend on them
   const tenantSnapshotMap = useMemo(() => {
@@ -86,6 +87,16 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
     if (!openTenantId) return;
     fetchTenantDetail(openTenantId, snapshotState.periodType, snapshotState.customRange ?? undefined);
   }, [openTenantId, snapshotState.periodType, snapshotState.customRange, fetchTenantDetail]);
+
+  useEffect(() => {
+    if (!openTenantId) return;
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [openTenantId]);
 
   const summary = useMemo(() => {
     const total = tenants.length;
@@ -284,7 +295,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
             <tr>
               <th>#</th>
               <th>{t("tenants.statistics.table.restaurant")}</th>
-              <th>{t("tenants.statistics.table.status")}</th>
+              <th>URL</th>
               <th style={{ textAlign: "right" }}>{t("strategyReport.table.revenue")}</th>
               <th style={{ textAlign: "center" }}>{t("tenants.statistics.table.orders")}</th>
               <th style={{ textAlign: "center" }}>{t("strategyReport.table.completionRate")}</th>
@@ -315,13 +326,13 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
                       </div>
                       <div>
                         <div className="stats-t-name">{tenant.name}</div>
-                        <div className="stats-t-domain">{tenant.domain || tenant.slug || "—"}</div>
+                        <div className="stats-t-domain">{tenant.businessName || "—"}</div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span className="stats-status-dot" style={{ "--dot-color": tenant.status === "active" ? "var(--success)" : "var(--danger)" } as React.CSSProperties}>
-                      {tenant.status === "active" ? t("tenants.status.active") : t("tenants.status.inactive")}
+                    <span style={{ fontSize: "0.875rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                      {tenant.hostName || "—"}
                     </span>
                   </td>
                   <td style={{ textAlign: "right" }}>
@@ -369,33 +380,34 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
       </div>
 
       {/* Detail Panel */}
-      <div className={`stats-detail-panel ${openTenantId ? "open" : ""}`} id="detail-panel">
+      <div ref={detailPanelRef} className={`stats-detail-panel ${openTenantId ? "open" : ""}`} id="detail-panel">
         <div className="stats-detail-panel-head">
-          <div className="stats-detail-panel-title">
-            <div
-              className="stats-t-avatar"
-              style={{ width: "28px", height: "28px", fontSize: "12px", borderRadius: "6px", background: "var(--primary)" }}
-            >
-              {selectedTenant?.name?.[0] || "?"}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="stats-detail-panel-title">
+              <div
+                className="stats-t-avatar"
+                style={{ width: "28px", height: "28px", fontSize: "12px", borderRadius: "6px", background: "var(--primary)" }}
+              >
+                {selectedTenant?.name?.[0] || "?"}
+              </div>
+              <span>{selectedTenant?.name || "—"}</span>
             </div>
-            <span>{selectedTenant?.name || "—"}</span>
+            <button className="stats-btn-close-panel" onClick={closeDetail}>
+              ✕
+            </button>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <div className="stats-period-tabs" style={{ justifyContent: "flex-end", width: "fit-content" }}>
             {(["daily", "monthly", "yearly"] as PeriodType[]).map((p) => (
               <button
                 key={p}
                 onClick={() => handlePeriodChange(p)}
                 className={`stats-period-tab ${snapshotState.periodType === p ? "active" : ""}`}
                 disabled={snapshotState.loading}
-                style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem" }}
               >
                 {t(`strategyReport.period.${p}`)}
               </button>
             ))}
           </div>
-          <button className="stats-btn-close-panel" onClick={closeDetail}>
-            ✕
-          </button>
         </div>
         <div className="stats-detail-kpi-row">
           <div className="stats-detail-kpi">
