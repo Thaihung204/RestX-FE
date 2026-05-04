@@ -54,7 +54,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
 
   // Define useMemos BEFORE useEffects that depend on them
   const tenantSnapshotMap = useMemo(() => {
-    const map = new Map<string, (typeof snapshotState.allTenantsData.tenants)[number]>();
+    const map = new Map<string, NonNullable<typeof snapshotState.allTenantsData>["tenants"][number]>();
     snapshotState.allTenantsData?.tenants.forEach((item) => {
       map.set(item.tenantId, item);
     });

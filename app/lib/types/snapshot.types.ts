@@ -41,7 +41,7 @@ export interface TenantDetailSnapshot extends TenantSummary {
   breakdown: BreakdownEntry[];
 }
 
-export type PeriodType = 'daily' | 'monthly' | 'yearly' | 'custom';
+export type PeriodType = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 
 export interface CustomDateRange {
   start: string;

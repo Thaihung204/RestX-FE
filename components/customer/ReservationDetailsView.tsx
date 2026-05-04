@@ -1665,10 +1665,24 @@ export default function ReservationDetailsView({
             const preOrder = await orderService.getOrderById(normalizedDetail.orderId);
             setRelatedOrders(preOrder ? [preOrder] : []);
           } catch {
-            setRelatedOrders([]);
+            try {
+              const orders = await orderService.getAllOrders();
+              setRelatedOrders(
+                orders.filter((o) => o.reservationId === normalizedDetail.id),
+              );
+            } catch {
+              setRelatedOrders([]);
+            }
           }
         } else {
-          setRelatedOrders([]);
+          try {
+            const orders = await orderService.getAllOrders();
+            setRelatedOrders(
+              orders.filter((o) => o.reservationId === normalizedDetail.id),
+            );
+          } catch {
+            setRelatedOrders([]);
+          }
         }
       }
     } catch (err) {
