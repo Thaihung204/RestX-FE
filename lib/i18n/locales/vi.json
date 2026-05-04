@@ -2540,6 +2540,8 @@
         "inputs": {
           "open": "Mở cửa",
           "close": "Đóng cửa",
+          "session_buffer_minutes": "Thời gian giữ bàn sau check-in (phút)",
+          "session_buffer_hint": "Áp dụng cho thời điểm tự đóng bàn và tính thời lượng phiên bàn.",
           "apply_all": "Áp dụng tất cả",
           "apply_all_title": "Áp dụng thời gian của Thứ 2 cho tất cả các ngày khác"
         },
@@ -4625,6 +4627,7 @@
         "booking_ref": "Mã đặt bàn",
         "confirmation_sent": "Email xác nhận gửi tới:",
         "phone_label": "Số điện thoại",
+        "deposit_required": "Đặt bàn này cần thanh toán cọc để hoàn tất. Bấm nút thanh toán cọc bên dưới để xác nhận giữ chỗ.",
         "pay_deposit_now": "Thanh toán cọc ngay",
         "deposit_deadline": "Hạn thanh toán cọc",
         "view_details": "Xem chi tiết",

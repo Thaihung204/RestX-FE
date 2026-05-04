@@ -29,10 +29,12 @@ export function ReservationRowActions({
   item,
   onActionComplete,
   onViewDetail,
+  restrictToToday = true,
 }: {
   item: ReservationListItem;
   onActionComplete: () => void;
   onViewDetail?: () => void;
+  restrictToToday?: boolean;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -53,7 +55,7 @@ export function ReservationRowActions({
     isConfirmed &&
     !isCheckedIn &&
     (!hasDepositRequirement || isDepositPaid) &&
-    isSameLocalDate(item.reservationDateTime, now.getFullYear(), now.getMonth(), now.getDate());
+    (!restrictToToday || isSameLocalDate(item.reservationDateTime, now.getFullYear(), now.getMonth(), now.getDate()));
 
   const pendingBadgeCount = Number(hasUnpaidDeposit) + Number(canCheckIn);
 
@@ -173,7 +175,7 @@ export function ReservationRowActions({
   return (
     <>
       <ReservationActionMenu
-        onViewDetail={onViewDetail || (() => router.push(`/admin/reservation/${item.id}`))}
+        onViewDetail={onViewDetail || (() => router.push(`/admin/your-reservation/${item.id}`))}
         viewDetailLabel={t("admin.reservations.actions.view_detail")}
         moreLabel={moreLabel}
         menuItems={menuItems}

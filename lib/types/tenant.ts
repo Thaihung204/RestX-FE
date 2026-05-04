@@ -78,6 +78,7 @@ export interface TenantUpdateInput {
   businessEmailAddress?: string;
   businessCompanyNumber?: string;
   businessOpeningHours?: string;
+  configuration?: TenantConfiguration;
   tenantSettings?: unknown[] | string;
 
   // System Fields (read-only)
@@ -128,6 +129,7 @@ export interface TenantApiResponse {
   businessCompanyNumber?: string;
   businessOpeningHours?: string;
   tenantSettings?: unknown[];
+  configuration?: TenantConfiguration;
   createdDate?: string;
   modifiedDate?: string;
   createdBy?: string;
@@ -187,4 +189,8 @@ export interface BusinessHour {
   openTime: string;
   closeTime: string;
   isClosed: boolean;
+}
+
+export interface TenantConfiguration {
+  sessionBufferMinutes: number;
 }

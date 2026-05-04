@@ -18,6 +18,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { message } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+import { MIN_ADVANCE_BOOKING_MINUTES } from '@/lib/utils/reservationTimeRules';
 
 // ─────────────────────────────────────────────────────
 // Constants & Helpers
@@ -27,7 +28,7 @@ const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESERVATION_ADVANCE_MONTHS = 1;
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const APPLY_CLIENT_CURRENT_TIME_GUARD = false;
+const APPLY_CLIENT_CURRENT_TIME_GUARD = true;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -329,14 +330,13 @@ const getSelectableTimeBounds = (date: string, slots: string[]) => {
     const lastSlotMinutes = toMinutes(normalizedSlots[normalizedSlots.length - 1]);
     if (firstSlotMinutes === null || lastSlotMinutes === null) return null;
 
-    const intervalMinutes = Math.max(1, getSlotIntervalMinutes(normalizedSlots));
-    const latestAllowedMinutes = Math.min((24 * 60) - 1, lastSlotMinutes + intervalMinutes);
+    const latestAllowedMinutes = lastSlotMinutes;
 
     let minMinutes = firstSlotMinutes;
     if (APPLY_CLIENT_CURRENT_TIME_GUARD && date === getTodayLocalDate()) {
         const now = dayjs();
         const nowMinutes = (now.hour() * 60) + now.minute();
-        minMinutes = Math.max(minMinutes, nowMinutes + 1);
+        minMinutes = Math.max(minMinutes, nowMinutes + MIN_ADVANCE_BOOKING_MINUTES);
     }
 
     if (minMinutes > latestAllowedMinutes) return null;
@@ -671,6 +671,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const autoFilledRef = useRef(false);
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+    const [currentTimeTick, setCurrentTimeTick] = useState(() => Date.now());
     const [booking, setBooking] = useState<BookingData>(() => ({
         date: getTodayLocalDate(),
         time: '19:00',
@@ -705,6 +706,14 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(() => setBusinessHours([]));
     }, [tenant?.id]);
 
+    useEffect(() => {
+        const timerId = window.setInterval(() => {
+            setCurrentTimeTick(Date.now());
+        }, 60_000);
+
+        return () => window.clearInterval(timerId);
+    }, []);
+
     const { timeSlots, closedWeekdays, closedNotice } = useMemo(
         () => getTenantReservationConfig(tenant, booking.date, businessHours),
         [tenant, booking.date, businessHours],
@@ -731,16 +740,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         const lastSlotMinutes = toMinutes(normalizedSlots[normalizedSlots.length - 1]);
         if (lastSlotMinutes === null) return true;
 
-        const intervalMinutes = Math.max(1, getSlotIntervalMinutes(normalizedSlots));
-        const latestBookableMinutes = Math.min((24 * 60) - 1, lastSlotMinutes + intervalMinutes);
-
-        const ADVANCE_BUFFER_MINUTES = 30;
         const now = dayjs();
         const nowMinutes = (now.hour() * 60) + now.minute();
-        const earliestBookableMinutes = nowMinutes + ADVANCE_BUFFER_MINUTES;
+        const earliestBookableMinutes = nowMinutes + MIN_ADVANCE_BOOKING_MINUTES;
 
-        return earliestBookableMinutes > latestBookableMinutes;
-    }, [booking.date, isBookingDayClosed, timeSlots]);
+        return earliestBookableMinutes > lastSlotMinutes;
+    }, [booking.date, isBookingDayClosed, currentTimeTick, timeSlots]);
 
     const closedBookingDateValue = useMemo(() => {
         const value = new Date(`${booking.date}T00:00:00`);
@@ -807,7 +812,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
 
         return null;
-    }, [booking.date, isBookingDayClosed, isBookingPastHoursToday, isDateClosedByTenantSettings, timeSlots, businessHours]);
+    }, [booking.date, isBookingDayClosed, isBookingPastHoursToday, isDateClosedByTenantSettings, timeSlots, businessHours, currentTimeTick]);
 
     const handlePickNextAvailableDate = useCallback(() => {
         if (!nextAvailableBooking) return;
@@ -844,9 +849,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [reservationId, setReservationId] = useState<string>('');
     const [depositCheckoutUrl, setDepositCheckoutUrl] = useState<string>('');
     const [depositPaymentDeadline, setDepositPaymentDeadline] = useState<string>('');
+    const isDepositPendingStep = step === ReservationStep.DEPOSIT_PENDING;
     const isTableSelectionStep = step === ReservationStep.TABLE_SELECTION;
-    const isOverlayReservationStep = isTableSelectionStep || step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
-    const isCompactReservationStep = step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
+    const isOverlayReservationStep = isTableSelectionStep || step === ReservationStep.CONFIRMATION || isDepositPendingStep || step === ReservationStep.SUCCESS;
+    const isCompactReservationStep = step === ReservationStep.CONFIRMATION || isDepositPendingStep || step === ReservationStep.SUCCESS;
 
     const totalSelectedCapacity = useMemo(
         () => selectedTables.reduce((sum, table) => sum + (table.capacity || 0), 0),
@@ -855,7 +861,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     const selectableTimeBounds = useMemo(
         () => getSelectableTimeBounds(booking.date, effectiveTimeSlots),
-        [booking.date, effectiveTimeSlots],
+        [booking.date, effectiveTimeSlots, currentTimeTick],
     );
 
     // Mobile time picker options
@@ -919,7 +925,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         if (nextDate !== booking.date || nextTime !== booking.time) {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
-    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots, businessHours]);
+    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots, businessHours, currentTimeTick]);
 
     // Auto-fill user info when logged in (only once, first time CONFIRMATION is opened)
     useEffect(() => {
@@ -1374,6 +1380,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
         const nextTime = clampTimeToBounds(booking.time, nextBounds);
 
+        if (!isTimeWithinBounds(nextTime, nextBounds)) {
+            message.error(t('landing.booking.form.time_not_available', {
+                defaultValue: 'Selected time is no longer available. Please choose another time.',
+            }));
+            return;
+        }
+
         if (nextDate !== booking.date || nextTime !== booking.time) {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
@@ -1393,6 +1406,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     };
 
     const handleConfirmTableSelection = async () => {
+        const freshBounds = businessHours.length > 0
+            ? getBusinessHourBoundsForDate(booking.date, businessHours)
+            : (isDateClosedByTenantSettings(booking.date) ? null : getSelectableTimeBounds(booking.date, timeSlots));
+
+        if (!freshBounds || !isTimeWithinBounds(booking.time, freshBounds)) {
+            message.error(t('landing.booking.form.time_not_available', {
+                defaultValue: 'Selected time is no longer available. Please choose another time.',
+            }));
+            return;
+        }
+
         try {
             const reservationDateTime = `${booking.date}T${booking.time}:00`;
             await reservationService.checkTables({
@@ -1413,6 +1437,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     const handleCompleteReservation = async () => {
         if (selectedTables.length === 0) return;
+
+        const freshBounds = businessHours.length > 0
+            ? getBusinessHourBoundsForDate(booking.date, businessHours)
+            : (isDateClosedByTenantSettings(booking.date) ? null : getSelectableTimeBounds(booking.date, timeSlots));
+
+        if (!freshBounds || !isTimeWithinBounds(booking.time, freshBounds)) {
+            setSubmitError(t('landing.booking.form.time_not_available', {
+                defaultValue: 'Selected time is no longer available. Please choose another time.',
+            }));
+            return;
+        }
 
         if (isBookingDayClosed) {
             setSubmitError(closedBookingMessage);
@@ -1465,7 +1500,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             setReservationId(rawId);
             setDepositCheckoutUrl(checkoutUrl);
             setDepositPaymentDeadline(paymentDeadline);
-            setStep(ReservationStep.SUCCESS);
+
+            setStep(checkoutUrl ? ReservationStep.DEPOSIT_PENDING : ReservationStep.SUCCESS);
         } catch (error: unknown) {
             console.error("Failed to create reservation:", error);
             // Hiển thị message lỗi từ BE nếu có
@@ -2161,8 +2197,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     document.body
                 )}
 
-                {step === ReservationStep.SUCCESS && typeof document !== 'undefined' && createPortal(
-                    <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.success.title')}>
+                {(step === ReservationStep.SUCCESS || isDepositPendingStep) && typeof document !== 'undefined' && createPortal(
+                    <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={isDepositPendingStep ? t('landing.booking.deposit.title', { defaultValue: 'Cần thanh toán cọc' }) : t('landing.booking.success.title')}>
                         <div
                             className="reservation-flow-overlay-backdrop absolute inset-0 transition-opacity"
                             onClick={() => {
@@ -2186,35 +2222,52 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 </button>
 
                                 {/* Green top accent */}
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
+                                <div className={`absolute top-0 left-0 w-full h-1.5 ${isDepositPendingStep ? 'bg-[var(--warning)]' : 'bg-[var(--success)]'}`} />
 
-                                {/* Success icon */}
-                                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">
-                                    <span className="material-symbols-outlined text-[var(--success)] text-3xl sm:text-4xl">verified</span>
+                                {/* Status icon */}
+                                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 ${isDepositPendingStep ? 'bg-[var(--warning-soft)]' : 'bg-[var(--success-soft)]'}`}>
+                                    <span className={`material-symbols-outlined text-3xl sm:text-4xl ${isDepositPendingStep ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+                                        {isDepositPendingStep ? 'payments' : 'verified'}
+                                    </span>
                                 </div>
 
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text)] mb-2 text-balance">{t('landing.booking.success.title')}</h2>
+                                <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text)] mb-2 text-balance">
+                                    {isDepositPendingStep
+                                        ? t('landing.booking.deposit.title', { defaultValue: 'Cần thanh toán cọc' })
+                                        : t('landing.booking.success.title')}
+                                </h2>
                                 <p className="text-[var(--text-muted)] text-sm mb-4 sm:mb-6 leading-relaxed px-1 sm:px-2 text-pretty">
-                                    {t('landing.booking.success.thank_you')}{' '}
+                                    {isDepositPendingStep
+                                        ? t('landing.booking.deposit.description', { defaultValue: 'Đơn đặt bàn của bạn đã được tạo. Vui lòng thanh toán cọc để hoàn tất và giữ chỗ.' })
+                                        : t('landing.booking.success.thank_you')}{' '}
                                     <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
-                                    {t('landing.booking.success.table_label')}{' '}
+                                    {isDepositPendingStep
+                                        ? t('landing.booking.deposit.table_label', { defaultValue: 'Bàn' })
+                                        : t('landing.booking.success.table_label')}{' '}
                                     <span className="text-[var(--primary)] font-bold">
                                         {selectedTables.length > 0 ? selectedTables.map(t => `#${t.label}`).join(', ') : ''}
                                     </span>
-                                    {selectedTables.length > 0 ? ` (${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')})` : ''} {t('landing.booking.success.reserved_for')}{' '}
+                                    {selectedTables.length > 0 ? ` (${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')})` : ''} {isDepositPendingStep ? t('landing.booking.deposit.reserved_for', { defaultValue: 'đã được giữ chỗ cho' }) : t('landing.booking.success.reserved_for')}{' '}
                                     <span className="text-[var(--text)] font-semibold">
                                         {booking.guests} {t('landing.booking.success.guests')}
                                     </span>{' '}
-                                    {t('landing.booking.success.on')}{' '}
+                                    {isDepositPendingStep ? t('landing.booking.deposit.on', { defaultValue: 'vào ngày' }) : t('landing.booking.success.on')}{' '}
                                     <span className="text-[var(--text)] font-semibold">
                                         {new Date(booking.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </span>{' '}
-                                    {t('landing.booking.success.at')}{' '}
+                                    {isDepositPendingStep ? t('landing.booking.deposit.at', { defaultValue: 'lúc' }) : t('landing.booking.success.at')}{' '}
                                     <span className="text-[var(--text)] font-semibold">{booking.time}</span>.
                                 </p>
 
                                 {/* Info block */}
                                 <div className="bg-[var(--surface)] rounded-2xl p-3.5 sm:p-4 mb-5 sm:mb-6 text-left border border-[var(--border)] space-y-3">
+                                    {depositCheckoutUrl && (
+                                        <div className="rounded-xl p-3 border border-[var(--warning-border)] bg-[var(--warning-soft)] text-[var(--warning)] text-sm font-medium leading-relaxed">
+                                            {t('landing.booking.deposit.required_notice', {
+                                                defaultValue: 'Đặt bàn này cần thanh toán cọc để hoàn tất. Bấm nút thanh toán cọc bên dưới để xác nhận giữ chỗ.',
+                                            })}
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
                                         <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">

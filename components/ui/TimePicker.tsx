@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { MIN_ADVANCE_BOOKING_MINUTES } from '@/lib/utils/reservationTimeRules';
 
 interface TimePickerProps {
   value: string;        // "HH:mm"
@@ -12,8 +13,6 @@ interface TimePickerProps {
   placeholder?: string;
   disabled?: boolean;
 }
-
-const MIN_ADVANCE_MINUTES = 30;
 
 const toMins = (t: string) => {
   const [h, m] = t.split(':').map(Number);
@@ -53,7 +52,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
 
   // When isToday, earliest selectable = now + 30 min
   const getEarliestMins = () =>
-    isToday ? Math.max(openMins, nowMinutes() + MIN_ADVANCE_MINUTES) : openMins;
+    isToday ? Math.max(openMins, nowMinutes() + MIN_ADVANCE_BOOKING_MINUTES) : openMins;
 
   // Is a specific hour:minute combo selectable?
   const isSlotDisabled = (h: number, m: number) => {

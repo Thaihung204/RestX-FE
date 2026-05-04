@@ -1,6 +1,7 @@
 import {
   ITenant,
   ITenantRequest,
+  TenantConfiguration,
   TenantApiResponse,
   TenantCreateInput,
   TenantRequestInput,
@@ -65,6 +66,7 @@ export interface TenantConfig {
   createdBy: string;
   modifiedBy: string;
   tenantSettings: any[];
+  configuration?: TenantConfiguration;
 }
 
 // Helper function to convert API response to frontend ITenant format
@@ -318,6 +320,18 @@ const toFormData = (
     }
   });
 
+  const rawConfiguration = data.configuration ?? data.Configuration;
+  const sessionBufferMinutes =
+    rawConfiguration?.sessionBufferMinutes ??
+    rawConfiguration?.SessionBufferMinutes;
+  if (sessionBufferMinutes !== null && sessionBufferMinutes !== undefined) {
+    formData.append(
+      "Configuration.SessionBufferMinutes",
+      normalizeFieldValue("sessionBufferMinutes", sessionBufferMinutes),
+    );
+    appendedKeys.push("Configuration.SessionBufferMinutes");
+  }
+
   // Append file uploads (already PascalCase)
   if (files) {
     if (files.logo) {
@@ -398,6 +412,7 @@ export const tenantService = {
           BusinessEmailAddress: "businessEmailAddress",
           BusinessCompanyNumber: "businessCompanyNumber",
           BusinessOpeningHours: "businessOpeningHours",
+          Configuration: "configuration",
           CreatedDate: "createdDate",
           ModifiedDate: "modifiedDate",
           CreatedBy: "createdBy",

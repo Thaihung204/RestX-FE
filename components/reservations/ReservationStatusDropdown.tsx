@@ -39,7 +39,7 @@ export function ReservationStatusDropdown({
   mapStatus,
   disabled = false,
   loading = false,
-  minWidth = 170,
+  minWidth = 150,
   className,
 }: ReservationStatusDropdownProps) {
   const { t } = useTranslation();
@@ -95,7 +95,7 @@ export function ReservationStatusDropdown({
       })}
       optionRender={(opt: any) => (
         <div
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-1 text-center"
           style={{ opacity: opt.data.isPast ? 0.4 : 1 }}
         >
           <span

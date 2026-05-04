@@ -127,7 +127,7 @@ export default function ReservationList({ data, loading, setPage, onStatusUpdate
 
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <div className="flex justify-center">
-                        <ReservationRowActions item={item} onActionComplete={onStatusUpdated} />
+                        <ReservationRowActions item={item} onActionComplete={onStatusUpdated} restrictToToday={false} />
                       </div>
                     </td>
                   </tr>

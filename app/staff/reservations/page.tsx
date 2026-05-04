@@ -1397,6 +1397,7 @@ export default function ReservationsPage() {
                             item={item}
                             onActionComplete={fetchData}
                             onViewDetail={() => setSelectedId(item.id)}
+                            restrictToToday
                           />
                         </div>
                       </td>
@@ -1656,6 +1657,7 @@ export default function ReservationsPage() {
                       item={item}
                       onActionComplete={fetchData}
                       onViewDetail={() => setSelectedId(item.id)}
+                      restrictToToday
                     />
                   </div>
                 ))
