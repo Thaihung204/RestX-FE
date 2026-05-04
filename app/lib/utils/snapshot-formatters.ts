@@ -96,3 +96,58 @@ export const getCancellationSeverity = (cancelledCount: number, totalCount: numb
   if (rate > 5) return 'warning';
   return 'normal';
 };
+
+/**
+ * Format month for yearly chart display
+ * "2026-01-31" → "Tháng 1" or "Jan"
+ */
+export const formatMonthLabel = (dateString: string, locale: string = 'vi-VN'): string => {
+  try {
+    const date = new Date(dateString + 'T00:00:00Z');
+    if (locale === 'vi-VN') {
+      return `Tháng ${date.getMonth() + 1}`;
+    }
+    return date.toLocaleDateString(locale, { month: 'short' });
+  } catch {
+    return dateString;
+  }
+};
+
+/**
+ * Group daily breakdown data by month (for yearly period views)
+ * Aggregates all daily entries within each month into a single entry per month
+ */
+export const groupBreakdownByMonth = (breakdown: any[]): any[] => {
+  const monthMap = new Map<string, any>();
+
+  breakdown.forEach((entry) => {
+    const date = new Date(entry.date + 'T00:00:00Z');
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
+
+    if (!monthMap.has(monthKey)) {
+      monthMap.set(monthKey, {
+        date: monthKey,
+        revenue: 0,
+        discountAmount: 0,
+        totalOrders: 0,
+        completedOrders: 0,
+        cancelledOrders: 0,
+        newCustomers: 0,
+        newReservations: 0,
+        _count: 0,
+      });
+    }
+
+    const monthEntry = monthMap.get(monthKey)!;
+    monthEntry.revenue += entry.revenue ?? 0;
+    monthEntry.discountAmount += entry.discountAmount ?? 0;
+    monthEntry.totalOrders += entry.totalOrders ?? 0;
+    monthEntry.completedOrders += entry.completedOrders ?? 0;
+    monthEntry.cancelledOrders += entry.cancelledOrders ?? 0;
+    monthEntry.newCustomers += entry.newCustomers ?? 0;
+    monthEntry.newReservations += entry.newReservations ?? 0;
+    monthEntry._count += 1;
+  });
+
+  return Array.from(monthMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+};

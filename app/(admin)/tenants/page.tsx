@@ -156,12 +156,17 @@ const TenantPage: React.FC = () => {
 
       const data = await tenantService.getAllTenantsForAdmin();
       setTenants(data);
+      hydratedFromCacheRef.current = true;
 
       if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          TENANTS_CACHE_KEY,
-          JSON.stringify({ data, cachedAt: Date.now() }),
-        );
+        try {
+          sessionStorage.setItem(
+            TENANTS_CACHE_KEY,
+            JSON.stringify({ data, cachedAt: Date.now() }),
+          );
+        } catch (storageError) {
+          console.warn("Failed to save tenants to sessionStorage:", storageError);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch tenants:", error);

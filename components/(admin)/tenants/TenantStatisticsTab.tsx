@@ -1,15 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Table, Spin, Modal } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import {
-  BarChartOutlined,
-  EyeOutlined,
-  RiseOutlined,
-  ShopOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { Spin } from "antd";
+import { EyeOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { ITenant } from "@/lib/types/tenant";
 import { useSnapshotData } from "@/app/lib/hooks/useSnapshotData";
@@ -17,6 +10,7 @@ import { KpiCards } from "@/app/components/admin/strategy-report/KpiCards";
 import { BreakdownCharts } from "@/app/components/admin/strategy-report/BreakdownCharts";
 import { PeriodType } from "@/app/lib/types/snapshot.types";
 import { formatVND, formatCompletionRate } from "@/app/lib/utils/snapshot-formatters";
+import { BreakdownEntry } from '@/app/lib/types/snapshot.types';
 
 type TenantStatisticsTabProps = {
   tenants: ITenant[];
@@ -52,18 +46,46 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
     state: snapshotState,
     fetchAllTenants,
     fetchTenantDetail,
-    resetToAllTenants,
     changePeriod,
   } = useSnapshotData();
 
-  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [openTenantId, setOpenTenantId] = useState<string | null>(null);
 
-  // Fetch snapshot data on mount
+  // Define useMemos BEFORE useEffects that depend on them
+  const tenantSnapshotMap = useMemo(() => {
+    const map = new Map<string, (typeof snapshotState.allTenantsData.tenants)[number]>();
+    snapshotState.allTenantsData?.tenants.forEach((item) => {
+      map.set(item.tenantId, item);
+    });
+    return map;
+  }, [snapshotState.allTenantsData]);
+
+  const selectedTenant = useMemo(() => {
+    if (!openTenantId) return null;
+    return tenants.find((tenant) => tenant.id === openTenantId) ?? null;
+  }, [openTenantId, tenants]);
+
+  const selectedSummary = useMemo(() => {
+    if (!openTenantId) return null;
+    return tenantSnapshotMap.get(openTenantId) ?? null;
+  }, [openTenantId, tenantSnapshotMap]);
+
+  const selectedDetail = useMemo(() => {
+    if (!openTenantId) return null;
+    if (!snapshotState.tenantDetailData) return null;
+    if (snapshotState.tenantDetailData.tenantId !== openTenantId) return null;
+    return snapshotState.tenantDetailData;
+  }, [openTenantId, snapshotState.tenantDetailData]);
+
   useEffect(() => {
     fetchAllTenants("monthly");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!openTenantId) return;
+    fetchTenantDetail(openTenantId, snapshotState.periodType, snapshotState.customRange ?? undefined);
+  }, [openTenantId, snapshotState.periodType, snapshotState.customRange, fetchTenantDetail]);
 
   const summary = useMemo(() => {
     const total = tenants.length;
@@ -73,228 +95,153 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
     return { total, active, maintenance, recent };
   }, [tenants]);
 
-  // Look up snapshot revenue for a tenant by id
-  const getSnapshotForTenant = (tenantId: string) => {
-    return snapshotState.allTenantsData?.tenants.find(
-      (s) => s.tenantId === tenantId
-    );
-  };
-
-  const selectedTenant = useMemo(
-    () => tenants.find((t) => t.id === selectedTenantId),
-    [tenants, selectedTenantId]
-  );
-
-  const handleViewRevenue = (tenantId: string) => {
-    setSelectedTenantId(tenantId);
-    setModalOpen(true);
-    fetchTenantDetail(tenantId, snapshotState.periodType);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedTenantId(null);
-    resetToAllTenants();
-  };
-
   const handlePeriodChange = (period: PeriodType) => {
+    console.log(`[TenantStats] Period changed to: ${period}`, { currentTenantId: openTenantId });
     changePeriod(period);
   };
 
-  const columns: ColumnsType<ITenant> = [
-    {
-      title: t("tenants.statistics.table.restaurant"),
-      key: "restaurant",
-      render: (_, record) => (
-        <div className="tenant-stat-restaurant">
-          <div className="tenant-stat-restaurant-avatar">
-            {record.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div className="tenant-stat-restaurant-name">{record.name}</div>
-            <div className="tenant-stat-restaurant-business">{record.businessName}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: t("tenants.statistics.table.plan"),
-      dataIndex: "plan",
-      key: "plan",
-      render: (plan: ITenant["plan"]) => (
-        <span className={`tenant-stat-plan tenant-stat-plan-${plan}`}>{t(`tenants.plan.${plan}`)}</span>
-      ),
-    },
-    {
-      title: t("tenants.statistics.table.status"),
-      dataIndex: "status",
-      key: "status",
-      render: (status: ITenant["status"]) => (
-        <span className={`tenant-status-label tenant-status-label-${status}`}>{t(`tenants.status.${status}`)}</span>
-      ),
-    },
-    {
-      title: t("strategyReport.table.revenue"),
-      key: "revenue",
-      sorter: (a, b) => {
-        const snapA = getSnapshotForTenant(a.id);
-        const snapB = getSnapshotForTenant(b.id);
-        return (snapA?.revenue ?? 0) - (snapB?.revenue ?? 0);
-      },
-      render: (_, record) => {
-        const snap = getSnapshotForTenant(record.id);
-        if (!snap) return <span className="ts-no-data">{"\u2014"}</span>;
-        return (
-          <span className="ts-revenue-value">
-            {formatVND(snap.revenue)}
-          </span>
-        );
-      },
-    },
-    {
-      title: t("strategyReport.table.completionRate"),
-      key: "completionRate",
-      render: (_, record) => {
-        const snap = getSnapshotForTenant(record.id);
-        if (!snap) return <span className="ts-no-data">{"\u2014"}</span>;
-        return (
-          <span className="ts-completion-value">
-            {formatCompletionRate(snap.completedOrders, snap.totalOrders)}
-          </span>
-        );
-      },
-    },
-    {
-      title: t("tenants.statistics.table.last_active"),
-      dataIndex: "lastActive",
-      key: "lastActive",
-      render: (lastActive: string) => {
-        const band = getActivityBand(lastActive);
-        return (
-          <div className={`tenant-stat-activity tenant-stat-activity-${band}`}>
-            <span>{formatLastActive(lastActive)}</span>
-            <small>{t(`tenants.statistics.activity.${band}`)}</small>
-          </div>
-        );
-      },
-    },
-    {
-      title: "",
-      key: "actions",
-      align: "right" as const,
-      width: 200,
-      render: (_, record) => (
-        <div className="ts-actions-cell">
-          <Button
-            type="text"
-            icon={<BarChartOutlined />}
-            className="ts-revenue-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewRevenue(record.id);
-            }}
-          >
-            {t("strategyReport.viewRevenue")}
-          </Button>
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            className="tenant-stat-view-btn"
-            onClick={() => onViewDetails(record)}
-          />
-        </div>
-      ),
-    },
-  ];
+  const selectTenant = (tenantId: string) => {
+    console.log(`[TenantStats] Selecting tenant: ${tenantId}`);
+    setOpenTenantId((prev) => (prev === tenantId ? null : tenantId));
+  };
+
+  const closeDetail = () => {
+    setOpenTenantId(null);
+  };
+
+  const sortedTenants = useMemo(() => {
+    return [...tenants].sort((a, b) => {
+      const revenueA = tenantSnapshotMap.get(a.id)?.revenue ?? 0;
+      const revenueB = tenantSnapshotMap.get(b.id)?.revenue ?? 0;
+      return revenueB - revenueA;
+    });
+  }, [tenants, tenantSnapshotMap]);
+
+  const detailRevenue = selectedDetail?.revenue ?? selectedSummary?.revenue ?? 0;
+  const detailTotalOrders = selectedDetail?.totalOrders ?? selectedSummary?.totalOrders ?? 0;
+  const detailCompletedOrders = selectedDetail?.completedOrders ?? selectedSummary?.completedOrders ?? 0;
+  const detailCancelledOrders = selectedDetail?.cancelledOrders ?? selectedSummary?.cancelledOrders ?? 0;
+  const detailNewReservations = selectedDetail?.newReservations ?? selectedSummary?.newReservations ?? 0;
+
+  const fallbackBreakdown = useMemo((): BreakdownEntry[] => {
+    // If backend didn't return a breakdown, create a simple even distribution across the period
+    if (selectedDetail && (!selectedDetail.breakdown || selectedDetail.breakdown.length === 0) && selectedSummary) {
+      const period = snapshotState.periodType;
+      const periodStart = selectedSummary.periodStart ? new Date(selectedSummary.periodStart) : new Date();
+      const days = period === 'weekly' ? 7 : Math.max(1, Math.ceil((Date.now() - periodStart.getTime()) / (1000 * 60 * 60 * 24)));
+
+      const revenue = Math.max(0, Math.floor(selectedSummary.revenue ?? 0));
+      const orders = Math.max(0, Math.floor(selectedSummary.totalOrders ?? 0));
+      const completed = Math.max(0, Math.floor(selectedSummary.completedOrders ?? 0));
+      const cancelled = Math.max(0, Math.floor(selectedSummary.cancelledOrders ?? 0));
+      const newCustomers = Math.max(0, Math.floor(selectedSummary.newCustomers ?? 0));
+      const newReservations = Math.max(0, Math.floor(selectedSummary.newReservations ?? 0));
+
+      const baseRev = Math.floor(revenue / days);
+      let remRev = revenue - baseRev * days;
+      const baseOrders = Math.floor(orders / days);
+      let remOrders = orders - baseOrders * days;
+      const completionRate = orders > 0 ? completed / orders : 0;
+      const cancelledRate = orders > 0 ? cancelled / orders : 0;
+      const baseCustomers = Math.floor(newCustomers / days);
+      let remCustomers = newCustomers - baseCustomers * days;
+      const baseReservations = Math.floor(newReservations / days);
+      let remReservations = newReservations - baseReservations * days;
+
+      const arr: BreakdownEntry[] = [];
+      for (let i = 0; i < days; i++) {
+        const d = new Date(periodStart);
+        d.setDate(d.getDate() + i);
+        const dayRev = baseRev + (remRev > 0 ? 1 : 0);
+        if (remRev > 0) remRev--;
+        const dayOrders = baseOrders + (remOrders > 0 ? 1 : 0);
+        if (remOrders > 0) remOrders--;
+        const dayCompleted = Math.round(dayOrders * completionRate);
+        const dayCancelled = Math.round(dayOrders * cancelledRate);
+        const dayCustomers = baseCustomers + (remCustomers > 0 ? 1 : 0);
+        if (remCustomers > 0) remCustomers--;
+        const dayReservations = baseReservations + (remReservations > 0 ? 1 : 0);
+        if (remReservations > 0) remReservations--;
+
+        arr.push({
+          date: d.toISOString(),
+          revenue: dayRev,
+          discountAmount: 0,
+          totalOrders: dayOrders,
+          completedOrders: dayCompleted,
+          cancelledOrders: dayCancelled,
+          newCustomers: dayCustomers,
+          newReservations: dayReservations,
+        });
+      }
+
+      return arr;
+    }
+
+    return selectedDetail?.breakdown ?? [];
+  }, [selectedDetail, selectedSummary, snapshotState.periodType]);
 
   return (
     <div className="dashboard-animate-in" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Hero Section */}
-      <div className="tenant-statistics-hero tenant-glass">
+      <div className="stats-hero">
         <div>
-          <p className="tenant-statistics-kicker">{t("tenants.statistics.kicker")}</p>
-          <h2 className="tenant-statistics-title">{t("tenants.statistics.title")}</h2>
-          <p className="tenant-statistics-subtitle">{t("tenants.statistics.subtitle")}</p>
+          <p className="stats-hero-label">{t("tenants.statistics.kicker")}</p>
+          <h2 className="stats-hero-title">{t("tenants.statistics.title")}</h2>
+          <p className="stats-hero-sub">{t("tenants.statistics.subtitle")}</p>
         </div>
-        <div className="tenant-statistics-meta">
-          <div>
-            <ShopOutlined />
-            <span>{t("tenants.statistics.total_restaurants", { count: summary.total })}</span>
+        <div className="stats-hero-stats">
+          <div className="stats-hero-stat">
+            <div className="stats-hero-stat-val">{summary.total}</div>
+            <div className="stats-hero-stat-label">{t("tenants.statistics.total_restaurants", { count: summary.total })}</div>
           </div>
-          <div>
-            <UserOutlined />
-            <span>{t("tenants.statistics.active_restaurants", { count: summary.active })}</span>
+          <div className="stats-hero-divider"></div>
+          <div className="stats-hero-stat">
+            <div className="stats-hero-stat-val" style={{ color: 'var(--success)' }}>{summary.active}</div>
+            <div className="stats-hero-stat-label">{t("tenants.statistics.active_restaurants", { count: summary.active })}</div>
           </div>
         </div>
       </div>
 
       {/* Status KPI Cards */}
-      <div className="tenant-stats-bar">
-        <div className="tenant-stat-card">
-          <div className="tenant-stat-glow" style={{ background: "rgba(35, 146, 255, 0.1)" }} />
-          <div className="tenant-stat-top">
-            <div>
-              <p className="tenant-stat-label">{t("tenants.statistics.cards.total")}</p>
-              <h3 className="tenant-stat-value">{summary.total}</h3>
-            </div>
-            <span className="tenant-stat-icon" style={{ color: "#5aa7ff" }}>
-              <ShopOutlined />
-            </span>
-          </div>
+      <div className="stats-kpi-grid">
+        <div className="stats-kpi-card" style={{ "--accent-color": "var(--primary)" } as React.CSSProperties}>
+          <div className="stats-kpi-glow"></div>
+          <div className="stats-kpi-label">{t("tenants.statistics.cards.total")}</div>
+          <div className="stats-kpi-value">{summary.total}</div>
         </div>
 
-        <div className="tenant-stat-card">
-          <div className="tenant-stat-glow" style={{ background: "rgba(34, 197, 94, 0.1)" }} />
-          <div className="tenant-stat-top">
-            <div>
-              <p className="tenant-stat-label">{t("tenants.statistics.cards.active")}</p>
-              <h3 className="tenant-stat-value">{summary.active}</h3>
-            </div>
-            <span className="tenant-stat-icon" style={{ color: "#22C55E" }}>
-              <RiseOutlined />
-            </span>
-          </div>
+        <div className="stats-kpi-card" style={{ "--accent-color": "var(--success)" } as React.CSSProperties}>
+          <div className="stats-kpi-glow" style={{ background: "radial-gradient(circle, var(--success) 0%, transparent 70%)" }}></div>
+          <div className="stats-kpi-label">{t("tenants.statistics.cards.active")}</div>
+          <div className="stats-kpi-value">{summary.active}</div>
         </div>
 
-        <div className="tenant-stat-card">
-          <div className="tenant-stat-glow" style={{ background: "rgba(249, 115, 22, 0.1)" }} />
-          <div className="tenant-stat-top">
-            <div>
-              <p className="tenant-stat-label">{t("tenants.statistics.cards.maintenance")}</p>
-              <h3 className="tenant-stat-value">{summary.maintenance}</h3>
-            </div>
-            <span className="tenant-stat-icon" style={{ color: "#F97316" }}>
-              <UserOutlined />
-            </span>
-          </div>
+        <div className="stats-kpi-card" style={{ "--accent-color": "#F97316" } as React.CSSProperties}>
+          <div className="stats-kpi-glow" style={{ background: "radial-gradient(circle, #F97316 0%, transparent 70%)" }}></div>
+          <div className="stats-kpi-label">{t("tenants.statistics.cards.maintenance")}</div>
+          <div className="stats-kpi-value">{summary.maintenance}</div>
         </div>
 
-        <div className="tenant-stat-card">
-          <div className="tenant-stat-glow" style={{ background: "rgba(168, 85, 247, 0.1)" }} />
-          <div className="tenant-stat-top">
-            <div>
-              <p className="tenant-stat-label">{t("tenants.statistics.cards.recent")}</p>
-              <h3 className="tenant-stat-value">{summary.recent}</h3>
-            </div>
-            <span className="tenant-stat-icon" style={{ color: "#A855F7" }}>
-              <RiseOutlined />
-            </span>
-          </div>
+        <div className="stats-kpi-card" style={{ "--accent-color": "#9B5CF6" } as React.CSSProperties}>
+          <div className="stats-kpi-glow" style={{ background: "radial-gradient(circle, #9B5CF6 0%, transparent 70%)" }}></div>
+          <div className="stats-kpi-label">{t("tenants.statistics.cards.recent")}</div>
+          <div className="stats-kpi-value">{summary.recent}</div>
         </div>
       </div>
 
       {/* Revenue Overview Section */}
       <div className="ts-revenue-section">
-        <div className="ts-revenue-header">
-          <h3 className="ts-revenue-section-title">
+        <div className="stats-section-row">
+          <h3 className="stats-section-label">
             {t("strategyReport.revenueOverview")}
           </h3>
-          <div className="ts-period-selector">
-            {(["weekly", "monthly"] as PeriodType[]).map((p) => (
+          <div className="stats-period-tabs">
+            {(["daily", "monthly", "yearly"] as PeriodType[]).map((p) => (
               <button
                 key={p}
                 onClick={() => handlePeriodChange(p)}
-                className={`ts-period-btn ${snapshotState.periodType === p ? "ts-period-btn-active" : ""}`}
+                className={`stats-period-tab ${snapshotState.periodType === p ? "active" : ""}`}
                 disabled={snapshotState.loading}
               >
                 {t(`strategyReport.period.${p}`)}
@@ -305,7 +252,7 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
 
         {/* Revenue KPI Cards */}
         {snapshotState.loading && !snapshotState.allTenantsData ? (
-          <div className="ts-loading-container">
+          <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
             <Spin size="large" />
           </div>
         ) : snapshotState.allTenantsData ? (
@@ -317,78 +264,200 @@ const TenantStatisticsTab: React.FC<TenantStatisticsTabProps> = ({ tenants, onVi
             newCustomers={snapshotState.allTenantsData.newCustomers}
           />
         ) : snapshotState.error ? (
-          <div className="ts-error-message">
+          <div style={{ color: "var(--danger)", padding: "1rem" }}>
             {snapshotState.error}
           </div>
         ) : null}
       </div>
 
       {/* Tenant Table */}
-      <div className="tenant-statistics-table-wrap tenant-table-wrap">
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={tenants}
-          size="small"
-          pagination={{
-            pageSize: 8,
-            showSizeChanger: true,
-            showTotal: (total) => (
-              <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                {t("tenants.statistics.table.total", { count: total })}
-              </span>
-            ),
-            className: "px-4 pb-3",
-            responsive: true,
-            showLessItems: true,
-          }}
-          scroll={{ x: "max-content" }}
-        />
+      <div className="stats-section-row">
+        <div className="stats-section-label">{t("tenants.statistics.table.restaurants_list")}</div>
+        <div style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>
+          {t("tenants.statistics.table.click_for_details")}
+        </div>
       </div>
 
-      {/* Revenue Breakdown Modal */}
-      <Modal
-        open={modalOpen}
-        onCancel={handleCloseModal}
-        footer={null}
-        width={960}
-        centered
-        destroyOnClose
-        className="ts-breakdown-modal"
-        title={
-          <div className="ts-modal-header">
-            <div className="ts-modal-avatar">
-              {selectedTenant?.name?.charAt(0).toUpperCase() ?? "?"}
+      <div className="stats-table-card">
+        <table className="stats-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{t("tenants.statistics.table.restaurant")}</th>
+              <th>{t("tenants.statistics.table.status")}</th>
+              <th style={{ textAlign: "right" }}>{t("strategyReport.table.revenue")}</th>
+              <th style={{ textAlign: "center" }}>{t("tenants.statistics.table.orders")}</th>
+              <th style={{ textAlign: "center" }}>{t("strategyReport.table.completionRate")}</th>
+              <th style={{ textAlign: "center" }}>{t("tenants.statistics.table.new_customers")}</th>
+              <th style={{ textAlign: "center" }}>{t("tenants.statistics.table.reservations")}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedTenants.map((tenant, i) => {
+              const rowSnapshot = tenantSnapshotMap.get(tenant.id);
+              return (
+                <tr
+                  key={tenant.id}
+                  id={`row-${tenant.id}`}
+                  onClick={() => selectTenant(tenant.id)}
+                  className={openTenantId === tenant.id ? "active-row" : ""}
+                >
+                  <td>
+                    <span style={{ fontSize: "0.875rem", fontFamily: "DM Mono, monospace", color: i < 3 ? "var(--primary)" : "var(--text-muted)" }}>
+                      #{i + 1}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="stats-t-info">
+                      <div className="stats-t-avatar" style={{ background: rowSnapshot ? "var(--primary)" : "#999" }}>
+                        {tenant.name[0]}
+                      </div>
+                      <div>
+                        <div className="stats-t-name">{tenant.name}</div>
+                        <div className="stats-t-domain">{tenant.domain || tenant.slug || "—"}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="stats-status-dot" style={{ "--dot-color": tenant.status === "active" ? "var(--success)" : "var(--danger)" } as React.CSSProperties}>
+                      {tenant.status === "active" ? t("tenants.status.active") : t("tenants.status.inactive")}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <span className="stats-t-revenue">
+                      {rowSnapshot ? formatVND(rowSnapshot.revenue) : "—"}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "center", color: "var(--text-muted)", fontFamily: "DM Mono, monospace", fontSize: "0.9375rem" }}>
+                    {rowSnapshot?.totalOrders ?? "—"}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    <span
+                      className="stats-t-rate"
+                      style={{
+                        color: rowSnapshot?.totalOrders ? "var(--success)" : "var(--text-muted)",
+                      }}
+                    >
+                      {rowSnapshot ? formatCompletionRate(rowSnapshot.completedOrders, rowSnapshot.totalOrders) : "—"}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "center", color: "var(--text-muted)", fontFamily: "DM Mono, monospace", fontSize: "0.9375rem" }}>
+                    {rowSnapshot?.newCustomers ?? "—"}
+                  </td>
+                  <td style={{ textAlign: "center", color: "var(--text-muted)", fontFamily: "DM Mono, monospace", fontSize: "0.9375rem" }}>
+                    {rowSnapshot?.newReservations ?? "—"}
+                  </td>
+                  <td>
+                    <button
+                      className={`stats-btn-detail ${openTenantId === tenant.id ? "on" : ""}`}
+                      id={`dbt-${tenant.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectTenant(tenant.id);
+                      }}
+                    >
+                      <EyeOutlined />
+                      {t("tenants.statistics.table.details")}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detail Panel */}
+      <div className={`stats-detail-panel ${openTenantId ? "open" : ""}`} id="detail-panel">
+        <div className="stats-detail-panel-head">
+          <div className="stats-detail-panel-title">
+            <div
+              className="stats-t-avatar"
+              style={{ width: "28px", height: "28px", fontSize: "12px", borderRadius: "6px", background: "var(--primary)" }}
+            >
+              {selectedTenant?.name?.[0] || "?"}
             </div>
-            <div>
-              <h3 className="ts-modal-title">
-                {selectedTenant?.name ?? selectedTenantId}
-              </h3>
-              <p className="ts-modal-subtitle">
-                {t("strategyReport.revenueBreakdown")}
-              </p>
+            <span>{selectedTenant?.name || "—"}</span>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {(["daily", "monthly", "yearly"] as PeriodType[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => handlePeriodChange(p)}
+                className={`stats-period-tab ${snapshotState.periodType === p ? "active" : ""}`}
+                disabled={snapshotState.loading}
+                style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem" }}
+              >
+                {t(`strategyReport.period.${p}`)}
+              </button>
+            ))}
+          </div>
+          <button className="stats-btn-close-panel" onClick={closeDetail}>
+            ✕
+          </button>
+        </div>
+        <div className="stats-detail-kpi-row">
+          <div className="stats-detail-kpi">
+            <div className="stats-detail-kpi-label">{t("strategyReport.kpi.totalRevenue")}</div>
+            <div className="stats-detail-kpi-value primary">
+              {formatVND(detailRevenue)}
             </div>
           </div>
-        }
-      >
-        <div className="ts-modal-body">
-          {snapshotState.loading && (
-            <div className="ts-loading-container">
+          <div className="stats-detail-kpi">
+            <div className="stats-detail-kpi-label">{t("tenants.statistics.table.orders")}</div>
+            <div className="stats-detail-kpi-value">
+              {detailTotalOrders}
+            </div>
+          </div>
+          <div className="stats-detail-kpi">
+            <div className="stats-detail-kpi-label">{t("strategyReport.kpi.completionRate")}</div>
+            <div className="stats-detail-kpi-value success">
+              {formatCompletionRate(detailCompletedOrders, detailTotalOrders)}
+            </div>
+          </div>
+          <div className="stats-detail-kpi">
+            <div className="stats-detail-kpi-label">{t("strategyReport.kpi.cancellationRate")}</div>
+            <div className="stats-detail-kpi-value danger">
+              {detailCancelledOrders} đơn
+            </div>
+          </div>
+          <div className="stats-detail-kpi">
+            <div className="stats-detail-kpi-label">{t("tenants.statistics.table.reservations")}</div>
+            <div className="stats-detail-kpi-value purple">
+              {detailNewReservations}
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: "1rem 1.25rem 1.25rem" }}>
+          {snapshotState.loading && !selectedDetail ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
               <Spin size="large" />
             </div>
-          )}
-
-          {!snapshotState.loading && snapshotState.tenantDetailData && (
-            <BreakdownCharts breakdown={snapshotState.tenantDetailData.breakdown} />
-          )}
-
-          {!snapshotState.loading && !snapshotState.tenantDetailData && snapshotState.error && (
-            <div className="ts-error-message">
-              {snapshotState.error}
+          ) : snapshotState.periodType === "daily" ? (
+            <div className="ts-daily-summary-info" style={{ 
+              padding: "1.5rem",
+              backgroundColor: "rgba(var(--primary-rgb, 59, 130, 246), 0.05)",
+              border: "1px solid rgba(var(--primary-rgb, 59, 130, 246), 0.2)",
+              borderRadius: "0.5rem",
+              textAlign: "center"
+            }}>
+              <div style={{ fontSize: "0.9375rem", fontWeight: "500", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                {t("strategyReport.dailySummaryTitle", "Tổng quan ngày hôm qua")}
+              </div>
+              <div style={{ fontSize: "0.8125rem", color: "var(--text-muted)", lineHeight: "1.5" }}>
+                {t("strategyReport.dailySummaryDesc", "Báo cáo hôm qua chỉ cung cấp tổng quan dữ liệu (ở trên). Hãy chọn 'Tháng' hoặc 'Năm' để xem biểu đồ chi tiết")}
+              </div>
+            </div>
+          ) : selectedDetail?.breakdown?.length ? (
+            <BreakdownCharts breakdown={selectedDetail.breakdown} periodType={snapshotState.periodType} />
+          ) : (
+            <div className="ts-no-data" style={{ padding: "1rem" }}>
+              {t("strategyReport.noTenantData")}
             </div>
           )}
         </div>
-      </Modal>
+      </div>
     </div>
   );
 };

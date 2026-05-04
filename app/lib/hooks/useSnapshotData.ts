@@ -9,7 +9,7 @@ import {
   PeriodType,
   CustomDateRange,
 } from '@/app/lib/types/snapshot.types';
-  import axiosInstance from '@/lib/services/axiosInstance';
+import adminAxiosInstance from '@/lib/services/adminAxiosInstance';
 
 export const useSnapshotData = () => {
   const { t } = useTranslation();
@@ -32,13 +32,21 @@ export const useSnapshotData = () => {
       try {
         setState((prev) => ({ ...prev, loading: true, error: null }));
 
-        let url = `/admin/snapshots?periodType=${periodType}`;
+        let url = `/snapshots?periodType=${periodType}`;
 
         if (periodType === 'custom' && customRange) {
           url += `&startDate=${customRange.start}&endDate=${customRange.end}`;
         }
 
-        const response = await axiosInstance.get<AllTenantsSnapshot>(url);
+        console.log(`[Snapshot Hook] Fetching all tenants: ${url}`);
+        const response = await adminAxiosInstance.get<AllTenantsSnapshot>(url);
+
+        console.log(`[Snapshot Hook] All tenants response:`, {
+          url,
+          periodType,
+          tenantsCount: response.data.tenants?.length ?? 0,
+          totalRevenue: response.data.totalRevenue,
+        });
 
         setState((prev) => ({
           ...prev,
@@ -49,6 +57,7 @@ export const useSnapshotData = () => {
         }));
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : t('common.errors.load_failed');
+        console.error(`[Snapshot Hook] Error fetching all tenants:`, { periodType, error: errorMessage });
         setState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -67,13 +76,24 @@ export const useSnapshotData = () => {
       try {
         setState((prev) => ({ ...prev, loading: true, error: null }));
 
-        let url = `/admin/snapshots?periodType=${periodType}&tenantId=${tenantId}`;
+        let url = `/snapshots?tenantId=${tenantId}&periodType=${periodType}`;
 
         if (periodType === 'custom' && customRange) {
           url += `&startDate=${customRange.start}&endDate=${customRange.end}`;
         }
 
-        const response = await axiosInstance.get<TenantDetailSnapshot>(url);
+        const response = await adminAxiosInstance.get<TenantDetailSnapshot>(url);
+        
+        console.log(`[Snapshot Hook] Detail response received:`, {
+          url,
+          tenantId,
+          periodType,
+          hasBreakdown: !!response.data.breakdown,
+          breakdownLength: response.data.breakdown?.length ?? 0,
+          revenue: response.data.revenue,
+          totalOrders: response.data.totalOrders,
+          fullResponse: response.data,
+        });
 
         setState((prev) => ({
           ...prev,
@@ -83,6 +103,7 @@ export const useSnapshotData = () => {
         }));
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : t('common.errors.load_failed');
+        console.error(`[Snapshot Hook] Error fetching detail:`, { tenantId, periodType, error: errorMessage });
         setState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -109,6 +130,7 @@ export const useSnapshotData = () => {
    */
   const changePeriod = useCallback(
     async (newPeriodType: PeriodType, customRange?: CustomDateRange) => {
+      console.log(`[Snapshot Hook] Changing period to: ${newPeriodType}`, { customRange, currentTenantId: state.selectedTenantId });
       setState((prev) => ({
         ...prev,
         periodType: newPeriodType,
@@ -117,9 +139,11 @@ export const useSnapshotData = () => {
 
       // If viewing a tenant detail, refetch with new period
       if (state.selectedTenantId) {
+        console.log(`[Snapshot Hook] Refetching detail for tenant ${state.selectedTenantId} with period ${newPeriodType}`);
         await fetchTenantDetail(state.selectedTenantId, newPeriodType, customRange);
       } else {
         // Otherwise refetch all tenants
+        console.log(`[Snapshot Hook] Refetching all tenants with period ${newPeriodType}`);
         await fetchAllTenants(newPeriodType, customRange);
       }
     },

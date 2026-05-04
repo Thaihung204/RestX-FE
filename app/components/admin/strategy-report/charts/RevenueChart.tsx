@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LineChart,
   Line,
+  ReferenceDot,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -12,34 +13,46 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { BreakdownEntry } from '@/app/lib/types/snapshot.types';
-import { formatVND, formatDate } from '@/app/lib/utils/snapshot-formatters';
+import { PeriodType } from '@/app/lib/types/snapshot.types';
+import { formatVND, formatDate, formatMonthLabel, formatShortNumber } from '@/app/lib/utils/snapshot-formatters';
 
 interface RevenueChartProps {
   data: BreakdownEntry[];
+  periodType?: PeriodType;
 }
 
-export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
+export const RevenueChart: React.FC<RevenueChartProps> = ({ data, periodType = 'monthly' }) => {
   const { t } = useTranslation();
 
+  const dateFormatter = periodType === 'yearly' ? formatMonthLabel : formatDate;
+
   const chartData = data.map((entry) => ({
-    date: formatDate(entry.date),
+    date: dateFormatter(entry.date),
+    isoDate: entry.date,
     revenue: entry.revenue,
     discountAmount: entry.discountAmount,
   }));
 
+  const peakPoint = chartData.reduce(
+    (max, item) => (item.revenue > max.revenue ? item : max),
+    chartData[0]
+  );
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const revenueValue = payload.find((row: any) => row.dataKey === 'revenue')?.value ?? 0;
+      const discountValue = payload.find((row: any) => row.dataKey === 'discountAmount')?.value ?? 0;
+      const discountRate = revenueValue > 0 ? ((discountValue / revenueValue) * 100).toFixed(1) : '0.0';
+
       return (
         <div className="ts-chart-tooltip">
           <p className="ts-chart-tooltip-date">{payload[0].payload.date}</p>
           <p className="ts-chart-tooltip-row" style={{ color: 'var(--primary)' }}>
-            {t('strategyReport.chart.revenue')}: {formatVND(payload[0].value)}
+            {t('strategyReport.chart.revenue')}: {formatVND(revenueValue)}
           </p>
-          {payload[1] && (
-            <p className="ts-chart-tooltip-row" style={{ color: '#f97316' }}>
-              {t('strategyReport.chart.discount')}: {formatVND(payload[1].value)}
-            </p>
-          )}
+          <p className="ts-chart-tooltip-row" style={{ color: '#f97316' }}>
+            {t('strategyReport.chart.discount')}: {formatVND(discountValue)} ({discountRate}%)
+          </p>
         </div>
       );
     }
@@ -59,9 +72,26 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
-          <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" tickFormatter={(v) => formatVND(v)} />
+          <YAxis
+            yAxisId="left"
+            width={58}
+            tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+            stroke="var(--border)"
+            domain={[0, (dataMax: number) => Math.max(1, Math.ceil(dataMax * 1.2))]}
+            tickFormatter={(v) => `${formatShortNumber(v)}đ`}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            width={46}
+            tick={{ fontSize: 11, fill: '#f97316' }}
+            stroke="var(--border)"
+            domain={[0, (dataMax: number) => Math.max(1, Math.ceil(dataMax * 1.35))]}
+            tickFormatter={(v) => formatShortNumber(v)}
+          />
           <Tooltip content={<CustomTooltip />} />
           <Line
+            yAxisId="left"
             type="monotone"
             dataKey="revenue"
             stroke="url(#revGrad)"
@@ -71,6 +101,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
             name={t('strategyReport.chart.revenue')}
           />
           <Line
+            yAxisId="right"
             type="monotone"
             dataKey="discountAmount"
             stroke="#f97316"
@@ -80,6 +111,18 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
             activeDot={{ r: 5, stroke: '#f97316', strokeWidth: 2, fill: 'var(--card)' }}
             name={t('strategyReport.chart.discount')}
           />
+          {peakPoint && (
+            <ReferenceDot
+              yAxisId="left"
+              x={peakPoint.date}
+              y={peakPoint.revenue}
+              r={5}
+              fill="var(--primary)"
+              stroke="#fff"
+              strokeWidth={1.5}
+              ifOverflow="visible"
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
       <div className="ts-chart-legend">

@@ -3992,11 +3992,18 @@
         "idle": "Không hoạt động 30+ ngày"
       },
       "table": {
+        "restaurants_list": "Danh sách nhà hàng",
+        "click_for_details": "Bấm vào hàng để xem chi tiết doanh thu",
         "restaurant": "Nhà hàng",
         "plan": "Gói",
         "status": "Trạng thái",
         "last_active": "Hoạt động gần nhất",
         "domain": "Domain",
+        "orders": "Đơn hàng",
+        "new_customers": "Khách mới",
+        "reservations": "Reservations",
+        "details": "Chi tiết",
+        "revenue": "Doanh thu",
         "total": "{{count}} nhà hàng"
       }
     },
@@ -5315,8 +5322,9 @@
     "title": "Báo cáo Chiến lược AI",
     "subtitle": "Giám sát hiệu suất nền tảng và phân tích khách hàng",
     "period": {
-      "weekly": "Hàng tuần",
-      "monthly": "Hàng tháng",
+      "daily": "Hôm qua",
+      "monthly": "Tháng này",
+      "yearly": "Năm này",
       "custom": "Tùy chỉnh"
     },
     "startDate": "Ngày bắt đầu",
@@ -5348,6 +5356,8 @@
     },
     "detailChartsTitle": "Ph\u00e2n t\u00edch chi ti\u1ebft",
     "revenueOverview": "T\u1ed5ng quan doanh thu",
+    "dailySummaryTitle": "Tổng quan ngày hôm qua",
+    "dailySummaryDesc": "Báo cáo hôm qua chỉ cung cấp tổng quan dữ liệu (ở trên). Hãy chọn 'Tháng' hoặc 'Năm' để xem biểu đồ chi tiết",
     "revenueBreakdown": "Chi ti\u1ebft doanh thu",
     "viewRevenue": "Xem doanh thu",
     "closeChart": "\u0110\u00f3ng",
@@ -5361,8 +5371,10 @@
       "cancelledOrders": "Đơn hủy",
       "customersTitle": "Khách hàng mới theo thời gian",
       "newCustomers": "Khách hàng mới",
+      "cumulativeCustomers": "Khách hàng tích lũy",
       "reservationsTitle": "Xu hướng đặt bàn",
-      "reservations": "Đặt bàn mới"
+      "reservations": "Đặt bàn mới",
+      "rollingAverage3Days": "Trung bình 3 ngày"
     }
   }
 }

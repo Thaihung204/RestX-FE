@@ -34,7 +34,6 @@ export const KpiCards: React.FC<KpiCardsProps> = ({
     <div className="ts-kpi-grid">
       {/* Revenue Card */}
       <div className="ts-kpi-card">
-        <div className="ts-kpi-card-accent" style={{ background: 'var(--primary)' }} />
         <p className="ts-kpi-label">{t('strategyReport.kpi.totalRevenue')}</p>
         <p className="ts-kpi-value ts-kpi-value-primary">{formatVND(totalRevenue)}</p>
         <p className="ts-kpi-sub">{t('strategyReport.kpi.revenueSubtext')}</p>
@@ -42,7 +41,6 @@ export const KpiCards: React.FC<KpiCardsProps> = ({
 
       {/* Completion Rate Card */}
       <div className="ts-kpi-card">
-        <div className="ts-kpi-card-accent" style={{ background: '#22c55e' }} />
         <p className="ts-kpi-label">{t('strategyReport.kpi.completionRate')}</p>
         <p className="ts-kpi-value ts-kpi-value-primary">{completionRate}</p>
         <p className="ts-kpi-sub">{t('strategyReport.kpi.completionSubtext')}</p>
@@ -50,17 +48,6 @@ export const KpiCards: React.FC<KpiCardsProps> = ({
 
       {/* Cancellation Rate Card */}
       <div className={`ts-kpi-card ts-kpi-card-severity-${cancellationSeverity}`}>
-        <div
-          className="ts-kpi-card-accent"
-          style={{
-            background:
-              cancellationSeverity === 'danger'
-                ? '#ef4444'
-                : cancellationSeverity === 'warning'
-                  ? '#f59e0b'
-                  : '#3b82f6',
-          }}
-        />
         <p className="ts-kpi-label">{t('strategyReport.kpi.cancellationRate')}</p>
         <p className="ts-kpi-value">{cancellationRate}%</p>
         <p className="ts-kpi-sub">
@@ -72,7 +59,6 @@ export const KpiCards: React.FC<KpiCardsProps> = ({
 
       {/* New Customers Card */}
       <div className="ts-kpi-card">
-        <div className="ts-kpi-card-accent" style={{ background: '#8b5cf6' }} />
         <p className="ts-kpi-label">{t('strategyReport.kpi.newCustomers')}</p>
         <p className="ts-kpi-value ts-kpi-value-primary">{newCustomers}</p>
         <p className="ts-kpi-sub">{t('strategyReport.kpi.newCustomersSubtext')}</p>

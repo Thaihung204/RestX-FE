@@ -3899,11 +3899,18 @@
         "idle": "Inactive for 30+ days"
       },
       "table": {
+        "restaurants_list": "Restaurant List",
+        "click_for_details": "Click a row to view revenue details",
         "restaurant": "Restaurant",
         "plan": "Plan",
         "status": "Status",
         "last_active": "Last active",
         "domain": "Domain",
+        "orders": "Orders",
+        "new_customers": "New Customers",
+        "reservations": "Reservations",
+        "details": "Details",
+        "revenue": "Revenue",
         "total": "{{count}} restaurants"
       }
     },
@@ -5256,8 +5263,9 @@
     "title": "AI Strategy Report",
     "subtitle": "Monitor platform performance and tenant analytics",
     "period": {
-      "weekly": "Weekly",
-      "monthly": "Monthly",
+      "daily": "Yesterday",
+      "monthly": "This month",
+      "yearly": "This year",
       "custom": "Custom"
     },
     "startDate": "Start Date",
@@ -5289,6 +5297,8 @@
     },
     "detailChartsTitle": "Breakdown Analytics",
     "revenueOverview": "Revenue Overview",
+    "dailySummaryTitle": "Yesterday's Summary",
+    "dailySummaryDesc": "Yesterday's report provides a summary view (above). Select 'Month' or 'Year' to see detailed charts",
     "revenueBreakdown": "Revenue Breakdown",
     "viewRevenue": "View Revenue",
     "closeChart": "Close",
@@ -5302,8 +5312,10 @@
       "cancelledOrders": "Cancelled Orders",
       "customersTitle": "New Customers Over Time",
       "newCustomers": "New Customers",
+      "cumulativeCustomers": "Cumulative Customers",
       "reservationsTitle": "Reservations Trend",
-      "reservations": "New Reservations"
+      "reservations": "New Reservations",
+      "rollingAverage3Days": "3-day average"
     }
   }
 }
