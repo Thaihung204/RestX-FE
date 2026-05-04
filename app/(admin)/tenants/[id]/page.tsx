@@ -1,30 +1,31 @@
 ﻿"use client";
 
+import BusinessHoursEditor from "@/components/ui/BusinessHoursEditor";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import StatusToggle from "@/components/ui/StatusToggle";
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
-import { TenantUpdateInput } from "@/lib/types/tenant";
+import { BusinessHour, TenantUpdateInput } from "@/lib/types/tenant";
 import {
-  ArrowLeftOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  ShopOutlined,
+    ArrowLeftOutlined,
+    DeleteOutlined,
+    ExclamationCircleOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    ShopOutlined,
 } from "@ant-design/icons";
 import type { FormProps, UploadFile } from "antd";
 import {
-  Alert,
-  App,
-  Button,
-  ColorPicker,
-  Form,
-  Input,
-  Modal,
-  Spin,
-  Upload,
+    Alert,
+    App,
+    Button,
+    ColorPicker,
+    Form,
+    Input,
+    Modal,
+    Spin,
+    Upload,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -100,6 +101,8 @@ const TenantEditPage: React.FC = () => {
   const [hasExistingPaymentSettings, setHasExistingPaymentSettings] =
     useState(false);
   const [activeTab, setActiveTab] = useState<DetailTab>("general");
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+  const [hoursLoading, setHoursLoading] = useState(false);
   const tenantId = params.id as string;
 
   const getRawFile = (fileList: UploadFile[]): File | null => {
@@ -204,6 +207,16 @@ const TenantEditPage: React.FC = () => {
         typeof data.status === "boolean" ? data.status : data.status === true,
       );
       await fetchPaymentSettings();
+      // Fetch structured business hours from dedicated API
+      setHoursLoading(true);
+      try {
+        const hours = await tenantService.getBusinessHours(tenantId);
+        if (hours && hours.length > 0) setBusinessHours(hours);
+      } catch {
+        // silently ignore — editor will use defaults
+      } finally {
+        setHoursLoading(false);
+      }
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       message.error(t("tenants.toasts.detail_error_message"));
@@ -302,6 +315,15 @@ const TenantEditPage: React.FC = () => {
         favicon: getRawFile(faviconFileList),
         background: getRawFile(backgroundFileList),
       });
+
+      // Save structured business hours
+      if (businessHours.length > 0) {
+        try {
+          await tenantService.updateBusinessHours(tenantId, businessHours);
+        } catch (e) {
+          console.error("Failed to save business hours:", e);
+        }
+      }
 
       if (hasAllPaymentCredential) {
         try {
@@ -535,9 +557,16 @@ const TenantEditPage: React.FC = () => {
           <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.company_number")}</span>} name="businessCompanyNumber">
             <Input size="large" />
           </Form.Item>
-          <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.opening_hours")}</span>} name="businessOpeningHours">
-            <Input size="large" />
-          </Form.Item>
+
+          <div className="td-col-span-2">
+            <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.opening_hours")}</span>}>
+              <BusinessHoursEditor
+                value={businessHours}
+                onChange={setBusinessHours}
+                disabled={hoursLoading}
+              />
+            </Form.Item>
+          </div>
 
           <div className="td-col-span-2">
             <Form.Item label={<span className={labelStyle}>{t("tenants.edit.fields.about_us")}</span>} name="aboutUs">
