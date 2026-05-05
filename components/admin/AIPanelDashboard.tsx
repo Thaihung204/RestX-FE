@@ -466,10 +466,12 @@ export default function AIPanelDashboard({
                             <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.currentTrend")}</h5>
                             <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy?.trend ?? report.summary ?? ""}</p>
                           </div>
-                          <div>
-                            <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.promoStrategy")}</h5>
-                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy?.promoStrategy ?? ""}</p>
-                          </div>
+                          {report.marketingStrategy?.promoStrategy && (
+                            <div>
+                              <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.promoStrategy")}</h5>
+                              <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy.promoStrategy}</p>
+                            </div>
+                          )}
                           {safeArray(report.marketingStrategy?.upcomingActions).length > 0 && (
                             <div>
                               <h5 className="font-bold text-sm mb-2 mt-4" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.upcomingEvents")}</h5>
@@ -483,7 +485,8 @@ export default function AIPanelDashboard({
                         </div>
                       </AIStrategySection>
 
-                      {safeArray(report.customerStrategy?.actions).length > 0 && (
+                      {/* customerStrategy (new schema) OR customers (flat schema) */}
+                      {(safeArray(report.customerStrategy?.actions).length > 0 || report.customers) && (
                         <AIStrategySection
                           title={t("dashboard.analytics.sections.customerStrategy")}
                           variant="primary"
@@ -493,9 +496,43 @@ export default function AIPanelDashboard({
                             </svg>
                           }>
                           <div className="space-y-3">
+                            {/* New schema: customerStrategy.actions[] */}
                             {safeArray(report.customerStrategy?.actions).map((action, i) => (
                               <AIStrategyListItem key={i} title={action.title} reason={action.reason} action={action.action} when={action.when} impact={action.impact} variant="default" />
                             ))}
+
+                            {/* Flat schema: customers.{evidence, insight, action} */}
+                            {safeArray(report.customerStrategy?.actions).length === 0 && report.customers && (
+                              <div className="space-y-3">
+                                {report.customers.evidence && (
+                                  <div className="flex items-start gap-2">
+                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--text-muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                    <div>
+                                      <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.analytics.labels.evidence", { defaultValue: "Cơ sở dữ liệu" })}</p>
+                                      <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{report.customers.evidence}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                {report.customers.insight && (
+                                  <div className="flex items-start gap-2">
+                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--primary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                                    <div>
+                                      <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.analytics.labels.insight", { defaultValue: "Nhận định" })}</p>
+                                      <p className="text-sm" style={{ color: "var(--text)" }}>{report.customers.insight}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                {report.customers.action && (
+                                  <div className="flex items-start gap-2">
+                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--success)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                    <div>
+                                      <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.analytics.labels.action", { defaultValue: "Hành động" })}</p>
+                                      <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{report.customers.action}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </AIStrategySection>
                       )}
