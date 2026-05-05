@@ -21,11 +21,13 @@ const getAdminBaseUrl = (): string => {
         parts.length >= 2 && parts.slice(-2).join('.') === 'restx.food';
 
     if (isRestxDomain) {
-        parts[0] = 'admin';
-        const adminHost = parts.join('.');
-        return `${window.location.protocol}//${adminHost}/api`;
+        // Always resolve to admin.restx.food regardless of subdomain depth:
+        // restx.food        → admin.restx.food
+        // www.restx.food    → admin.restx.food
+        // demo.restx.food   → admin.restx.food
+        return `${window.location.protocol}//admin.restx.food/api`;
     } else {
-        // Custom domain — route to the fixed admin backend
+        // Custom domain — always route to the fixed admin backend
         return 'https://admin.restx.food/api';
     }
 };
@@ -37,19 +39,21 @@ const adminAxiosInstance = axios.create({
     },
 });
 
-if (typeof window !== 'undefined') {
-    adminAxiosInstance.defaults.baseURL = getAdminBaseUrl();
-}
-
+// Recalculate baseURL on every request so it always reflects the current
+// window.location (important for custom domains like lebon.io.vn that must
+// always hit admin.restx.food regardless of when the module was first loaded).
 adminAxiosInstance.interceptors.request.use(
     (config) => {
-        // Doc adminAccessToken tu ca hai storage (rememberMe=true -> localStorage, rememberMe=false -> sessionStorage)
         if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('adminAccessToken') || sessionStorage.getItem('adminAccessToken');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+            config.baseURL = getAdminBaseUrl();
         }
+
+        // Doc adminAccessToken tu ca hai storage (rememberMe=true -> localStorage, rememberMe=false -> sessionStorage)
+        const token = localStorage.getItem('adminAccessToken') || sessionStorage.getItem('adminAccessToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
         if (config.data instanceof FormData) {
             delete config.headers['Content-Type'];
         }
