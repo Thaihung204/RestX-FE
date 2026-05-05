@@ -86,6 +86,11 @@ export interface MergeTableRequest {
     customerId?: string | null;
 }
 
+export interface MoveTableRequest {
+    sourceTableId: string;
+    targetTableId: string;
+}
+
 export interface MergeTableResponse {
     orderId?: string | null;
     requiresManualResolution: boolean;
@@ -382,6 +387,18 @@ export const tableService = {
 
             throw error;
         }
+    },
+
+    /** POST /api/tables/move — Move the active session (and its order) to another table */
+    moveTable: async (request: MoveTableRequest): Promise<TableSessionInfo> => {
+        const response = await axiosInstance.post<unknown>('/tables/move', request);
+        const normalized = normalizeSessionInfo(response.data);
+
+        if (!normalized) {
+            throw new Error('Invalid table session payload');
+        }
+
+        return normalized;
     },
 };
 

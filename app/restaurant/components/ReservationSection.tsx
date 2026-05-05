@@ -29,6 +29,8 @@ const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESERVATION_ADVANCE_MONTHS = 1;
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 const APPLY_CLIENT_CURRENT_TIME_GUARD = true;
+/** BE default SessionBufferMinutes = 120. FE mirrors it to exclude slots too close to closing. */
+const DEFAULT_SESSION_BUFFER_MINUTES = 120;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -322,7 +324,7 @@ const businessDayToDayjsDay = (day: number) => ((day % 7) + 1) % 7;
 
 const getMaxBookableDate = () => dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month').format('YYYY-MM-DD');
 
-const getSelectableTimeBounds = (date: string, slots: string[]) => {
+const getSelectableTimeBounds = (date: string, slots: string[], sessionBufferMinutes?: number) => {
     const normalizedSlots = normalizeTimeSlots(slots);
     if (!normalizedSlots.length) return null;
 
@@ -330,7 +332,12 @@ const getSelectableTimeBounds = (date: string, slots: string[]) => {
     const lastSlotMinutes = toMinutes(normalizedSlots[normalizedSlots.length - 1]);
     if (firstSlotMinutes === null || lastSlotMinutes === null) return null;
 
-    const latestAllowedMinutes = lastSlotMinutes;
+    // Fix #1: slot + dining duration must not exceed closing time.
+    // The last slot in the array represents the closing boundary.
+    // Subtract buffer so guest has enough dining time before close.
+    const buffer = sessionBufferMinutes ?? DEFAULT_SESSION_BUFFER_MINUTES;
+    const closingMinutes = lastSlotMinutes;
+    const latestAllowedMinutes = Math.max(firstSlotMinutes, closingMinutes - buffer);
 
     let minMinutes = firstSlotMinutes;
     if (APPLY_CLIENT_CURRENT_TIME_GUARD && date === getTodayLocalDate()) {
@@ -669,6 +676,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
+    const businessHoursLoadedRef = useRef(false);
+    const lastClampedTimeRef = useRef<string | null>(null);
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
     const [currentTimeTick, setCurrentTimeTick] = useState(() => Date.now());
@@ -703,7 +712,22 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     useEffect(() => {
         if (!tenant?.id) return;
-        tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(() => setBusinessHours([]));
+        tenantService.getBusinessHours(tenant.id)
+            .then((hours) => {
+                businessHoursLoadedRef.current = true;
+                setBusinessHours(hours);
+            })
+            .catch(() => {
+                businessHoursLoadedRef.current = false;
+                setBusinessHours([]);
+                // Fix #2: Warn user that operating hours might be inaccurate
+                message.warning(
+                    t('landing.booking.form.hours_fallback_warning', {
+                        defaultValue: 'Could not load operating hours. Displayed times may not be accurate.',
+                    }),
+                    5,
+                );
+            });
     }, [tenant?.id]);
 
     useEffect(() => {
@@ -714,7 +738,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         return () => window.clearInterval(timerId);
     }, []);
 
-    const { timeSlots, closedWeekdays, closedNotice } = useMemo(
+    const { timeSlots, closedWeekdays, closedNotice, maxGuestsOverride } = useMemo(
         () => getTenantReservationConfig(tenant, booking.date, businessHours),
         [tenant, booking.date, businessHours],
     );
@@ -923,6 +947,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             : normalizedCurrentTime;
 
         if (nextDate !== booking.date || nextTime !== booking.time) {
+            // Fix #5: Notify user when their selected time was auto-adjusted
+            if (nextTime !== booking.time && booking.time && lastClampedTimeRef.current !== nextTime) {
+                lastClampedTimeRef.current = nextTime;
+                message.info(
+                    t('landing.booking.form.time_adjusted', {
+                        defaultValue: `Your selected time was adjusted to ${nextTime} to fit available hours.`,
+                        time: nextTime,
+                    }),
+                    4,
+                );
+            }
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
     }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots, businessHours, currentTimeTick]);
@@ -978,7 +1013,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
 
                     if (activeFloors.length > 0) {
-                        const selectedAt = `${booking.date}T${booking.time}:59.999`;
+                        // Fix #3: Normalize to HH:mm to avoid double-seconds (e.g. "22:30:00:59.999")
+                        const safeTime = (booking.time || '19:00').split(':').slice(0, 2).join(':');
+                        const selectedAt = `${booking.date}T${safeTime}:59.999`;
                         // Fetch layout for each floor in parallel
                         const layoutResults = await Promise.allSettled(
                             activeFloors.map(f => floorService.getFloorLayout(f.id, selectedAt))
@@ -1417,6 +1454,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             return;
         }
 
+        // Fix #9: Early-warning capacity check
+        const totalSelectedCapacity = selectedTables.reduce((sum, t) => sum + (t.capacity || 0), 0);
+        if (totalSelectedCapacity < Number(booking.guests)) {
+            message.warning(t('landing.booking.form.insufficient_seats', {
+                defaultValue: 'The selected tables do not have enough seats for your party size. Please select more tables.',
+            }));
+            return;
+        }
+
         try {
             const reservationDateTime = `${booking.date}T${booking.time}:00`;
             await reservationService.checkTables({
@@ -1474,6 +1520,18 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         try {
             // Combine date + time thành ISO datetime
             const reservationDateTime = `${booking.date}T${booking.time}:00`;
+
+            // Fix #4: Re-validate with server to catch stale-tab scenarios
+            try {
+                await reservationService.checkTime({ reservationDateTime });
+            } catch (checkErr: any) {
+                const beMsg = checkErr?.response?.data?.message || checkErr?.message;
+                setSubmitError(beMsg || t('landing.booking.form.time_not_available', {
+                    defaultValue: 'Selected time is no longer available. Please choose another time.',
+                }));
+                setIsSubmitting(false);
+                return;
+            }
 
             const result = await reservationService.createReservation({
                 tableIds: selectedTables.map(t => t.id),
@@ -1731,7 +1789,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                         // Allow temporary empty state while typing
                                                         setBooking(b => ({ ...b, guests: '' as any }));
                                                     } else if (!isNaN(val) && val >= 1) {
-                                                        setBooking(b => ({ ...b, guests: val }));
+                                                        const maxAllowed = maxGuestsOverride ?? 99;
+                                                        setBooking(b => ({ ...b, guests: Math.min(val, maxAllowed) }));
                                                     }
                                                 }}
                                                 onBlur={(e) => {
@@ -1759,7 +1818,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                     aria-label={t('landing.booking.form.increase_guests')}
                                                     onClick={() => setBooking((b) => {
                                                         const currentGuests = Math.max(1, Number(b.guests) || 1);
-                                                        return { ...b, guests: currentGuests + 1 };
+                                                        const maxAllowed = maxGuestsOverride ?? 99;
+                                                        return { ...b, guests: Math.min(currentGuests + 1, maxAllowed) };
                                                     })}
                                                     className="pill-step-btn"
                                                 >
@@ -2304,12 +2364,21 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
                                         </button>
                                         {depositPaymentDeadline && (
-                                            <p className="text-xs text-[var(--danger)] text-center">
-                                                {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
+                                            <p className="text-xs text-[var(--danger)] text-center mt-3 font-medium bg-[var(--danger-soft)] text-[var(--danger)] py-2 rounded-lg border border-[var(--danger-border)]">
+                                                {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}:{' '}
+                                                {new Date(depositPaymentDeadline.endsWith('Z') ? depositPaymentDeadline : `${depositPaymentDeadline}Z`).toLocaleString('vi-VN', {
+                                                    hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
+                                                })}
                                             </p>
                                         )}
                                     </div>
                                 )}
+
+                                <div className="text-xs text-[var(--text-muted)] text-center mb-5 px-4">
+                                    {t('landing.booking.success.hold_notice', {
+                                        defaultValue: 'Please arrive on time. Your table will be held for 15 minutes past the reservation time.',
+                                    })}
+                                </div>
 
                                 <button
                                     onClick={() => {

@@ -930,7 +930,15 @@
         "close_session_confirm_title": "Xác nhận đóng phiên bàn?",
         "close_session_confirm_content": "Phiên bàn sẽ được đóng và trạng thái bàn sẽ cập nhật lại.",
         "close_session_success": "Đóng phiên bàn thành công!",
-        "close_session_error": "Đóng phiên bàn thất bại"
+        "close_session_error": "Đóng phiên bàn thất bại",
+        "transfer_session_btn": "Chuyển bàn",
+        "transfer_session_title": "Chuyển phiên bàn",
+        "transfer_session_desc": "Chọn bàn đích để dời session và order hiện tại sang bàn khác.",
+        "transfer_target": "Bàn đích",
+        "transfer_target_placeholder": "Chọn bàn trống",
+        "transfer_session_confirm": "Xác nhận chuyển bàn",
+        "transfer_session_success": "Chuyển bàn thành công!",
+        "transfer_session_error": "Chuyển bàn thất bại"
       }
     },
     "customer": {
@@ -1283,7 +1291,7 @@
       "subtitle": "Các hành động mới nhất"
     },
     "sidebar": {
-      "management": "Qu\u1EA3n l\u00FD",
+      "management": "Quản lý",
       "sections": {
         "overview": "Tổng quan",
         "operations": "Vận hành",
@@ -4202,18 +4210,18 @@
       "maintenance": "Bảo trì"
     },
     "detail_tabs": {
-      "general": "Th\u00f4ng tin chung",
-      "branding": "Th\u01b0\u01a1ng hi\u1ec7u & Giao di\u1ec7n",
-      "payment": "C\u00e0i \u0111\u1eb7t thanh to\u00e1n",
-      "system": "Th\u00f4ng tin h\u1ec7 th\u1ed1ng",
-      "tenant_detail": "Chi ti\u1ebft nh\u00e0 h\u00e0ng",
-      "light_mode": "Giao di\u1ec7n s\u00e1ng",
-      "dark_mode": "Giao di\u1ec7n t\u1ed1i",
-      "general_profile": "H\u1ed3 s\u01a1 chung",
-      "general_profile_desc": "C\u1ea5u h\u00ecnh danh t\u00ednh v\u00e0 th\u00f4ng tin li\u00ean h\u1ec7 c\u1ed1t l\u00f5i cho nh\u00e0 h\u00e0ng n\u00e0y. C\u00e1c thay \u0111\u1ed5i s\u1ebd \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng tr\u00ean to\u00e0n b\u1ed9 h\u1ec7 th\u1ed1ng RestX.",
-      "active_tenant": "Ho\u1ea1t \u0111\u1ed9ng",
-      "inactive_tenant": "Kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng",
-      "view_details": "Xem chi ti\u1ebft"
+      "general": "Thông tin chung",
+      "branding": "Thương hiệu & Giao diện",
+      "payment": "Cài đặt thanh toán",
+      "system": "Thông tin hệ thống",
+      "tenant_detail": "Chi tiết nhà hàng",
+      "light_mode": "Giao diện sáng",
+      "dark_mode": "Giao diện tối",
+      "general_profile": "Hồ sơ chung",
+      "general_profile_desc": "Cấu hình danh tính và thông tin liên hệ cốt lõi cho nhà hàng này. Các thay đổi sẽ được áp dụng trên toàn bộ hệ thống RestX.",
+      "active_tenant": "Hoạt động",
+      "inactive_tenant": "Không hoạt động",
+      "view_details": "Xem chi tiết"
     },
     "plans": {
       "basic": "CƠ BẢN",
@@ -4632,7 +4640,8 @@
         "pay_deposit_now": "Thanh toán cọc ngay",
         "deposit_deadline": "Hạn thanh toán cọc",
         "view_details": "Xem chi tiết",
-        "make_another": "Đặt bàn mới"
+        "make_another": "Đặt bàn mới",
+        "hold_notice": "Vui lòng đến đúng giờ. Bàn của bạn sẽ được giữ tối đa 15 phút so với giờ đặt."
       },
       "hero": {
         "badge": "ĐẶT CHỖ TRỰC TUYẾN",
@@ -4658,7 +4667,11 @@
         "closed_overlay_notice": "Thông báo",
         "closed_overlay_cta": "Chọn ngày khả dụng gần nhất",
         "closed_overlay_hint": "Hãy dùng ô chọn ngày bên dưới để chuyển sang ngày khác.",
-        "closed_overlay_no_next": "Không tìm thấy ngày khả dụng trong 30 ngày tới."
+        "closed_overlay_no_next": "Không tìm thấy ngày khả dụng trong 30 ngày tới.",
+        "hours_fallback_warning": "Không thể tải giờ hoạt động chính xác. Giờ hiển thị có thể bị sai lệch.",
+        "time_adjusted": "Giờ đặt bàn của bạn đã được tự động điều chỉnh thành {{time}} để phù hợp với giờ hoạt động.",
+        "time_not_available": "Thời gian này không khả dụng. Vui lòng chọn thời gian khác.",
+        "insufficient_seats": "Các bàn đã chọn không đủ chỗ cho số lượng khách của bạn. Vui lòng chọn thêm bàn."
       },
       "features": {
         "fine_dining": {
@@ -5429,13 +5442,13 @@
       "newCustomers": "Khách mới",
       "reservations": "Đặt bàn mới"
     },
-    "detailChartsTitle": "Ph\u00e2n t\u00edch chi ti\u1ebft",
-    "revenueOverview": "T\u1ed5ng quan doanh thu",
+    "detailChartsTitle": "Phân tích chi tiết",
+    "revenueOverview": "Tổng quan doanh thu",
     "dailySummaryTitle": "Tổng quan ngày hôm qua",
     "dailySummaryDesc": "Báo cáo hôm qua chỉ cung cấp tổng quan dữ liệu (ở trên). Hãy chọn 'Tháng' hoặc 'Năm' để xem biểu đồ chi tiết",
-    "revenueBreakdown": "Chi ti\u1ebft doanh thu",
+    "revenueBreakdown": "Chi tiết doanh thu",
     "viewRevenue": "Xem doanh thu",
-    "closeChart": "\u0110\u00f3ng",
+    "closeChart": "Đóng",
     "chart": {
       "revenueTitle": "Xu hướng doanh thu & chiết khấu",
       "revenue": "Doanh thu",

@@ -74,6 +74,20 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
     setError(null);
   }, [table, initialForm]);
 
+  // Prevent closing with ESC when deposit confirmation is showing
+  useEffect(() => {
+    if (!open || !confirmationCode) return;
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [open, confirmationCode]);
+
   const handleClose = () => {
     setForm({ ...initialFormState, ...initialForm });
     setConfirmationCode(null);
@@ -109,6 +123,19 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
 
     try {
       const reservationDateTime = `${form.date}T${form.time}:00`;
+
+      // Validation parity: re-validate time before booking to prevent stale selection issues
+      try {
+        await reservationService.checkTime({ reservationDateTime });
+      } catch (checkErr: any) {
+        const beMsg = checkErr?.response?.data?.message || checkErr?.message;
+        setError(beMsg || t('landing.booking.form.time_not_available', {
+            defaultValue: 'Selected time is no longer available. Please choose another time.',
+        }));
+        setLoading(false);
+        return;
+      }
+
       const result = await reservationService.createReservation({
         tableIds: [table.id],
         reservationDateTime,
@@ -144,6 +171,8 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
 
   if (typeof document === 'undefined') return null;
 
+ 
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -151,7 +180,12 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
+          onClick={() => {
+            // Prevent closing modal if deposit confirmation is showing
+            if (!confirmationCode) {
+              handleClose();
+            }
+          }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -258,12 +292,21 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
                       </button>
                       {depositPaymentDeadline && (
-                        <p style={{ color: 'var(--danger)', marginTop: 8, fontSize: 12 }}>
-                          {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
+                        <p style={{ color: 'var(--danger)', marginTop: 8, fontSize: 12, padding: '8px', background: 'var(--danger-soft)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
+                          {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}:{' '}
+                          {new Date(depositPaymentDeadline.endsWith('Z') ? depositPaymentDeadline : `${depositPaymentDeadline}Z`).toLocaleString('vi-VN', {
+                              hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
+                          })}
                         </p>
                       )}
                     </div>
                   )}
+
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16 }}>
+                      {t('landing.booking.success.hold_notice', {
+                          defaultValue: 'Please arrive on time. Your table will be held for 15 minutes past the reservation time.',
+                      })}
+                  </div>
                   <button
                     onClick={handleClose}
                     style={{
