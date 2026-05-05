@@ -26,7 +26,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
-import { App, Button, Card, Col, Input, Modal, Row, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Input, Modal, Row, Select, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -251,6 +251,9 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isClosingSession, setIsClosingSession] = useState(false);
   const [confirmCloseSessionTable, setConfirmCloseSessionTable] = useState<TableActivityData | null>(null);
+  const [transferSessionTable, setTransferSessionTable] = useState<TableActivityData | null>(null);
+  const [transferTargetTableId, setTransferTargetTableId] = useState<string>('');
+  const [isTransferringSession, setIsTransferringSession] = useState(false);
   const [isMergeMode, setIsMergeMode] = useState(false);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [isMerging, setIsMerging] = useState(false);
@@ -497,6 +500,42 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       messageApi.error(msg || t('staff.floor_activity.modal.close_session_error', { defaultValue: 'Đóng phiên bàn thất bại' }));
     } finally {
       setIsClosingSession(false);
+    }
+  };
+
+  const openTransferSessionModal = (table: TableActivityData) => {
+    const availableTarget = tables.find((item) => item.id !== table.id && item.status === 'available');
+    setTransferSessionTable(table);
+    setTransferTargetTableId(availableTarget?.id || '');
+  };
+
+  const executeTransferSession = async () => {
+    if (!transferSessionTable?.id || !transferTargetTableId) return;
+
+    setIsTransferringSession(true);
+    try {
+      await tableService.moveTable({
+        sourceTableId: transferSessionTable.id,
+        targetTableId: transferTargetTableId,
+      });
+
+      messageApi.success(
+        t('staff.floor_activity.modal.transfer_session_success', {
+          defaultValue: 'Chuyển bàn thành công!',
+        }),
+      );
+
+      setTransferSessionTable(null);
+      setTransferTargetTableId('');
+      setSelectedTable(null);
+      await fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      messageApi.error(
+        msg || t('staff.floor_activity.modal.transfer_session_error', { defaultValue: 'Chuyển bàn thất bại' }),
+      );
+    } finally {
+      setIsTransferringSession(false);
     }
   };
 
@@ -1124,7 +1163,8 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const isSessionCurrentlyActive = isSessionActive && isSessionTrulyStarted;
           const isSessionScheduled = isSessionActive && !isSessionTrulyStarted;
           const canCloseSession = isSessionCurrentlyActive;
-          const isSessionEnded = Boolean(selectedTable.sessionEndedAt) || (selectedTable.sessionIsActive === false && hasSessionFootprint);
+          const isSessionEnded = selectedTable.sessionIsActive === false && hasSessionFootprint;
+          const canTransferSession = isSessionCurrentlyActive;
 
           return (
             <div className="table-modal-root">
@@ -1280,6 +1320,19 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     </Button>
                   )}
 
+                  {canTransferSession && (
+                    <Button
+                      type="default"
+                      icon={<TableOutlined />}
+                      onClick={() => openTransferSessionModal(selectedTable)}
+                      block
+                      size="large"
+                      style={{ marginTop: 12, borderRadius: 12, height: 44, fontWeight: 700, fontSize: 14 }}
+                    >
+                      {t('staff.floor_activity.modal.transfer_session_btn', { defaultValue: 'Chuyển bàn' })}
+                    </Button>
+                  )}
+
                   {selectedTable.qrCodeUrl && (
                     <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'center' }}>
                       <QRCodeSection table={selectedTable} />
@@ -1388,6 +1441,49 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
             </div>
           );
         })()}
+      </Modal>
+
+      <Modal
+        open={!!transferSessionTable}
+        onCancel={() => {
+          setTransferSessionTable(null);
+          setTransferTargetTableId('');
+        }}
+        onOk={executeTransferSession}
+        confirmLoading={isTransferringSession}
+        okText={t('staff.floor_activity.modal.transfer_session_confirm', { defaultValue: 'Xác nhận chuyển bàn' })}
+        cancelText={t('common.cancel', { defaultValue: 'Hủy' })}
+        title={t('staff.floor_activity.modal.transfer_session_title', { defaultValue: 'Chuyển bàn' })}
+        centered
+        destroyOnClose
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            {t('staff.floor_activity.modal.transfer_session_desc', {
+              defaultValue: 'Chọn bàn đích để dời session và order hiện tại sang bàn khác.',
+            })}
+          </div>
+
+          <div style={{ display: 'grid', gap: 8 }}>
+            <Text style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+              {t('staff.floor_activity.modal.transfer_target', { defaultValue: 'Bàn đích' })}
+            </Text>
+            <Select
+              value={transferTargetTableId || undefined}
+              onChange={(value) => setTransferTargetTableId(value)}
+              placeholder={t('staff.floor_activity.modal.transfer_target_placeholder', {
+                defaultValue: 'Chọn bàn trống',
+              })}
+              style={{ width: '100%' }}
+              options={tables
+                .filter((item) => item.id !== transferSessionTable?.id && item.status === 'available')
+                .map((item) => ({
+                  value: item.id,
+                  label: `${item.name} - ${item.floorName || item.zone}`,
+                }))}
+            />
+          </div>
+        </div>
       </Modal>
 
       <ConfirmModal
