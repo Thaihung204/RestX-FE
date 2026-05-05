@@ -1,6 +1,7 @@
 'use client';
 
 import { LeBonReservationModal } from '@/components/lebon/LeBonReservationModal';
+import { useTenant } from '@/lib/contexts/TenantContext';
 import { Cormorant_Garamond, Montserrat } from 'next/font/google';
 import NextImage from 'next/image';
 import { useEffect, useRef, useState } from 'react';
@@ -274,120 +275,201 @@ function HeroSection({ onMenuOpen }: { onMenuOpen: () => void }) {
 
   return (
     <section id="hero" style={{ position: 'relative', height: '100vh', minHeight: 640, overflow: 'hidden' }}>
-      <NextImage src="/images/restaurant/banner-lebon.png" alt="Le Bon" fill priority
+      <NextImage src="/images/restaurant/banner-lebon_cleanup.png" alt="Le Bon" fill priority
         style={{ objectFit: 'cover', objectPosition: 'center', scale: loaded ? '1' : '1.04', transition: 'scale 1.8s cubic-bezier(0.22,1,0.36,1)' }} />
 
-      {/* Layered overlays */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,20,12,0.55) 0%, rgba(8,20,12,0.25) 40%, rgba(8,20,12,0.7) 100%)' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 30%, rgba(8,20,12,0.5) 100%)' }} />
+      {/* Base vignette — matches #0f2316 layout color */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(15,35,22,0.42) 0%, rgba(15,35,22,0.08) 50%, rgba(15,35,22,0.55) 100%)' }} />
 
-      {/* Corner ornaments */}
-      {[
-        { top: 96, left: 56 }, { top: 96, right: 56 },
-        { bottom: 72, left: 56 }, { bottom: 72, right: 56 },
-      ].map((pos, i) => (
+      {/* Directional fade — soft feather into #0f2316 */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(100deg, rgba(15,35,22,0.0) 20%, rgba(15,35,22,0.28) 44%, rgba(15,35,22,0.60) 62%, rgba(15,35,22,0.70) 100%)' }} />
+
+      {/* Full-width corner ornaments */}
+      {([
+        { top: 80, left: 48, borderTop: '1px solid rgba(201,168,76,0.35)', borderLeft: '1px solid rgba(201,168,76,0.35)' },
+        { top: 80, right: 48, borderTop: '1px solid rgba(201,168,76,0.35)', borderRight: '1px solid rgba(201,168,76,0.35)' },
+        { bottom: 64, left: 48, borderBottom: '1px solid rgba(201,168,76,0.35)', borderLeft: '1px solid rgba(201,168,76,0.35)' },
+        { bottom: 64, right: 48, borderBottom: '1px solid rgba(201,168,76,0.35)', borderRight: '1px solid rgba(201,168,76,0.35)' },
+      ] as React.CSSProperties[]).map((style, i) => (
         <div key={i} style={{
-          position: 'absolute', width: 72, height: 72,
-          borderTop: i < 2 ? '1px solid rgba(201,168,76,0.45)' : undefined,
-          borderBottom: i >= 2 ? '1px solid rgba(201,168,76,0.45)' : undefined,
-          borderLeft: i % 2 === 0 ? '1px solid rgba(201,168,76,0.45)' : undefined,
-          borderRight: i % 2 === 1 ? '1px solid rgba(201,168,76,0.45)' : undefined,
+          position: 'absolute', width: 64, height: 64,
           opacity: loaded ? 1 : 0,
-          transition: `opacity 1.2s ease ${600 + i * 120}ms`,
-          ...pos,
+          transition: `opacity 1.4s ease ${700 + i * 120}ms`,
+          ...style,
         }} />
       ))}
 
-      {/* Content */}
+      {/* Thin gold vertical accent line */}
       <div style={{
-        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 24px',
+        position: 'absolute', top: '18%', bottom: '18%', left: '53%',
+        width: 1,
+        background: 'linear-gradient(to bottom, transparent 0%, rgba(201,168,76,0.5) 25%, rgba(201,168,76,0.5) 75%, transparent 100%)',
+        opacity: loaded ? 1 : 0,
+        transition: 'opacity 1.8s ease 1000ms',
+      }} />
+
+      {/* ── Right panel content ── */}
+      <div style={{
+        position: 'absolute', top: 0, right: 0, bottom: 0, width: '47%',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center',
+        padding: '0 clamp(24px, 5vw, 72px)',
       }}>
-        <p style={{
-          fontFamily: 'var(--font-montserrat)', fontSize: 10, fontWeight: 500,
-          letterSpacing: 7, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 24,
-          opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(16px)',
-          transition: 'opacity 1s ease 200ms, transform 1s ease 200ms',
-        }}>Est. 2023 · Đà Nẵng</p>
 
+        {/* Framed card — glass with gold border, #0f2316 toned */}
         <div style={{
-          opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(20px) scale(0.92)',
-          transition: 'opacity 1s ease 350ms, transform 1s ease 350ms', marginBottom: 28,
+          position: 'relative',
+          width: '100%', maxWidth: 420,
+          padding: 'clamp(32px, 4vw, 52px) clamp(28px, 3.5vw, 48px)',
+          background: 'rgba(15,35,22,0.55)',
+          backdropFilter: 'blur(20px) saturate(1.3)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.3)',
+          border: '1px solid rgba(201,168,76,0.30)',
+          boxShadow: '0 0 0 1px rgba(201,168,76,0.10) inset, 0 32px 80px rgba(15,35,22,0.5)',
+          opacity: loaded ? 1 : 0,
+          transform: loaded ? 'none' : 'translateY(24px)',
+          transition: 'opacity 1.2s ease 150ms, transform 1.2s cubic-bezier(0.22,1,0.36,1) 150ms',
         }}>
-          <NextImage src="/images/restaurant/lebon-logo.png" alt="Le Bon" width={76} height={76}
-            style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-        </div>
 
-        <h1 style={{
-          fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(56px, 9vw, 104px)',
-          fontWeight: 300, color: '#f5f0e8', letterSpacing: 10, margin: '0 0 6px',
-          lineHeight: 1, textTransform: 'uppercase',
-          opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(24px)',
-          transition: 'opacity 1.1s ease 480ms, transform 1.1s ease 480ms',
-        }}>Le Bon</h1>
+          {/* Inner corner accents */}
+          {[
+            { top: -1, left: -1, borderTop: '2px solid rgba(201,168,76,0.7)', borderLeft: '2px solid rgba(201,168,76,0.7)' },
+            { top: -1, right: -1, borderTop: '2px solid rgba(201,168,76,0.7)', borderRight: '2px solid rgba(201,168,76,0.7)' },
+            { bottom: -1, left: -1, borderBottom: '2px solid rgba(201,168,76,0.7)', borderLeft: '2px solid rgba(201,168,76,0.7)' },
+            { bottom: -1, right: -1, borderBottom: '2px solid rgba(201,168,76,0.7)', borderRight: '2px solid rgba(201,168,76,0.7)' },
+          ].map((s, i) => (
+            <div key={i} style={{ position: 'absolute', width: 20, height: 20, ...s }} />
+          ))}
 
-        <p style={{
-          fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(16px, 2.5vw, 24px)',
-          fontStyle: 'italic', fontWeight: 300, color: 'rgba(245,240,232,0.7)',
-          letterSpacing: 4, marginBottom: 36,
-          opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(16px)',
-          transition: 'opacity 1s ease 620ms, transform 1s ease 620ms',
-        }}>Steak & Wine · French Cuisine</p>
+          {/* Est. row */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24,
+            opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(10px)',
+            transition: 'opacity 0.9s ease 400ms, transform 0.9s ease 400ms',
+          }}>
+            <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.55))' }} />
+            <span style={{
+              fontFamily: 'var(--font-montserrat)', fontSize: 8, fontWeight: 400,
+              letterSpacing: 5, color: 'rgba(201,168,76,0.8)', textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+            }}>Est. 2023 · Đà Nẵng</span>
+            <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(201,168,76,0.55))' }} />
+          </div>
 
-        <div style={{
-          opacity: loaded ? 1 : 0, transition: 'opacity 1s ease 750ms',
-        }}>
-          <GoldDivider />
-        </div>
+          {/* Logo */}
+          <div style={{
+            display: 'flex', justifyContent: 'center', marginBottom: 16,
+            opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'scale(0.88)',
+            transition: 'opacity 0.9s ease 520ms, transform 0.9s cubic-bezier(0.22,1,0.36,1) 520ms',
+          }}>
+            <NextImage src="/images/restaurant/lebon-logo.png" alt="Le Bon" width={52} height={52}
+              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.88 }} />
+          </div>
 
-        <p style={{
-          fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(15px, 2vw, 20px)',
-          fontStyle: 'italic', color: 'rgba(245,240,232,0.65)', marginTop: 28, marginBottom: 52,
-          maxWidth: 440, lineHeight: 1.8,
-          opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(12px)',
-          transition: 'opacity 1s ease 880ms, transform 1s ease 880ms',
-        }}>
-          Xa hoa kiểu Pháp, định nghĩa lại sự thanh lịch
-        </p>
+          {/* Title */}
+          <h1 style={{
+            fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(46px, 5.5vw, 82px)',
+            fontWeight: 300, color: '#f5f0e8', letterSpacing: 14,
+            margin: '0 0 2px', lineHeight: 1, textTransform: 'uppercase',
+            textShadow: '0 1px 24px rgba(0,0,0,0.5)',
+            opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(16px)',
+            transition: 'opacity 1s ease 620ms, transform 1s ease 620ms',
+          }}>Le Bon</h1>
 
-        <div style={{
-          display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center',
-          opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(16px)',
-          transition: 'opacity 1s ease 1000ms, transform 1s ease 1000ms',
-        }}>
-          <button onClick={onMenuOpen} style={{
-            fontFamily: 'var(--font-montserrat)', fontSize: 10, fontWeight: 600,
-            letterSpacing: 3, textTransform: 'uppercase',
-            background: '#c9a84c', border: 'none', color: '#0f2316',
-            padding: '16px 44px', cursor: 'pointer', transition: 'all 0.35s',
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#dbb85a'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#c9a84c'; e.currentTarget.style.transform = 'none'; }}
-          >Khám Phá Thực Đơn</button>
+          {/* Subtitle italic */}
+          <p style={{
+            fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(12px, 1.6vw, 18px)',
+            fontStyle: 'italic', fontWeight: 300,
+            color: 'rgba(245,240,232,0.58)', letterSpacing: 3,
+            margin: '6px 0 20px',
+            opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(12px)',
+            transition: 'opacity 0.9s ease 720ms, transform 0.9s ease 720ms',
+          }}>Steak &amp; Wine · French Cuisine</p>
 
-          <a href="#about" style={{
-            fontFamily: 'var(--font-montserrat)', fontSize: 10, fontWeight: 500,
-            letterSpacing: 3, textTransform: 'uppercase',
-            background: 'transparent', border: '1px solid rgba(245,240,232,0.45)',
-            color: '#f5f0e8', padding: '16px 44px', textDecoration: 'none',
-            display: 'inline-block', transition: 'all 0.35s',
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a84c'; e.currentTarget.style.color = '#c9a84c'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(245,240,232,0.45)'; e.currentTarget.style.color = '#f5f0e8'; }}
-          >Về Chúng Tôi</a>
+          {/* Ornament divider */}
+          <div style={{
+            opacity: loaded ? 1 : 0, transition: 'opacity 0.9s ease 820ms',
+            marginBottom: 20,
+          }}>
+            <GoldDivider />
+          </div>
+
+          {/* Tagline */}
+          <p style={{
+            fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(12px, 1.4vw, 16px)',
+            fontStyle: 'italic', color: 'rgba(245,240,232,0.5)',
+            lineHeight: 2, marginBottom: 36, letterSpacing: 0.5,
+            opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(8px)',
+            transition: 'opacity 0.9s ease 920ms, transform 0.9s ease 920ms',
+          }}>
+            Xa hoa kiểu Pháp, định nghĩa lại sự thanh lịch
+          </p>
+
+          {/* CTA buttons */}
+          <div style={{
+            display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap',
+            opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(10px)',
+            transition: 'opacity 0.9s ease 1040ms, transform 0.9s ease 1040ms',
+          }}>
+            <button onClick={onMenuOpen} style={{
+              fontFamily: 'var(--font-montserrat)', fontSize: 8.5, fontWeight: 600,
+              letterSpacing: 2.5, textTransform: 'uppercase',
+              background: 'linear-gradient(135deg, #c9a84c 0%, #e2c06a 50%, #c9a84c 100%)',
+              backgroundSize: '200% 100%',
+              border: 'none', color: '#0c1e10',
+              padding: '13px 28px', cursor: 'pointer',
+              transition: 'all 0.4s ease',
+              boxShadow: '0 4px 24px rgba(201,168,76,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
+            }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundPosition = '100% 0';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(201,168,76,0.45), inset 0 1px 0 rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundPosition = '0% 0';
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = '0 4px 24px rgba(201,168,76,0.3), inset 0 1px 0 rgba(255,255,255,0.15)';
+              }}
+            >Khám Phá Thực Đơn</button>
+
+            <a href="#about" style={{
+              fontFamily: 'var(--font-montserrat)', fontSize: 8.5, fontWeight: 500,
+              letterSpacing: 2.5, textTransform: 'uppercase',
+              background: 'transparent',
+              border: '1px solid rgba(245,240,232,0.35)',
+              color: 'rgba(245,240,232,0.8)',
+              padding: '13px 28px', textDecoration: 'none',
+              display: 'inline-block', transition: 'all 0.35s ease',
+            }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(245,240,232,0.08)';
+                e.currentTarget.style.borderColor = 'rgba(245,240,232,0.65)';
+                e.currentTarget.style.color = '#f5f0e8';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(245,240,232,0.35)';
+                e.currentTarget.style.color = 'rgba(245,240,232,0.8)';
+                e.currentTarget.style.transform = 'none';
+              }}
+            >Về Chúng Tôi</a>
+          </div>
         </div>
       </div>
 
-      {/* Scroll line */}
+      {/* Scroll indicator */}
       <div style={{
-        position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+        position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
         opacity: loaded ? 1 : 0, transition: 'opacity 1s ease 1300ms',
       }}>
-        <span style={{ fontFamily: 'var(--font-montserrat)', fontSize: 8, letterSpacing: 4, color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase' }}>Scroll</span>
+        <span style={{ fontFamily: 'var(--font-montserrat)', fontSize: 7.5, letterSpacing: 4, color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase' }}>Scroll</span>
         <div style={{
-          width: 1, height: 48,
-          background: 'linear-gradient(to bottom, rgba(201,168,76,0.6), transparent)',
+          width: 1, height: 44,
+          background: 'linear-gradient(to bottom, rgba(201,168,76,0.55), transparent)',
           animation: 'lb-scroll-pulse 2s ease-in-out infinite',
         }} />
       </div>
@@ -854,6 +936,7 @@ function FooterSection() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function LeBonPage() {
+  const { tenant } = useTenant();
   const [menuOpen, setMenuOpen] = useState(false);
   const [reservationOpen, setReservationOpen] = useState(false);
 
@@ -921,6 +1004,7 @@ export default function LeBonPage() {
       <LeBonReservationModal
         open={reservationOpen}
         onClose={() => setReservationOpen(false)}
+        tenantId={tenant?.id}
       />
     </div>
   );
