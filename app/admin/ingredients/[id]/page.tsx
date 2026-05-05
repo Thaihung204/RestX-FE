@@ -42,7 +42,7 @@ export default function IngredientFormPage() {
     minStockLevel: 0,
     maxStockLevel: 0,
     supplierId: null,
-    type: "",
+    type: null,
     isActive: true,
     currentQuantity: 0,
     status: 0,
@@ -60,8 +60,9 @@ export default function IngredientFormPage() {
   const cannotSave = isNew && hasNoSuppliers;
 
   const normalizeTypeCode = (value?: string | null) => {
-    if (!value) return "";
+    if (!value) return null;
     const trimmed = value.trim();
+    if (!trimmed) return null;
     const found = ingredientCategories.find((c) => c.code === trimmed || c.name === trimmed);
     return found?.code || trimmed;
   };
@@ -133,6 +134,12 @@ export default function IngredientFormPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    if (name === "minStockLevel" || name === "maxStockLevel") {
+      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+        setForm((prev) => ({ ...prev, [name]: value === "" ? 0 : value as any }));
+      }
+      return;
+    }
     setForm((prev) => ({
       ...prev,
       [name]:
@@ -154,7 +161,12 @@ export default function IngredientFormPage() {
     if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length")); return; }
     if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required")); return; }
 
-    const normalizedPayload = { ...form, type: normalizeTypeCode(form.type) };
+    const normalizedPayload = {
+      ...form,
+      type: normalizeTypeCode(form.type),
+      minStockLevel: Number(form.minStockLevel) || 0,
+      maxStockLevel: Number(form.maxStockLevel) || 0,
+    };
 
     try {
       setLoading(true);
@@ -315,7 +327,7 @@ export default function IngredientFormPage() {
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.type")}
-                        <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional")}</span>
+                        {/* <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional")}</span> */}
                       </label>
                       {loadingCategories ? (
                         <div className="w-full px-3 py-2.5 rounded-lg border text-sm" style={disabledFieldStyle}>
@@ -323,6 +335,7 @@ export default function IngredientFormPage() {
                         </div>
                       ) : (
                         <DropDown name="type" value={form.type ?? ""} onChange={handleChange} disabled={cannotSave} className="px-3" style={cannotSave ? disabledFieldStyle : fieldStyle}>
+                          <option value="">{t("dashboard.ingredients.type_none")}</option>
                           {ingredientCategories.map((c) => (
                             <option key={c.id} value={c.code ?? c.name}>{getCategoryLabel(c)}</option>
                           ))}
@@ -343,7 +356,7 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.min_stock")}
                       </label>
-                      <input type="number" name="minStockLevel" min={0} step="0.001" value={form.minStockLevel || ""} onChange={handleChange} disabled={cannotSave}
+                      <input type="text" inputMode="decimal" name="minStockLevel" value={form.minStockLevel === 0 ? "" : form.minStockLevel} onChange={handleChange} disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                         style={cannotSave ? disabledFieldStyle : fieldStyle} />
                     </div>
@@ -351,7 +364,7 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.max_stock")}
                       </label>
-                      <input type="number" name="maxStockLevel" min={0} step="0.001" value={form.maxStockLevel || ""} onChange={handleChange} disabled={cannotSave}
+                      <input type="text" inputMode="decimal" name="maxStockLevel" value={form.maxStockLevel === 0 ? "" : form.maxStockLevel} onChange={handleChange} disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                         style={cannotSave ? disabledFieldStyle : fieldStyle} />
                     </div>

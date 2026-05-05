@@ -650,7 +650,7 @@ export default function MenuItemFormPage() {
                       )}
                     </div>
 
-                    <div>
+                    {/* <div>
                       <label htmlFor="quantity" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
                         {t("menu_form.quantity_in_stock")}
                       </label>
@@ -675,7 +675,7 @@ export default function MenuItemFormPage() {
                           (e.currentTarget.style.boxShadow = "none")
                         }
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 

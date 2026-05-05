@@ -4,10 +4,10 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import StatusToggle from "@/components/ui/StatusToggle";
 import { getTypeTranslation, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
+import { App } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { App } from "antd";
 
 function getStatus(item: IngredientItem): "active" | "inactive" {
   return item.isActive ? "active" : "inactive";
@@ -32,7 +32,7 @@ export default function IngredientList() {
   const [filterType, setFilterType] = useState("all");
   const [filterActive, setFilterActive] = useState("all");
   const [savingRow, setSavingRow] = useState<string | null>(null);
-  const [editingQuantity, setEditingQuantity] = useState<Record<string, number | "">>({});
+  const [editingQuantity, setEditingQuantity] = useState<Record<string, string>>({});
   const [pendingToggle, setPendingToggle] = useState<IngredientItem | null>(null);
 
   useEffect(() => { fetchData(); }, []);
@@ -248,21 +248,27 @@ export default function IngredientList() {
                     <td className="px-3 py-3 text-center">
                       <div className="relative inline-flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <input
-                          type="number"
-                          value={editingQuantity[item.id!] ?? item.currentQuantity ?? ""}
-                          onChange={(e) => setEditingQuantity((prev) => ({ ...prev, [item.id!]: e.target.value === "" ? "" : Number(e.target.value) }))}
+                          type="text"
+                          inputMode="decimal"
+                          value={editingQuantity[item.id!] ?? String(item.currentQuantity ?? "")}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === "" || /^\d*\.?\d*$/.test(raw)) {
+                              setEditingQuantity((prev) => ({ ...prev, [item.id!]: raw }));
+                            }
+                          }}
                           className="w-20 px-2 py-1 rounded border text-sm text-center"
                           style={{
                             background: "var(--surface)", color: "var(--text)",
-                            borderColor: editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? "") ? "var(--primary)" : "var(--border)",
+                            borderColor: editingQuantity[item.id!] !== undefined && Number(editingQuantity[item.id!]) !== (item.currentQuantity ?? 0) ? "var(--primary)" : "var(--border)",
                           }}
                           disabled={savingRow === item.id}
                         />
-                        {editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? 0) && (
+                        {editingQuantity[item.id!] !== undefined && Number(editingQuantity[item.id!]) !== (item.currentQuantity ?? 0) && (
                           <button
                             onClick={async () => {
                               const val = editingQuantity[item.id!];
-                              if (val === "") return;
+                              if (val === "" || val === undefined) return;
                               await handleUpdateIngredient(item.id!, { currentQuantity: Number(val) });
                               setEditingQuantity((prev) => { const next = { ...prev }; delete next[item.id!]; return next; });
                             }}
@@ -365,21 +371,27 @@ export default function IngredientList() {
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.list.col_quantity")}</span>
                     <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
                       <input
-                        type="number"
-                        value={editingQuantity[item.id!] ?? item.currentQuantity ?? ""}
-                        onChange={(e) => setEditingQuantity((prev) => ({ ...prev, [item.id!]: e.target.value === "" ? "" : Number(e.target.value) }))}
+                        type="text"
+                        inputMode="decimal"
+                        value={editingQuantity[item.id!] ?? String(item.currentQuantity ?? "")}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === "" || /^\d*\.?\d*$/.test(raw)) {
+                            setEditingQuantity((prev) => ({ ...prev, [item.id!]: raw }));
+                          }
+                        }}
                         className="w-full px-2 py-1 rounded border text-sm text-center"
                         style={{
                           background: "var(--surface)", color: "var(--text)",
-                          borderColor: editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? "") ? "var(--primary)" : "var(--border)",
+                          borderColor: editingQuantity[item.id!] !== undefined && Number(editingQuantity[item.id!]) !== (item.currentQuantity ?? 0) ? "var(--primary)" : "var(--border)",
                         }}
                         disabled={savingRow === item.id}
                       />
-                      {editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? 0) && (
+                      {editingQuantity[item.id!] !== undefined && Number(editingQuantity[item.id!]) !== (item.currentQuantity ?? 0) && (
                         <button
                           onClick={async () => {
                             const val = editingQuantity[item.id!];
-                            if (val === "") return;
+                            if (val === "" || val === undefined) return;
                             await handleUpdateIngredient(item.id!, { currentQuantity: Number(val) });
                             setEditingQuantity((prev) => { const next = { ...prev }; delete next[item.id!]; return next; });
                           }}
