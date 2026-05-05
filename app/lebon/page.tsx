@@ -1,6 +1,7 @@
 'use client';
 
 import { LeBonReservationModal } from '@/components/lebon/LeBonReservationModal';
+import { useTenant } from '@/lib/contexts/TenantContext';
 import { Cormorant_Garamond, Montserrat } from 'next/font/google';
 import NextImage from 'next/image';
 import { useEffect, useRef, useState } from 'react';
@@ -935,6 +936,7 @@ function FooterSection() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function LeBonPage() {
+  const { tenant } = useTenant();
   const [menuOpen, setMenuOpen] = useState(false);
   const [reservationOpen, setReservationOpen] = useState(false);
 
@@ -1002,6 +1004,7 @@ export default function LeBonPage() {
       <LeBonReservationModal
         open={reservationOpen}
         onClose={() => setReservationOpen(false)}
+        tenantId={tenant?.id}
       />
     </div>
   );
