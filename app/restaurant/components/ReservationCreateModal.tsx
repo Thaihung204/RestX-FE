@@ -74,6 +74,20 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
     setError(null);
   }, [table, initialForm]);
 
+  // Prevent closing with ESC when deposit confirmation is showing
+  useEffect(() => {
+    if (!open || !confirmationCode) return;
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [open, confirmationCode]);
+
   const handleClose = () => {
     setForm({ ...initialFormState, ...initialForm });
     setConfirmationCode(null);
@@ -144,19 +158,7 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
 
   if (typeof document === 'undefined') return null;
 
-  // Prevent closing with ESC when deposit confirmation is showing
-  useEffect(() => {
-    if (!open || !confirmationCode) return;
-
-    const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => document.removeEventListener('keydown', handleEscapeKey);
-  }, [open, confirmationCode]);
+ 
 
   return createPortal(
     <AnimatePresence>
