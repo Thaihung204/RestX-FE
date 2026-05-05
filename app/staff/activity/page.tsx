@@ -15,11 +15,9 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CopyOutlined,
   DollarOutlined,
   FireOutlined,
   LoginOutlined,
-  DownloadOutlined,
   PhoneOutlined,
   PoweroffOutlined,
   QrcodeOutlined,
@@ -270,107 +268,29 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   );
 
   const QRCodeSection = ({ table }: { table: TableActivityData }) => {
-    const [copied, setCopied] = useState(false);
     const [imgError, setImgError] = useState(false);
 
-    const handleCopy = async () => {
-      const tableLink = typeof window !== 'undefined'
-        ? `${window.location.origin}/customer/${table.id}`
-        : `/customer/${table.id}`;
-
-      await navigator.clipboard.writeText(tableLink);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    };
-
-    const handleDownload = () => {
-      if (!table.qrCodeUrl) return;
-      const link = document.createElement('a');
-      link.href = table.qrCodeUrl;
-      link.download = `table-${table.name}-qr.png`;
-      link.target = '_blank';
-      link.click();
-    };
-
     return (
-      <div className="table-modal-section">
-        <div className="table-modal-section-header">
-          <div className="table-modal-section-icon" style={{ background: 'rgba(24,144,255,0.12)', color: '#1890ff' }}>
-            <QrcodeOutlined />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 12 }}>
+        {!imgError && table.qrCodeUrl && (
+          <div
+            style={{
+              padding: 8,
+              borderRadius: 8,
+              background: '#fff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            }}
+          >
+            <img
+              src={table.qrCodeUrl}
+              alt={t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
+              width={120}
+              height={120}
+              style={{ display: 'block', borderRadius: 4 }}
+              onError={() => setImgError(true)}
+            />
           </div>
-          <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>
-            {t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
-          </Text>
-          <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }}>
-            {t('tables.details.qr_scan', { ns: 'dashboard' })}
-          </Tag>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          {imgError || !table.qrCodeUrl ? (
-            <div
-              style={{
-                width: 160,
-                height: 160,
-                borderRadius: 12,
-                border: '1px dashed var(--border)',
-                background: 'var(--card)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                color: 'var(--text-muted)',
-                textAlign: 'center',
-                padding: 12,
-              }}
-            >
-              <QrcodeOutlined style={{ fontSize: 28 }} />
-              <Text style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                {t('tables.details.qr_load_failed', { ns: 'dashboard' })}
-              </Text>
-            </div>
-          ) : (
-            <div
-              style={{
-                padding: 12,
-                borderRadius: 12,
-                background: '#fff',
-                boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
-              }}
-            >
-              <img
-                src={table.qrCodeUrl}
-                alt={t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
-                width={160}
-                height={160}
-                style={{ display: 'block', borderRadius: 6 }}
-                onError={() => setImgError(true)}
-              />
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-            <Button
-              block
-              icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}
-              onClick={handleCopy}
-              style={{ borderRadius: 10, fontWeight: 600 }}
-            >
-              {copied ? t('tables.details.copied', { ns: 'dashboard' }) : t('tables.details.copy_link', { ns: 'dashboard' })}
-            </Button>
-            <Button
-              block
-              type="primary"
-              icon={<DownloadOutlined />}
-              onClick={handleDownload}
-              disabled={!table.qrCodeUrl}
-              style={{ borderRadius: 10, fontWeight: 700 }}
-            >
-              {t('tables.details.download_qr', { ns: 'dashboard' })}
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -1360,6 +1280,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     </Button>
                   )}
 
+                  {selectedTable.qrCodeUrl && (
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'center' }}>
+                      <QRCodeSection table={selectedTable} />
+                    </div>
+                  )}
+
                 </div>
 
                 {hasReservation && (
@@ -1421,8 +1347,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     )}
                   </div>
                 )}
-
-                {selectedTable.qrCodeUrl && <QRCodeSection table={selectedTable} />}
 
                 {hasOrder && (
                   <div className="table-modal-section">

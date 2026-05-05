@@ -144,6 +144,20 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
 
   if (typeof document === 'undefined') return null;
 
+  // Prevent closing with ESC when deposit confirmation is showing
+  useEffect(() => {
+    if (!open || !confirmationCode) return;
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [open, confirmationCode]);
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -151,7 +165,12 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
+          onClick={() => {
+            // Prevent closing modal if deposit confirmation is showing
+            if (!confirmationCode) {
+              handleClose();
+            }
+          }}
           style={{
             position: 'fixed',
             inset: 0,
