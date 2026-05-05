@@ -441,7 +441,29 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       }, 500);
     };
 
-    const events = ['orders.created', 'orders.updated', 'orders.deleted', 'reservations.created', 'reservations.updated', 'reservations.deleted', 'deposits.confirmed', 'tables.status_changed', 'tables.layout_updated', 'tables.session_created', 'tables.session_closed'];
+    const events = [
+      'orders.created',
+      'orders.updated',
+      'orders.deleted',
+      'reservations.created',
+      'reservations.updated',
+      'reservations.deleted',
+      'deposits.confirmed',
+      'payments.completed',
+      'payments.failed',
+      'payments.cancelled',
+      'tables.status_changed',
+      'tables.layout_updated',
+      'tables.session_created',
+      'tables.session_closed',
+      'dashboard.overview_updated',
+      'dashboard.summary_updated',
+      'dashboard.table_status_updated',
+      'notifications.created',
+      'notifications.updated',
+      'notifications.deleted',
+      'notifications.personal.created',
+    ];
 
     const setup = async () => {
       try {
