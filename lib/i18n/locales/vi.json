@@ -2385,6 +2385,7 @@
       "supplier": "Nhà cung cấp",
       "type": "Loại / Danh mục",
       "type_optional": "(tuỳ chọn)",
+      "type_none": "— Không có danh mục —",
       "code_hint": "(max 20 ký tự)",
       "placeholder_name": "VD: Cá hồi tươi",
       "placeholder_code": "VD: CA_HOI",

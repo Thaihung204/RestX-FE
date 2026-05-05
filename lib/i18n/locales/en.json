@@ -2361,6 +2361,7 @@
       "supplier": "Supplier",
       "type": "Category / Type",
       "type_optional": "(optional)",
+      "type_none": "— No category —",
       "code_hint": "(max 20 chars)",
       "placeholder_name": "e.g. Fresh salmon",
       "placeholder_code": "e.g. SALMON",
