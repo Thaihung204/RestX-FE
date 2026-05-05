@@ -274,7 +274,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     const [imgError, setImgError] = useState(false);
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
         {!imgError && table.qrCodeUrl && (
           <div
             style={{
@@ -287,8 +287,8 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
             <img
               src={table.qrCodeUrl}
               alt={t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
-              width={120}
-              height={120}
+              width={100}
+              height={100}
               style={{ display: 'block', borderRadius: 4 }}
               onError={() => setImgError(true)}
             />
@@ -1190,53 +1190,60 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
 
           return (
             <div className="table-modal-root">
-              <div className="table-modal-hero" style={{ background: `linear-gradient(135deg, ${tint(cfg.color, 22)} 0%, ${tint(cfg.color, 8)} 100%)`, borderBottom: `1px solid ${tint(cfg.color, 25)}` }}>
-                <div className="table-modal-hero-icon" style={{ background: tint(cfg.color, 18), border: `2px solid ${tint(cfg.color, 35)}` }}>
-                  <TableOutlined style={{ fontSize: 32, color: cfg.color }} />
-                </div>
-                <div className="table-modal-hero-info">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
-                      {t('staff.floor_activity.modal.table_name', {
-                        name: selectedTable.name,
-                        defaultValue: `Bàn ${selectedTable.name}`,
-                      })}
-                    </Title>
-                    {!hasNamedGuest && (
-                      <Tag style={{ borderRadius: 20, padding: '3px 12px', border: 'none', background: `${cfg.color}20`, color: cfg.color, fontWeight: 700, fontSize: 12 }}>
-                        {cfg.icon} {t(cfg.label)}
-                      </Tag>
-                    )}
+              <div className="table-modal-hero" style={{ background: `linear-gradient(135deg, ${tint(cfg.color, 22)} 0%, ${tint(cfg.color, 8)} 100%)`, borderBottom: `1px solid ${tint(cfg.color, 25)}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: 1 }}>
+                  <div className="table-modal-hero-icon" style={{ background: tint(cfg.color, 18), border: `2px solid ${tint(cfg.color, 35)}` }}>
+                    <TableOutlined style={{ fontSize: 32, color: cfg.color }} />
                   </div>
-                  {selectedTable.status === 'occupied' && (selectedTable.reservationContactName || selectedTable.customerName) && (
-                    <div style={{ marginTop: 8, fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
-                      {selectedTable.reservationContactName || selectedTable.customerName}
+                  <div className="table-modal-hero-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
+                        {t('staff.floor_activity.modal.table_name', {
+                          name: selectedTable.name,
+                          defaultValue: `Bàn ${selectedTable.name}`,
+                        })}
+                      </Title>
+                      {!hasNamedGuest && (
+                        <Tag style={{ borderRadius: 20, padding: '3px 12px', border: 'none', background: `${cfg.color}20`, color: cfg.color, fontWeight: 700, fontSize: 12 }}>
+                          {cfg.icon} {t(cfg.label)}
+                        </Tag>
+                      )}
                     </div>
-                  )}
-                  {selectedTable.reservationContactPhone && (
-                    <div style={{ marginTop: 6, fontSize: 13, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                      {selectedTable.reservationContactPhone}
-                    </div>
-                  )}
-                  {isSelectedTableMerged && (
-                    <span className="table-modal-merge-chip">
-                      <LinkOutlined />
-                      {t('staff.floor_activity.merge.merged_tables_badge', {
-                        count: selectedMergedTableCount,
-                        defaultValue: `Gộp ${selectedMergedTableCount} bàn`,
-                      })}
-                    </span>
-                  )}
-                  <div style={{ display: 'flex', gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
-                    <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}><UserOutlined style={{ marginRight: 5 }} />{selectedTable.capacity} {t('staff.floor_activity.seats_label')}</Text>
-                    {selectedTable.floorName && (
-                      <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                        <TableOutlined style={{ marginRight: 5 }} />
-                        {getLocalizedFloorName(selectedTable.floorName)}
-                      </Text>
+                    {selectedTable.status === 'occupied' && (selectedTable.reservationContactName || selectedTable.customerName) && (
+                      <div style={{ marginTop: 8, fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
+                        {selectedTable.reservationContactName || selectedTable.customerName}
+                      </div>
                     )}
+                    {selectedTable.reservationContactPhone && (
+                      <div style={{ marginTop: 6, fontSize: 13, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                        {selectedTable.reservationContactPhone}
+                      </div>
+                    )}
+                    {isSelectedTableMerged && (
+                      <span className="table-modal-merge-chip">
+                        <LinkOutlined />
+                        {t('staff.floor_activity.merge.merged_tables_badge', {
+                          count: selectedMergedTableCount,
+                          defaultValue: `Gộp ${selectedMergedTableCount} bàn`,
+                        })}
+                      </span>
+                    )}
+                    <div style={{ display: 'flex', gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
+                      <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}><UserOutlined style={{ marginRight: 5 }} />{selectedTable.capacity} {t('staff.floor_activity.seats_label')}</Text>
+                      {selectedTable.floorName && (
+                        <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                          <TableOutlined style={{ marginRight: 5 }} />
+                          {getLocalizedFloorName(selectedTable.floorName)}
+                        </Text>
+                      )}
+                    </div>
                   </div>
                 </div>
+                {selectedTable.qrCodeUrl && (
+                  <div style={{ flexShrink: 0 }}>
+                    <QRCodeSection table={selectedTable} />
+                  </div>
+                )}
               </div>
 
               <div className="table-modal-body">
@@ -1355,11 +1362,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     </Button>
                   )}
 
-                  {selectedTable.qrCodeUrl && (
-                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'center' }}>
-                      <QRCodeSection table={selectedTable} />
-                    </div>
-                  )}
 
                 </div>
 
