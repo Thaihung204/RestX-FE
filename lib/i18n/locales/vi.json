@@ -930,7 +930,15 @@
         "close_session_confirm_title": "Xác nhận đóng phiên bàn?",
         "close_session_confirm_content": "Phiên bàn sẽ được đóng và trạng thái bàn sẽ cập nhật lại.",
         "close_session_success": "Đóng phiên bàn thành công!",
-        "close_session_error": "Đóng phiên bàn thất bại"
+        "close_session_error": "Đóng phiên bàn thất bại",
+        "transfer_session_btn": "Chuyển bàn",
+        "transfer_session_title": "Chuyển phiên bàn",
+        "transfer_session_desc": "Chọn bàn đích để dời session và order hiện tại sang bàn khác.",
+        "transfer_target": "Bàn đích",
+        "transfer_target_placeholder": "Chọn bàn trống",
+        "transfer_session_confirm": "Xác nhận chuyển bàn",
+        "transfer_session_success": "Chuyển bàn thành công!",
+        "transfer_session_error": "Chuyển bàn thất bại"
       }
     },
     "customer": {

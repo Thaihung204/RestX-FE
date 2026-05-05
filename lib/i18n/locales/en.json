@@ -902,7 +902,15 @@
         "close_session_confirm_title": "Close this table session?",
         "close_session_confirm_content": "The session will be closed and the table status will be updated.",
         "close_session_success": "Table session closed successfully!",
-        "close_session_error": "Failed to close table session"
+        "close_session_error": "Failed to close table session",
+        "transfer_session_btn": "Transfer table",
+        "transfer_session_title": "Transfer session",
+        "transfer_session_desc": "Choose a target table to move the current session and order to another table.",
+        "transfer_target": "Target table",
+        "transfer_target_placeholder": "Choose an empty table",
+        "transfer_session_confirm": "Confirm transfer",
+        "transfer_session_success": "Table transferred successfully!",
+        "transfer_session_error": "Failed to transfer table"
       }
     },
     "customer": {

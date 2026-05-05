@@ -18,21 +18,11 @@ const resources = {
   },
 };
 
-const getInitialLanguage = (): string => {
-  if (typeof window !== 'undefined') {
-    const savedLang = localStorage.getItem('language');
-    if (savedLang === 'en' || savedLang === 'vi') {
-      return savedLang;
-    }
-  }
-  return 'vi';
-};
-
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: getInitialLanguage(), // Get language from localStorage or default to 'vi'
+    lng: 'vi', // Always start with 'vi', client will override if needed
     fallbackLng: 'vi',
     ns: ['common', 'dashboard', 'auth'],
     defaultNS: 'common',
