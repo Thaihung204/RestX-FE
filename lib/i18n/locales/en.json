@@ -4581,7 +4581,8 @@
         "pay_deposit_now": "Pay deposit now",
         "deposit_deadline": "Deposit payment deadline",
         "view_details": "View Details",
-        "make_another": "Make Another Booking"
+        "make_another": "Make Another Booking",
+        "hold_notice": "Please arrive on time. Your table will be held for 15 minutes past the reservation time."
       },
       "hero": {
         "badge": "ONLINE BOOKING",
@@ -4607,7 +4608,11 @@
         "closed_overlay_notice": "Notice",
         "closed_overlay_cta": "Pick next available date",
         "closed_overlay_hint": "Use the date picker below to select another day.",
-        "closed_overlay_no_next": "No available date found in the next 30 days."
+        "closed_overlay_no_next": "No available date found in the next 30 days.",
+        "hours_fallback_warning": "Could not load operating hours. Displayed times may not be accurate.",
+        "time_adjusted": "Your selected time was adjusted to {{time}} to fit available hours.",
+        "time_not_available": "Selected time is no longer available. Please choose another time.",
+        "insufficient_seats": "The selected tables do not have enough seats for your party size. Please select more tables."
       },
       "features": {
         "fine_dining": {
