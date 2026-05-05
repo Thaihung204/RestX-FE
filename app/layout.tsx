@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Restaurant Platform",
   description:
     "Tối ưu vận hành nhà hàng với một nền tảng quản lý thống nhất.",
+  icons: {
+    icon: "data:,",
+  },
 };
 
 export default function RootLayout({
@@ -27,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="data:," id="tenant-favicon" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
         <script
           dangerouslySetInnerHTML={{

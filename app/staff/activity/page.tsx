@@ -15,11 +15,9 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CopyOutlined,
   DollarOutlined,
   FireOutlined,
   LoginOutlined,
-  DownloadOutlined,
   PhoneOutlined,
   PoweroffOutlined,
   QrcodeOutlined,
@@ -28,7 +26,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
-import { App, Button, Card, Col, Input, Modal, Row, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Input, Modal, Row, Select, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -253,6 +251,9 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isClosingSession, setIsClosingSession] = useState(false);
   const [confirmCloseSessionTable, setConfirmCloseSessionTable] = useState<TableActivityData | null>(null);
+  const [transferSessionTable, setTransferSessionTable] = useState<TableActivityData | null>(null);
+  const [transferTargetTableId, setTransferTargetTableId] = useState<string>('');
+  const [isTransferringSession, setIsTransferringSession] = useState(false);
   const [isMergeMode, setIsMergeMode] = useState(false);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [isMerging, setIsMerging] = useState(false);
@@ -270,107 +271,29 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   );
 
   const QRCodeSection = ({ table }: { table: TableActivityData }) => {
-    const [copied, setCopied] = useState(false);
     const [imgError, setImgError] = useState(false);
 
-    const handleCopy = async () => {
-      const tableLink = typeof window !== 'undefined'
-        ? `${window.location.origin}/customer/${table.id}`
-        : `/customer/${table.id}`;
-
-      await navigator.clipboard.writeText(tableLink);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    };
-
-    const handleDownload = () => {
-      if (!table.qrCodeUrl) return;
-      const link = document.createElement('a');
-      link.href = table.qrCodeUrl;
-      link.download = `table-${table.name}-qr.png`;
-      link.target = '_blank';
-      link.click();
-    };
-
     return (
-      <div className="table-modal-section">
-        <div className="table-modal-section-header">
-          <div className="table-modal-section-icon" style={{ background: 'rgba(24,144,255,0.12)', color: '#1890ff' }}>
-            <QrcodeOutlined />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 12 }}>
+        {!imgError && table.qrCodeUrl && (
+          <div
+            style={{
+              padding: 8,
+              borderRadius: 8,
+              background: '#fff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            }}
+          >
+            <img
+              src={table.qrCodeUrl}
+              alt={t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
+              width={120}
+              height={120}
+              style={{ display: 'block', borderRadius: 4 }}
+              onError={() => setImgError(true)}
+            />
           </div>
-          <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>
-            {t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
-          </Text>
-          <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }}>
-            {t('tables.details.qr_scan', { ns: 'dashboard' })}
-          </Tag>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          {imgError || !table.qrCodeUrl ? (
-            <div
-              style={{
-                width: 160,
-                height: 160,
-                borderRadius: 12,
-                border: '1px dashed var(--border)',
-                background: 'var(--card)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                color: 'var(--text-muted)',
-                textAlign: 'center',
-                padding: 12,
-              }}
-            >
-              <QrcodeOutlined style={{ fontSize: 28 }} />
-              <Text style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                {t('tables.details.qr_load_failed', { ns: 'dashboard' })}
-              </Text>
-            </div>
-          ) : (
-            <div
-              style={{
-                padding: 12,
-                borderRadius: 12,
-                background: '#fff',
-                boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
-              }}
-            >
-              <img
-                src={table.qrCodeUrl}
-                alt={t('tables.details.qr_title', { ns: 'dashboard', number: table.name })}
-                width={160}
-                height={160}
-                style={{ display: 'block', borderRadius: 6 }}
-                onError={() => setImgError(true)}
-              />
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-            <Button
-              block
-              icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}
-              onClick={handleCopy}
-              style={{ borderRadius: 10, fontWeight: 600 }}
-            >
-              {copied ? t('tables.details.copied', { ns: 'dashboard' }) : t('tables.details.copy_link', { ns: 'dashboard' })}
-            </Button>
-            <Button
-              block
-              type="primary"
-              icon={<DownloadOutlined />}
-              onClick={handleDownload}
-              disabled={!table.qrCodeUrl}
-              style={{ borderRadius: 10, fontWeight: 700 }}
-            >
-              {t('tables.details.download_qr', { ns: 'dashboard' })}
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -577,6 +500,42 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       messageApi.error(msg || t('staff.floor_activity.modal.close_session_error', { defaultValue: 'Đóng phiên bàn thất bại' }));
     } finally {
       setIsClosingSession(false);
+    }
+  };
+
+  const openTransferSessionModal = (table: TableActivityData) => {
+    const availableTarget = tables.find((item) => item.id !== table.id && item.status === 'available');
+    setTransferSessionTable(table);
+    setTransferTargetTableId(availableTarget?.id || '');
+  };
+
+  const executeTransferSession = async () => {
+    if (!transferSessionTable?.id || !transferTargetTableId) return;
+
+    setIsTransferringSession(true);
+    try {
+      await tableService.moveTable({
+        sourceTableId: transferSessionTable.id,
+        targetTableId: transferTargetTableId,
+      });
+
+      messageApi.success(
+        t('staff.floor_activity.modal.transfer_session_success', {
+          defaultValue: 'Chuyển bàn thành công!',
+        }),
+      );
+
+      setTransferSessionTable(null);
+      setTransferTargetTableId('');
+      setSelectedTable(null);
+      await fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      messageApi.error(
+        msg || t('staff.floor_activity.modal.transfer_session_error', { defaultValue: 'Chuyển bàn thất bại' }),
+      );
+    } finally {
+      setIsTransferringSession(false);
     }
   };
 
@@ -1204,7 +1163,8 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const isSessionCurrentlyActive = isSessionActive && isSessionTrulyStarted;
           const isSessionScheduled = isSessionActive && !isSessionTrulyStarted;
           const canCloseSession = isSessionCurrentlyActive;
-          const isSessionEnded = Boolean(selectedTable.sessionEndedAt) || (selectedTable.sessionIsActive === false && hasSessionFootprint);
+          const isSessionEnded = selectedTable.sessionIsActive === false && hasSessionFootprint;
+          const canTransferSession = isSessionCurrentlyActive;
 
           return (
             <div className="table-modal-root">
@@ -1360,6 +1320,25 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     </Button>
                   )}
 
+                  {canTransferSession && (
+                    <Button
+                      type="default"
+                      icon={<TableOutlined />}
+                      onClick={() => openTransferSessionModal(selectedTable)}
+                      block
+                      size="large"
+                      style={{ marginTop: 12, borderRadius: 12, height: 44, fontWeight: 700, fontSize: 14 }}
+                    >
+                      {t('staff.floor_activity.modal.transfer_session_btn', { defaultValue: 'Chuyển bàn' })}
+                    </Button>
+                  )}
+
+                  {selectedTable.qrCodeUrl && (
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'center' }}>
+                      <QRCodeSection table={selectedTable} />
+                    </div>
+                  )}
+
                 </div>
 
                 {hasReservation && (
@@ -1422,8 +1401,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                   </div>
                 )}
 
-                {selectedTable.qrCodeUrl && <QRCodeSection table={selectedTable} />}
-
                 {hasOrder && (
                   <div className="table-modal-section">
                     <div className="table-modal-section-header">
@@ -1464,6 +1441,49 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
             </div>
           );
         })()}
+      </Modal>
+
+      <Modal
+        open={!!transferSessionTable}
+        onCancel={() => {
+          setTransferSessionTable(null);
+          setTransferTargetTableId('');
+        }}
+        onOk={executeTransferSession}
+        confirmLoading={isTransferringSession}
+        okText={t('staff.floor_activity.modal.transfer_session_confirm', { defaultValue: 'Xác nhận chuyển bàn' })}
+        cancelText={t('common.cancel', { defaultValue: 'Hủy' })}
+        title={t('staff.floor_activity.modal.transfer_session_title', { defaultValue: 'Chuyển bàn' })}
+        centered
+        destroyOnClose
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            {t('staff.floor_activity.modal.transfer_session_desc', {
+              defaultValue: 'Chọn bàn đích để dời session và order hiện tại sang bàn khác.',
+            })}
+          </div>
+
+          <div style={{ display: 'grid', gap: 8 }}>
+            <Text style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+              {t('staff.floor_activity.modal.transfer_target', { defaultValue: 'Bàn đích' })}
+            </Text>
+            <Select
+              value={transferTargetTableId || undefined}
+              onChange={(value) => setTransferTargetTableId(value)}
+              placeholder={t('staff.floor_activity.modal.transfer_target_placeholder', {
+                defaultValue: 'Chọn bàn trống',
+              })}
+              style={{ width: '100%' }}
+              options={tables
+                .filter((item) => item.id !== transferSessionTable?.id && item.status === 'available')
+                .map((item) => ({
+                  value: item.id,
+                  label: `${item.name} - ${item.floorName || item.zone}`,
+                }))}
+            />
+          </div>
+        </div>
       </Modal>
 
       <ConfirmModal
