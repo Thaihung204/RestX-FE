@@ -211,8 +211,8 @@ export default function IngredientList() {
               <tr style={{ background: "var(--card)", borderBottom: "2px solid var(--border)" }}>
                 <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 160 }}>{t("dashboard.ingredients.list.col_name")}</th>
                 <th className="text-left px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>{t("dashboard.ingredients.list.col_code")}</th>
-                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>{t("dashboard.ingredients.list.col_unit")}</th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 140 }}>{t("dashboard.ingredients.list.col_quantity")}</th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>{t("dashboard.ingredients.list.col_unit")}</th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 120 }}>{t("dashboard.ingredients.list.col_min_max")}</th>
                 <th className="text-left px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 120 }}>{t("dashboard.ingredients.list.col_supplier")}</th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>{t("dashboard.ingredients.list.col_type")}</th>
@@ -244,7 +244,6 @@ export default function IngredientList() {
                         {item.code}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-center" style={{ color: "var(--text)" }}>{item.unit}</td>
                     <td className="px-3 py-3 text-center">
                       <div className="relative inline-flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -290,6 +289,7 @@ export default function IngredientList() {
                         )}
                       </div>
                     </td>
+                    <td className="px-3 py-3 text-center" style={{ color: "var(--text)" }}>{item.unit}</td>
                     <td className="px-3 py-3 text-center text-xs hidden xl:table-cell" style={{ color: "var(--text-secondary)" }}>
                       {item.minStockLevel} / {item.maxStockLevel}
                     </td>
