@@ -989,9 +989,11 @@ export default function OrderManagement() {
 
     setIsProcessingPayment(true);
     try {
+      const isMembershipPromo = selectedPromotion?.code?.toUpperCase().includes("MEMBERSHIP") ?? false;
+
       const promoOptions = {
-        promotionCode: selectedPromotion?.code ?? null,
-        applyMembership: false,
+        promotionCode: isMembershipPromo ? null : (selectedPromotion?.code ?? null),
+        applyMembership: isMembershipPromo,
       };
 
       if (paymentMethod === "cash") {
